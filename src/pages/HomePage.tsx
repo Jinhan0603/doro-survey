@@ -39,10 +39,10 @@ export function HomePage() {
           </Link>
         </div>
       }
-      description="로봇 창업 특강을 참여형 수업으로 바꾸기 위한 실시간 질문·퀴즈·토론 시스템입니다. GitHub Pages와 Firebase를 전제로 한 MVP 골격을 먼저 정리했습니다."
+      description="로봇 창업 특강을 참여형 수업으로 바꾸기 위한 실시간 질문·퀴즈·토론 시스템입니다. 실제 강의자료 흐름에 맞춰 질문 타이밍과 운영 화면을 함께 다듬고 있습니다."
       eyebrow="DORO Live Survey"
-      status="phase 1 / structure and UI"
-      title="실시간 수업 반응 시스템의 첫 골격"
+      status="live lecture / Apple-inspired UI"
+      title="실제 강의 흐름에 맞춘 실시간 수업 반응 시스템"
     >
       <div className="stack stack--wide">
         <section className="feature-grid">
@@ -85,9 +85,10 @@ export function HomePage() {
             </div>
             <ol className="flow-list">
               <li>HashRouter 기반 화면 구조 확정</li>
-              <li>Notion-inspired 공용 스타일과 카드 시스템 구축</li>
-              <li>학생, Admin, Display 흐름을 목업으로 시각화</li>
-              <li>다음 단계에서 Firebase Auth와 Firestore 연결</li>
+              <li>Apple-inspired 공용 스타일과 카드 시스템 정리</li>
+              <li>학생, Admin, Display 흐름을 실제 수업 기준으로 다듬기</li>
+              <li>강의자료 기준 질문 타이밍 최적화</li>
+              <li>현장 리허설용 버튼 문구와 운영 흐름 점검</li>
             </ol>
           </Card>
         </section>

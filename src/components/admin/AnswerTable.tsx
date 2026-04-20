@@ -23,7 +23,7 @@ export function AnswerTable({ title, rows }: AnswerTableProps) {
     <Card className="answer-table-card">
       <div className="section-heading">
         <h3>{title}</h3>
-        <Badge>{rows.length} responses</Badge>
+        <Badge>응답 {rows.length}개</Badge>
       </div>
       <div className="answer-table">
         <div className="answer-table__head">

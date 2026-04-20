@@ -26,7 +26,7 @@ export function DisplayStage({
           <p>{prompt}</p>
         </div>
         <div className="display-stage__metric">
-          <span>responses</span>
+          <span>응답 수</span>
           <strong>{responseCount}</strong>
         </div>
       </div>

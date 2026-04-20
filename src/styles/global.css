@@ -754,14 +754,26 @@ button:disabled {
   box-shadow: 0 10px 24px rgba(0, 113, 227, 0.08);
 }
 
+.question-list__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.question-list__copy small {
+  color: var(--color-text-soft);
+  line-height: 1.45;
+}
+
 .question-list__order {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-accent);
 }
 
-.question-list__item small {
+.question-list__type {
   color: var(--color-text-soft);
+  font-weight: 600;
 }
 
 .admin-controls {

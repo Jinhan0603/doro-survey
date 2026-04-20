@@ -8,6 +8,7 @@ type WaitingStateProps = {
 export function WaitingState({ title, description }: WaitingStateProps) {
   return (
     <Card className="waiting-state" tone="muted">
+      <span className="question-card__step">WAITING</span>
       <h3>{title}</h3>
       <p>{description}</p>
     </Card>

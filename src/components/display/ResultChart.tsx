@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 
-const fills = ['#0075DE', '#6EA8DB', '#A9CCEA', '#D9E8F6', '#E7EFF7'];
+const fills = ['#0071E3', '#2890F0', '#62A8F7', '#9BC8FB', '#D7E9FF'];
 
 type ResultChartProps = {
   data: Array<{

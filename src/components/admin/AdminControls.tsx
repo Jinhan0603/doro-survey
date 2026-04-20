@@ -31,10 +31,10 @@ export function AdminControls({
       </div>
       <div className="admin-controls__buttons">
         <Button disabled={disabled} onClick={onToggleAccepting} variant={accepting ? 'primary' : 'secondary'}>
-          {accepting ? '답변 받는 중' : '답변 마감'}
+          {accepting ? '응답 마감하기' : '응답 열기'}
         </Button>
         <Button disabled={disabled} onClick={onToggleResults} variant={showResults ? 'primary' : 'secondary'}>
-          {showResults ? '결과 공개 중' : '결과 숨김'}
+          {showResults ? '결과 숨기기' : '결과 공개하기'}
         </Button>
       </div>
     </Card>

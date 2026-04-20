@@ -250,10 +250,14 @@ function LiveQuestionForm({
         onClick={handleSubmit}
         size="lg"
       >
-        {submitState === 'submitting' ? '제출 중...' : '답변 제출하기'}
+        {submitState === 'submitting'
+          ? '제출 중...'
+          : hasSubmitted
+            ? '답변 다시 제출하기'
+            : '이 답변 제출하기'}
       </Button>
       {submitError ? <div className="inline-message inline-message--error">{submitError}</div> : null}
-      {hasSubmitted ? <div className="inline-message">답변이 저장되었습니다. 다시 제출하면 최신 답으로 갱신됩니다.</div> : null}
+      {hasSubmitted ? <div className="inline-message">답변이 저장되었습니다. 내용을 바꾸고 다시 누르면 최신 답변으로 갱신됩니다.</div> : null}
     </>
   );
 
