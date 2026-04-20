@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function adminEmails() {
       return [
-        'dojeonrobot@gmail.com'
+        'awe2478223@gmail.com'
       ];
     }
 
@@ -38,7 +38,7 @@ service cloud.firestore {
 
     function studentCreatesAnswer(uid) {
       return isOwnAnswer(uid)
-        && request.resource.data.keys().hasAll([
+        && request.resource.data.keys().hasOnly([
           'uid',
           'nickname',
           'answer',
@@ -61,12 +61,12 @@ service cloud.firestore {
           'nickname',
           'answer',
           'answerText',
-          'approved',
-          'hidden',
           'updatedAt'
         ])
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.approved == resource.data.approved
+        && request.resource.data.hidden == resource.data.hidden
         && request.resource.data.approved == false
         && request.resource.data.hidden == false
         && validNickname()

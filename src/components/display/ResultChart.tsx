@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   Cell,
+  CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -20,12 +21,19 @@ type ResultChartProps = {
 export function ResultChart({ data }: ResultChartProps) {
   return (
     <div className="result-chart">
-      <ResponsiveContainer height={320} width="100%">
-        <BarChart data={data}>
-          <XAxis axisLine={false} dataKey="name" tickLine={false} />
-          <YAxis allowDecimals={false} axisLine={false} tickLine={false} />
+      <ResponsiveContainer height={360} width="100%">
+        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, bottom: 8, left: 24 }}>
+          <CartesianGrid horizontal={false} stroke="rgba(0, 0, 0, 0.06)" />
+          <XAxis allowDecimals={false} axisLine={false} tickLine={false} type="number" />
+          <YAxis
+            axisLine={false}
+            dataKey="name"
+            tickLine={false}
+            type="category"
+            width={180}
+          />
           <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }} />
-          <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+          <Bar dataKey="value" radius={[0, 10, 10, 0]}>
             {data.map((entry, index) => (
               <Cell key={`${entry.name}-${entry.value}`} fill={fills[index % fills.length]} />
             ))}

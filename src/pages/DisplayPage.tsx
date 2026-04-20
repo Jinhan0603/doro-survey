@@ -179,6 +179,11 @@ export function DisplayPage() {
         <div className="hero-actions">
           <Badge tone="success">live display</Badge>
           <Badge>{sessionId}</Badge>
+          {session ? (
+            <Badge tone={session.showResults ? 'accent' : 'default'}>
+              {session.showResults ? '결과 공개 중' : '결과 비공개'}
+            </Badge>
+          ) : null}
         </div>
       }
       description="Display는 Admin이 공개한 현재 질문 결과만 보여주는 발표 전용 화면입니다."

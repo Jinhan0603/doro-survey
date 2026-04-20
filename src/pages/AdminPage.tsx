@@ -17,14 +17,11 @@ import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useAuth } from '../hooks/useAuth';
 import { useSessionId } from '../hooks/useSessionId';
-import {
-  previewAnswerRows,
-  previewQuestions,
-} from '../data/previewQuestions';
+import { previewAnswerRows, previewQuestions } from '../data/previewQuestions';
 import { seedQuestions } from '../data/seedQuestions';
 import { downloadCsv } from '../utils/csv';
-import { buildAppUrl } from '../utils/urls';
 import { formatTimestamp, getAnswerSummary } from '../utils/stats';
+import { buildAppUrl } from '../utils/urls';
 
 function AdminPreview() {
   const [activeQuestionId, setActiveQuestionId] = useState(previewQuestions[1].id);
@@ -55,12 +52,29 @@ function AdminPreview() {
         />
 
         <div className="stack">
+          <Card className="status-strip">
+            <div className="status-tile">
+              <span>현재 응답 수</span>
+              <strong>20</strong>
+            </div>
+            <div className="status-tile">
+              <span>수집 상태</span>
+              <strong>{accepting ? 'Open' : 'Closed'}</strong>
+            </div>
+            <div className="status-tile">
+              <span>결과 공개</span>
+              <strong>{showResults ? 'Visible' : 'Hidden'}</strong>
+            </div>
+          </Card>
+
           <AdminControls
             accepting={accepting}
+            note="Firebase 연결 전이라 운영 흐름과 버튼 배치를 미리 점검하는 preview 상태입니다."
             showResults={showResults}
             onToggleAccepting={() => setAccepting((value) => !value)}
             onToggleResults={() => setShowResults((value) => !value)}
           />
+
           <Card className="admin-current">
             <div className="section-heading">
               <h3>현재 진행 질문</h3>
@@ -69,6 +83,7 @@ function AdminPreview() {
             <strong>{activeQuestion.title}</strong>
             <p>{activeQuestion.prompt}</p>
           </Card>
+
           <AnswerTable rows={previewAnswerRows} title="실시간 응답 미리보기" />
         </div>
 
@@ -76,16 +91,16 @@ function AdminPreview() {
           <QrPanel url={studentUrl} />
           <Card className="metric-panel">
             <div className="metric-panel__row">
-              <span>현재 응답 수</span>
-              <strong>20</strong>
+              <span>학생 접속 링크</span>
+              <strong>QR ready</strong>
             </div>
             <div className="metric-panel__row">
-              <span>수집 상태</span>
-              <strong>{accepting ? 'Open' : 'Closed'}</strong>
+              <span>현재 질문</span>
+              <strong>{activeQuestion.id.toUpperCase()}</strong>
             </div>
             <div className="metric-panel__row">
-              <span>결과 공개</span>
-              <strong>{showResults ? 'Visible' : 'Hidden'}</strong>
+              <span>모드</span>
+              <strong>Preview</strong>
             </div>
           </Card>
         </div>
@@ -112,8 +127,29 @@ export function AdminPage() {
 
   const studentUrl = buildAppUrl('/student', sessionId);
   const displayQuestions = questions.length > 0 ? questions : seedQuestions;
+  const approvedCount = answers.filter((answer) => answer.approved && !answer.hidden).length;
+  const hiddenCount = answers.filter((answer) => answer.hidden).length;
+
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
     value ? onLabel : offLabel;
+
+  const runAdminAction = async (action: () => Promise<void>, successMessage?: string) => {
+    try {
+      setBusy(true);
+      setActionError(null);
+      if (successMessage) {
+        setActionMessage(null);
+      }
+      await action();
+      if (successMessage) {
+        setActionMessage(successMessage);
+      }
+    } catch (nextError) {
+      setActionError(nextError instanceof Error ? nextError.message : '운영 작업 실행에 실패했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleLogin = async () => {
     try {
@@ -128,30 +164,24 @@ export function AdminPage() {
   };
 
   const handleSeed = async () => {
-    try {
-      setBusy(true);
-      setActionError(null);
-      await seedSession(sessionId);
-      setActionMessage('세션과 기본 질문 12개를 Firestore에 업로드했습니다.');
-    } catch (nextError) {
-      setActionError(nextError instanceof Error ? nextError.message : '세션 초기화에 실패했습니다.');
-    } finally {
-      setBusy(false);
-    }
+    await runAdminAction(
+      () => seedSession(sessionId),
+      '세션과 기본 질문 12개를 Firestore에 업로드했습니다.',
+    );
   };
 
   const handleExportCsv = (question: QuestionDoc) => {
     downloadCsv(
-        `${sessionId}-${question.id}-answers.csv`,
-        ['uid', 'nickname', 'type', 'answer', 'approved', 'hidden'],
-        answers.map((answer) => [
-          answer.uid,
-          answer.nickname,
-          question.type,
-          getAnswerSummary(question, answer),
-          answer.approved,
-          answer.hidden,
-        ]),
+      `${sessionId}-${question.id}-answers.csv`,
+      ['uid', 'nickname', 'type', 'answer', 'approved', 'hidden'],
+      answers.map((answer) => [
+        answer.uid,
+        answer.nickname,
+        question.type,
+        getAnswerSummary(question, answer),
+        answer.approved,
+        answer.hidden,
+      ]),
     );
   };
 
@@ -173,53 +203,39 @@ export function AdminPage() {
           activeQuestion.type === 'text' ? (
             <div className="inline-actions">
               <Button
+                disabled={busy}
                 size="sm"
                 variant={answer.approved ? 'secondary' : 'primary'}
                 onClick={() => {
-                  void (async () => {
-                    try {
-                      setBusy(true);
-                      setActionError(null);
-                      await updateAnswerModeration({
+                  void runAdminAction(
+                    () =>
+                      updateAnswerModeration({
                         sessionId,
                         questionId: activeQuestion.id,
                         uid: answer.uid,
                         approved: !answer.approved,
-                      });
-                    } catch (nextError) {
-                      setActionError(
-                        nextError instanceof Error ? nextError.message : '답변 승인 상태 변경에 실패했습니다.',
-                      );
-                    } finally {
-                      setBusy(false);
-                    }
-                  })();
+                      }),
+                    `주관식 답변을 ${answer.approved ? '승인 해제' : '승인'}했습니다.`,
+                  );
                 }}
               >
                 {answer.approved ? '승인 해제' : '승인'}
               </Button>
               <Button
+                disabled={busy}
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  void (async () => {
-                    try {
-                      setBusy(true);
-                      setActionError(null);
-                      await updateAnswerModeration({
+                  void runAdminAction(
+                    () =>
+                      updateAnswerModeration({
                         sessionId,
                         questionId: activeQuestion.id,
                         uid: answer.uid,
                         hidden: !answer.hidden,
-                      });
-                    } catch (nextError) {
-                      setActionError(
-                        nextError instanceof Error ? nextError.message : '답변 숨김 상태 변경에 실패했습니다.',
-                      );
-                    } finally {
-                      setBusy(false);
-                    }
-                  })();
+                      }),
+                    `답변을 ${answer.hidden ? '다시 표시' : '숨김'} 처리했습니다.`,
+                  );
                 }}
               >
                 {answer.hidden ? '표시' : '숨김'}
@@ -301,10 +317,10 @@ export function AdminPage() {
       actions={
         <div className="hero-actions">
           <Badge tone="success">signed in</Badge>
-          <Button size="sm" variant="secondary" onClick={handleSeed}>
-            기본 질문 seed
+          <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
+            {busy ? '작업 중...' : '기본 질문 seed'}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => signOutUser()}>
+          <Button disabled={busy} size="sm" variant="ghost" onClick={() => signOutUser()}>
             로그아웃
           </Button>
         </div>
@@ -319,19 +335,45 @@ export function AdminPage() {
           activeQuestionId={session?.activeQuestionId ?? displayQuestions[0]?.id ?? ''}
           questions={displayQuestions}
           onSelect={(questionId) => {
-            void setActiveQuestionId(sessionId, questionId);
+            void runAdminAction(
+              () => setActiveQuestionId(sessionId, questionId),
+              `현재 질문을 ${questionId}로 전환했습니다.`,
+            );
           }}
         />
 
         <div className="stack">
+          <Card className="status-strip">
+            <div className="status-tile">
+              <span>현재 응답 수</span>
+              <strong>{answers.length}</strong>
+            </div>
+            <div className="status-tile">
+              <span>승인된 답변</span>
+              <strong>{approvedCount}</strong>
+            </div>
+            <div className="status-tile">
+              <span>숨김 답변</span>
+              <strong>{hiddenCount}</strong>
+            </div>
+          </Card>
+
           <AdminControls
             accepting={session?.accepting ?? false}
+            disabled={busy}
+            note="현재 세션의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다."
             showResults={session?.showResults ?? false}
             onToggleAccepting={() => {
-              void updateSession(sessionId, { accepting: !(session?.accepting ?? false) });
+              void runAdminAction(
+                () => updateSession(sessionId, { accepting: !(session?.accepting ?? false) }),
+                `응답 수집 상태를 ${(session?.accepting ?? false) ? '마감' : '오픈'}으로 변경했습니다.`,
+              );
             }}
             onToggleResults={() => {
-              void updateSession(sessionId, { showResults: !(session?.showResults ?? false) });
+              void runAdminAction(
+                () => updateSession(sessionId, { showResults: !(session?.showResults ?? false) }),
+                `결과 공개 상태를 ${(session?.showResults ?? false) ? '비공개' : '공개'}로 변경했습니다.`,
+              );
             }}
           />
 
@@ -355,7 +397,7 @@ export function AdminPage() {
             {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
             {activeQuestion ? (
               <div className="hero-actions">
-                <Button size="sm" variant="secondary" onClick={() => handleExportCsv(activeQuestion)}>
+                <Button disabled={busy} size="sm" variant="secondary" onClick={() => handleExportCsv(activeQuestion)}>
                   CSV 다운로드
                 </Button>
               </div>

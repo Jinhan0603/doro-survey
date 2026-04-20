@@ -77,7 +77,7 @@ Starter security files are included:
 - [firestore.rules](./firestore.rules)
 - [firestore.indexes.json](./firestore.indexes.json)
 
-The default admin allowlist currently includes `dojeonrobot@gmail.com`. Adjust it before production if needed.
+The default admin allowlist currently includes `awe2478223@gmail.com`. Adjust it before production if needed.
 
 ### Deploy rules
 

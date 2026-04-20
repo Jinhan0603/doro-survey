@@ -137,6 +137,10 @@ function StudentPreview() {
     >
       <div className="page-grid page-grid--student">
         <Card className="identity-card" tone="muted">
+          <div className="identity-card__meta">
+            <Badge tone="accent">preview session</Badge>
+            {submitted ? <Badge tone="success">답변 제출됨</Badge> : <Badge>입력 중</Badge>}
+          </div>
           <Input
             autoComplete="nickname"
             hint="실서비스에서는 localStorage와 익명 로그인에 연결됩니다."
@@ -146,7 +150,16 @@ function StudentPreview() {
             value={nickname}
             onChange={(event) => setNickname(event.target.value)}
           />
-          {submitted ? <Badge tone="success">답변이 제출되었습니다</Badge> : <Badge>제출 전</Badge>}
+          <div className="status-strip status-strip--compact">
+            <div className="status-tile">
+              <span>질문 상태</span>
+              <strong>{mode === 'waiting' ? '대기 중' : '응답 가능'}</strong>
+            </div>
+            <div className="status-tile">
+              <span>닉네임</span>
+              <strong>{nickname || '미입력'}</strong>
+            </div>
+          </div>
         </Card>
         {content}
       </div>
@@ -380,6 +393,10 @@ export function StudentPage() {
     >
       <div className="page-grid page-grid--student">
         <Card className="identity-card" tone="muted">
+          <div className="identity-card__meta">
+            <Badge tone="accent">{sessionId}</Badge>
+            <Badge tone={user ? 'success' : 'default'}>{user ? '익명 로그인 연결됨' : '인증 중'}</Badge>
+          </div>
           <Input
             autoComplete="nickname"
             hint="닉네임은 이 브라우저에 저장됩니다."
@@ -389,11 +406,16 @@ export function StudentPage() {
             value={nickname}
             onChange={(event) => setNickname(event.target.value)}
           />
-          {existingAnswer ? (
-            <Badge tone="success">이 질문에 이미 응답했습니다</Badge>
-          ) : (
-            <Badge>{session?.accepting ? '응답 가능' : '응답 대기'}</Badge>
-          )}
+          <div className="status-strip status-strip--compact">
+            <div className="status-tile">
+              <span>현재 상태</span>
+              <strong>{session?.accepting ? '응답 가능' : '응답 대기'}</strong>
+            </div>
+            <div className="status-tile">
+              <span>답변 기록</span>
+              <strong>{existingAnswer ? '제출 완료' : '미제출'}</strong>
+            </div>
+          </div>
         </Card>
         {liveContent}
       </div>

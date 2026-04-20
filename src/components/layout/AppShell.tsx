@@ -30,8 +30,10 @@ export function AppShell({
             <p>{description}</p>
           </div>
           <div className="hero-panel__aside">
-            {status ? <Badge>{status}</Badge> : null}
-            {actions}
+            <div className="hero-panel__meta">
+              {status ? <Badge>{status}</Badge> : null}
+              {actions}
+            </div>
           </div>
         </section>
         {children}
