@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function adminEmails() {
+      return [
+        'dojeonrobot@gmail.com'
+      ];
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email in adminEmails();
+    }
+
+    function isOwnAnswer(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function validNickname() {
+      return request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 24;
+    }
+
+    function validAnswerShape() {
+      return (!('answer' in request.resource.data) || request.resource.data.answer == null || request.resource.data.answer is string)
+        && (!('answerText' in request.resource.data) || request.resource.data.answerText == null || (
+          request.resource.data.answerText is string
+          && request.resource.data.answerText.size() <= 300
+        ));
+    }
+
+    function studentCreatesAnswer(uid) {
+      return isOwnAnswer(uid)
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'nickname',
+          'answer',
+          'answerText',
+          'approved',
+          'hidden',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.approved == false
+        && request.resource.data.hidden == false
+        && validNickname()
+        && validAnswerShape();
+    }
+
+    function studentUpdatesAnswer(uid) {
+      return isOwnAnswer(uid)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'nickname',
+          'answer',
+          'answerText',
+          'approved',
+          'hidden',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.approved == false
+        && request.resource.data.hidden == false
+        && validNickname()
+        && validAnswerShape();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      match /questions/{questionId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+
+        match /answers/{uid} {
+          allow read: if isAdmin() || isOwnAnswer(uid);
+          allow create: if isAdmin() || studentCreatesAnswer(uid);
+          allow update: if isAdmin() || studentUpdatesAnswer(uid);
+          allow delete: if isAdmin();
+        }
+      }
+    }
+  }
+}
