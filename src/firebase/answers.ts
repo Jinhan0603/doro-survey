@@ -2,12 +2,14 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { requireDb } from './client';
@@ -96,6 +98,40 @@ export async function upsertAnswer({
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+const BATCH_LIMIT = 400;
+
+export async function deleteAnswersForQuestion(
+  sessionId: string,
+  questionId: string,
+): Promise<number> {
+  const db = requireDb();
+  const snapshot = await getDocs(getAnswersCollection(sessionId, questionId));
+  if (snapshot.empty) return 0;
+
+  const docs = snapshot.docs;
+  let deleted = 0;
+
+  for (let i = 0; i < docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + BATCH_LIMIT).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    deleted += Math.min(BATCH_LIMIT, docs.length - i);
+  }
+
+  return deleted;
+}
+
+export async function deleteAnswersForSession(
+  sessionId: string,
+  questionIds: string[],
+): Promise<number> {
+  let total = 0;
+  for (const questionId of questionIds) {
+    total += await deleteAnswersForQuestion(sessionId, questionId);
+  }
+  return total;
 }
 
 export async function updateAnswerModeration({

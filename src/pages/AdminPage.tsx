@@ -10,7 +10,7 @@ import { Input } from '../components/common/Input';
 import { AppShell } from '../components/layout/AppShell';
 import { WaitingState } from '../components/survey/WaitingState';
 import { signInAdminWithEmail, signOutUser } from '../firebase/auth';
-import { updateAnswerModeration } from '../firebase/answers';
+import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { appName, firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
 import { type QuestionDoc } from '../firebase/types';
@@ -164,6 +164,39 @@ export function AdminPage() {
       () => seedSession(sessionId),
       '세션과 기본 질문 12개를 Firestore에 업로드했습니다.',
     );
+  };
+
+  const handleResetQuestion = async () => {
+    if (!activeQuestion) return;
+    const confirmed = window.confirm(
+      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
+    );
+    if (!confirmed) return;
+    await runAdminAction(async () => {
+      const count = await deleteAnswersForQuestion(sessionId, activeQuestion.id);
+      setActionMessage(`현재 질문 응답 ${count}개를 삭제했습니다.`);
+    });
+  };
+
+  const handleResetSession = async () => {
+    if (displayQuestions.length === 0) return;
+    const input = window.prompt(
+      '전체 응답을 초기화합니다.\n\n삭제 후에는 되돌릴 수 없습니다.\n계속하려면 아래에 RESET을 정확히 입력하세요.',
+    );
+    if (input !== 'RESET') {
+      if (input !== null) window.alert('RESET을 정확히 입력해야 삭제됩니다.');
+      return;
+    }
+    await runAdminAction(async () => {
+      const questionIds = displayQuestions.map((q) => q.id);
+      const count = await deleteAnswersForSession(sessionId, questionIds);
+      await updateSession(sessionId, {
+        accepting: false,
+        showResults: false,
+        activeQuestionId: displayQuestions[0]?.id,
+      });
+      setActionMessage(`전체 응답 ${count}개를 삭제했습니다.`);
+    });
   };
 
   const handleExportCsv = (question: QuestionDoc) => {
@@ -400,6 +433,36 @@ export function AdminPage() {
           </Card>
 
           {activeQuestion ? <AnswerTable rows={answerRows} title="실시간 응답" /> : null}
+
+          <div className="danger-zone">
+            <div className="danger-zone__header">
+              <h3 className="danger-zone__title">응답 초기화</h3>
+              <p className="danger-zone__desc">
+                테스트 응답을 삭제하고 수업을 깨끗하게 시작할 수 있습니다.<br />
+                삭제 후에는 되돌릴 수 없습니다. 수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
+              </p>
+            </div>
+            <div className="danger-zone__buttons">
+              <Button
+                className="button--danger"
+                disabled={busy || !activeQuestion}
+                size="sm"
+                variant="secondary"
+                onClick={() => { void handleResetQuestion(); }}
+              >
+                현재 질문 응답 초기화
+              </Button>
+              <Button
+                className="button--danger button--danger-strong"
+                disabled={busy || displayQuestions.length === 0}
+                size="sm"
+                variant="secondary"
+                onClick={() => { void handleResetSession(); }}
+              >
+                전체 응답 초기화
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="stack">
