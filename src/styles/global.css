@@ -1463,3 +1463,356 @@ button:disabled {
     transform: scale(1);
   }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Phase colors
+────────────────────────────────────────────────────────────── */
+
+:root {
+  --color-phase-intro: #5c7cfa;
+  --color-phase-theory: #f59f00;
+  --color-phase-practice: #37b24d;
+  --color-phase-ethics: #ae3ec9;
+  --color-phase-closing: #f03e3e;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Phase tag
+────────────────────────────────────────────────────────────── */
+
+.phase-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--phase-color) 14%, transparent);
+  color: var(--phase-color);
+  border: 1px solid color-mix(in srgb, var(--phase-color) 24%, transparent);
+  white-space: nowrap;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Planner page layout
+────────────────────────────────────────────────────────────── */
+
+.planner-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.planner-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planner-page__section-heading {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.planner-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 48px 24px;
+}
+
+.planner-empty p {
+  margin: 6px 0;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Template grid and cards
+────────────────────────────────────────────────────────────── */
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.template-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px 0 4px;
+}
+
+.template-card__desc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.template-card__phases {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phase-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.phase-block__label {
+  flex: 1;
+}
+
+.phase-block__count {
+  font-size: 12px;
+  color: var(--color-text-soft);
+}
+
+.template-card__footer {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.template-card__meta {
+  font-size: 12px;
+  color: var(--color-text-soft);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Template form
+────────────────────────────────────────────────────────────── */
+
+.template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.template-form__heading {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.template-form__phases {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.template-form__phase-card {
+  border-left: 3px solid var(--phase-color, var(--color-border));
+}
+
+.template-form__phase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.template-form__phase-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.template-form__questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.template-form__question {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.template-form__question-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.template-form__question-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-accent);
+  min-width: 24px;
+}
+
+.template-form__question-meta {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.template-form__add-phase {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.template-form__add-label {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.template-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* select and textarea helpers */
+
+.select-sm {
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-strong);
+  font-size: 12px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.select-sm:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.textarea-sm {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-strong);
+  font-size: 13px;
+  color: var(--color-text);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.textarea-sm:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.form-error {
+  font-size: 13px;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   V2: Phase guide row
+────────────────────────────────────────────────────────────── */
+
+.planner-page__phase-guide {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.planner-page__phase-guide h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+}
+
+.phase-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.phase-guide-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase-guide-arrow {
+  color: var(--color-text-soft);
+  font-size: 14px;
+}
+
+/* stack-sm helper */
+
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* login-card */
+
+.login-card {
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-card__heading {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+/* Planner nav link on home page */
+
+.role-card--planner .feature-card__icon {
+  background: color-mix(in srgb, var(--color-phase-intro) 12%, transparent);
+  color: var(--color-phase-intro);
+}

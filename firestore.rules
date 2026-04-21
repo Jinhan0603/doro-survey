@@ -74,6 +74,11 @@ service cloud.firestore {
         && validAnswerShape();
     }
 
+    match /lessonTemplates/{templateId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /sessions/{sessionId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdmin();

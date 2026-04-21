@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:/Users/User/Documents/Jindex/doro-survey/*)",
+      "Write(C:/Users/User/Documents/Jindex/doro-survey/*)",
+      "Edit(C:/Users/User/Documents/Jindex/doro-survey/*)",
+      "Bash(firebase *)"
+    ]
+  }
+}

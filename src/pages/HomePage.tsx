@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, ClipboardCopy, MonitorPlay, ShieldCheck, Smartphone } from 'lucide-react';
+import { ArrowRight, ClipboardCopy, LayoutTemplate, MonitorPlay, ShieldCheck, Smartphone } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
@@ -31,17 +31,24 @@ const screens = [
     description: '빔프로젝터에 띄워 학생들과 결과를 함께 보는 화면입니다.',
     badge: '발표용',
   },
+  {
+    href: '#/planner',
+    icon: LayoutTemplate,
+    title: '수업 플래너',
+    description: '수업 전에 단계별 질문을 설계하고 템플릿으로 저장합니다. 도입→이론→실습→윤리→마무리 구조로 설계합니다.',
+    badge: '강사 전용',
+  },
 ];
 
 const usageSteps = [
+  '수업 플래너에서 수업 템플릿을 미리 만듭니다. (도입→이론→실습→윤리→마무리)',
   'Admin 화면에서 관리자 계정으로 로그인합니다.',
   '기본 질문 seed 버튼을 눌러 질문 세트를 불러옵니다.',
   '학생에게 QR 코드 또는 아래 링크를 공유합니다.',
   '질문을 선택하고 응답 수집을 Open으로 둡니다.',
   '답변이 충분히 모이면 Closed로 마감합니다.',
   '결과 공개를 Visible로 바꾸면 Display 화면에 그래프가 나타납니다.',
-  'Display 화면을 보며 학생들과 함께 토론합니다.',
-  '다음 질문을 선택하고 3번부터 반복합니다.',
+  'Display 화면을 보며 학생들과 함께 토론하고, 다음 질문으로 넘어갑니다.',
 ];
 
 const cautions = [
