@@ -8,9 +8,13 @@ type WaitingStateProps = {
 export function WaitingState({ title, description }: WaitingStateProps) {
   return (
     <Card className="waiting-state" tone="muted">
-      <span className="question-card__step">WAITING</span>
-      <h3>{title}</h3>
-      <p>{description}</p>
+      <div className="waiting-pulse" aria-hidden="true">
+        <span className="waiting-pulse__dot" />
+        <span className="waiting-pulse__dot" />
+        <span className="waiting-pulse__dot" />
+      </div>
+      <h3 className="waiting-state__title">{title}</h3>
+      <p className="waiting-state__desc">{description}</p>
     </Card>
   );
 }

@@ -1082,3 +1082,334 @@ button:disabled {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Compact Hero ──────────────────────────────────────────── */
+
+.hero-panel--compact {
+  padding: 20px 0 20px;
+}
+
+.hero-panel--compact h1 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+
+/* ── Feature Card icon row ─────────────────────────────────── */
+
+.feature-card__icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── Share Card ────────────────────────────────────────────── */
+
+.share-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px;
+}
+
+.share-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.share-card__header h3 {
+  margin: 0;
+}
+
+.share-card__url {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: rgba(29, 29, 31, 0.03);
+  flex-wrap: wrap;
+}
+
+.share-card__code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+}
+
+.share-card__hint {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.share-card .button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Flow list bullet variant ──────────────────────────────── */
+
+.flow-list--bullet {
+  list-style-type: disc;
+}
+
+/* ── Student Shell ─────────────────────────────────────────── */
+
+.student-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.student-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-header__name {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.student-main {
+  flex: 1;
+  padding: 28px 20px 80px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Nickname Onboarding ───────────────────────────────────── */
+
+.student-onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 40px;
+}
+
+.student-onboarding__heading {
+  margin: 0;
+  font-size: clamp(1.9rem, 8vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.student-onboarding__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.student-onboarding__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Submit Success ────────────────────────────────────────── */
+
+.submit-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 56px 24px 40px;
+  text-align: center;
+}
+
+.submit-success__icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-success-soft);
+  display: grid;
+  place-items: center;
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.submit-success__heading {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.submit-success__desc {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.submit-success__edit {
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: 0.94rem;
+  font-weight: 600;
+  padding: 8px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.submit-success__edit:hover {
+  color: var(--color-accent-strong);
+}
+
+/* ── Student Error & Already Submitted ────────────────────── */
+
+.student-error {
+  border: 1px solid rgba(187, 61, 61, 0.22);
+  border-radius: 18px;
+  background: var(--color-danger-soft);
+  padding: 14px 16px;
+  color: var(--color-danger);
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.student-already-submitted {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* ── Preview Mode Bar ──────────────────────────────────────── */
+
+.student-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: rgba(29, 29, 31, 0.04);
+  border: 1px solid var(--color-border);
+}
+
+.student-preview-bar__label {
+  color: var(--color-text-soft);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.student-preview-bar__modes {
+  display: flex;
+  gap: 4px;
+}
+
+.student-preview-bar__btn {
+  border: none;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+.student-preview-bar__btn.is-active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.student-preview-bar__btn:not(.is-active):hover {
+  background: rgba(29, 29, 31, 0.07);
+  color: var(--color-text);
+}
+
+/* ── Waiting Pulse Animation ───────────────────────────────── */
+
+.waiting-state {
+  text-align: center;
+}
+
+.waiting-state__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.waiting-state__desc {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+.waiting-pulse {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.waiting-pulse__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.waiting-pulse__dot:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.waiting-pulse__dot:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

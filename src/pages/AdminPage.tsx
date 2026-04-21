@@ -8,6 +8,7 @@ import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { AppShell } from '../components/layout/AppShell';
+import { WaitingState } from '../components/survey/WaitingState';
 import { signInAdminWithEmail, signOutUser } from '../firebase/auth';
 import { updateAnswerModeration } from '../firebase/answers';
 import { appName, firebaseConfigStatus } from '../firebase/client';
@@ -24,31 +25,28 @@ import { formatTimestamp, getAnswerSummary } from '../utils/stats';
 import { buildAppUrl } from '../utils/urls';
 
 function AdminPreview() {
-  const [activeQuestionId, setActiveQuestionId] = useState(previewQuestions[1].id);
+  const [activeQuestionId, setLocalActiveQuestion] = useState(previewQuestions[1].id);
   const [accepting, setAccepting] = useState(true);
   const [showResults, setShowResults] = useState(false);
 
-  const activeQuestion = previewQuestions.find((question) => question.id === activeQuestionId) ?? previewQuestions[0];
+  const activeQuestion = previewQuestions.find((q) => q.id === activeQuestionId) ?? previewQuestions[0];
   const studentUrl = useMemo(() => buildAppUrl('/student', 'robot-startup-2026'), []);
 
   return (
     <AppShell
+      compact
       actions={
         <div className="hero-actions">
-          <Badge tone="success">preview mode</Badge>
-          <Badge>no firebase config</Badge>
+          <Badge>미리보기 모드</Badge>
         </div>
       }
-      description="Firebase가 비어 있어서 현재는 운영 화면 preview만 표시합니다."
-      eyebrow="Admin Preview"
-      status="mock session / no backend"
-      title="강의 흐름을 흔들지 않는 운영 화면"
+      title="Admin 운영 화면"
     >
       <div className="page-grid page-grid--admin">
         <QuestionList
           activeQuestionId={activeQuestionId}
           questions={previewQuestions}
-          onSelect={setActiveQuestionId}
+          onSelect={setLocalActiveQuestion}
         />
 
         <div className="stack">
@@ -69,10 +67,10 @@ function AdminPreview() {
 
           <AdminControls
             accepting={accepting}
-            note="Firebase 연결 전이라 운영 흐름과 버튼 배치를 미리 점검하는 preview 상태입니다."
+            note="응답 수집 시작과 결과 공개 상태를 조작해보세요."
             showResults={showResults}
-            onToggleAccepting={() => setAccepting((value) => !value)}
-            onToggleResults={() => setShowResults((value) => !value)}
+            onToggleAccepting={() => setAccepting((v) => !v)}
+            onToggleResults={() => setShowResults((v) => !v)}
           />
 
           <Card className="admin-current">
@@ -100,7 +98,7 @@ function AdminPreview() {
             </div>
             <div className="metric-panel__row">
               <span>모드</span>
-              <strong>Preview</strong>
+              <strong>미리보기</strong>
             </div>
           </Card>
         </div>
@@ -127,8 +125,8 @@ export function AdminPage() {
 
   const studentUrl = buildAppUrl('/student', sessionId);
   const displayQuestions = questions.length > 0 ? questions : seedQuestions;
-  const approvedCount = answers.filter((answer) => answer.approved && !answer.hidden).length;
-  const hiddenCount = answers.filter((answer) => answer.hidden).length;
+  const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
+  const hiddenCount = answers.filter((a) => a.hidden).length;
 
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
     value ? onLabel : offLabel;
@@ -137,13 +135,9 @@ export function AdminPage() {
     try {
       setBusy(true);
       setActionError(null);
-      if (successMessage) {
-        setActionMessage(null);
-      }
+      if (successMessage) setActionMessage(null);
       await action();
-      if (successMessage) {
-        setActionMessage(successMessage);
-      }
+      if (successMessage) setActionMessage(successMessage);
     } catch (nextError) {
       setActionError(nextError instanceof Error ? nextError.message : '운영 작업 실행에 실패했습니다.');
     } finally {
@@ -174,13 +168,13 @@ export function AdminPage() {
     downloadCsv(
       `${sessionId}-${question.id}-answers.csv`,
       ['uid', 'nickname', 'type', 'answer', 'approved', 'hidden'],
-      answers.map((answer) => [
-        answer.uid,
-        answer.nickname,
+      answers.map((a) => [
+        a.uid,
+        a.nickname,
         question.type,
-        getAnswerSummary(question, answer),
-        answer.approved,
-        answer.hidden,
+        getAnswerSummary(question, a),
+        a.approved,
+        a.hidden,
       ]),
     );
   };
@@ -247,25 +241,15 @@ export function AdminPage() {
 
   if (authLoading) {
     return (
-      <AppShell
-        description="관리자 인증 상태를 확인하고 있습니다."
-        eyebrow="Admin Live"
-        status="checking auth"
-        title="운영 화면 연결 중"
-      >
-        <WaitingCard title="인증 상태를 확인 중입니다." />
+      <AppShell compact title="Admin 운영 화면">
+        <WaitingState description="잠시만 기다려주세요." title="인증 상태를 확인하는 중입니다" />
       </AppShell>
     );
   }
 
   if (!user) {
     return (
-      <AppShell
-        description="Admin은 Firebase Email/Password 계정으로만 진입할 수 있습니다."
-        eyebrow="Admin Live"
-        status="sign-in required"
-        title={`${appName} 운영 로그인`}
-      >
+      <AppShell compact title={`${appName} 관리자 로그인`}>
         <div className="auth-layout">
           <Card className="auth-card">
             <div className="section-heading">
@@ -291,20 +275,24 @@ export function AdminPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
-              {authError ? <div className="inline-message inline-message--error">{authError}</div> : null}
-              <Button disabled={!email.trim() || !password || busy} onClick={handleLogin} size="lg">
+              {authError ? (
+                <div className="inline-message inline-message--error">{authError}</div>
+              ) : null}
+              <Button disabled={!email.trim() || !password || busy} size="lg" onClick={handleLogin}>
                 {busy ? '로그인 중...' : '로그인'}
               </Button>
             </div>
           </Card>
 
           <Card className="banner-card">
-            <h3>세션 준비 흐름</h3>
+            <h3>수업 당일 사용 순서</h3>
             <ol className="flow-list">
-              <li>Admin 계정으로 로그인합니다.</li>
-              <li>기본 질문 세트를 Firestore에 seed 합니다.</li>
-              <li>현재 질문과 결과 공개 상태를 조작합니다.</li>
-              <li>학생과 Display 화면은 같은 세션을 실시간으로 구독합니다.</li>
+              <li>Admin 화면에서 로그인합니다.</li>
+              <li>기본 질문 seed 버튼을 누릅니다.</li>
+              <li>학생용 QR 또는 링크를 공유합니다.</li>
+              <li>질문을 선택하고 응답 수집을 엽니다.</li>
+              <li>응답이 모이면 마감 후 결과 공개를 누릅니다.</li>
+              <li>Display 화면을 보며 함께 토론합니다.</li>
             </ol>
           </Card>
         </div>
@@ -314,9 +302,10 @@ export function AdminPage() {
 
   return (
     <AppShell
+      compact
       actions={
         <div className="hero-actions">
-          <Badge tone="success">signed in</Badge>
+          <Badge tone="success">로그인 완료</Badge>
           <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
             {busy ? '작업 중...' : '기본 질문 seed'}
           </Button>
@@ -325,10 +314,7 @@ export function AdminPage() {
           </Button>
         </div>
       }
-      description="질문 전환, 응답 수집, 결과 공개, CSV 추출, 주관식 승인까지 라이브 운영 흐름을 한 화면에 모았습니다."
-      eyebrow="Admin Live"
-      status={user.email ?? 'authenticated admin'}
-      title="실제 강의 운영용 Admin 화면"
+      title="Admin 운영 화면"
     >
       <div className="page-grid page-grid--admin">
         <QuestionList
@@ -361,18 +347,18 @@ export function AdminPage() {
           <AdminControls
             accepting={session?.accepting ?? false}
             disabled={busy}
-            note="현재 세션의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다."
+            note="현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다."
             showResults={session?.showResults ?? false}
             onToggleAccepting={() => {
               void runAdminAction(
                 () => updateSession(sessionId, { accepting: !(session?.accepting ?? false) }),
-                `응답 수집 상태를 ${(session?.accepting ?? false) ? '마감' : '오픈'}으로 변경했습니다.`,
+                `응답 수집을 ${(session?.accepting ?? false) ? '마감' : '오픈'}했습니다.`,
               );
             }}
             onToggleResults={() => {
               void runAdminAction(
                 () => updateSession(sessionId, { showResults: !(session?.showResults ?? false) }),
-                `결과 공개 상태를 ${(session?.showResults ?? false) ? '비공개' : '공개'}로 변경했습니다.`,
+                `결과 공개를 ${(session?.showResults ?? false) ? '비공개' : '공개'}로 변경했습니다.`,
               );
             }}
           />
@@ -381,12 +367,12 @@ export function AdminPage() {
             <div className="section-heading">
               <h3>현재 진행 질문</h3>
               <Badge tone="accent">
-                {activeQuestion ? `Q${String(activeQuestion.order).padStart(2, '0')}` : 'No active question'}
+                {activeQuestion ? `Q${String(activeQuestion.order).padStart(2, '0')}` : '—'}
               </Badge>
             </div>
             {loading ? <p>질문을 불러오는 중입니다.</p> : null}
             {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-            {!activeQuestion && !loading ? <p>세션을 seed 한 뒤 질문을 열어주세요.</p> : null}
+            {!activeQuestion && !loading ? <p>기본 질문 seed 후 질문을 선택해주세요.</p> : null}
             {activeQuestion ? (
               <>
                 <strong>{activeQuestion.title}</strong>
@@ -394,10 +380,17 @@ export function AdminPage() {
               </>
             ) : null}
             {actionMessage ? <div className="inline-message">{actionMessage}</div> : null}
-            {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
+            {actionError ? (
+              <div className="inline-message inline-message--error">{actionError}</div>
+            ) : null}
             {activeQuestion ? (
               <div className="hero-actions">
-                <Button disabled={busy} size="sm" variant="secondary" onClick={() => handleExportCsv(activeQuestion)}>
+                <Button
+                  disabled={busy}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleExportCsv(activeQuestion)}
+                >
                   CSV 다운로드
                 </Button>
               </div>
@@ -427,8 +420,4 @@ export function AdminPage() {
       </div>
     </AppShell>
   );
-}
-
-function WaitingCard({ title }: { title: string }) {
-  return <Card className="banner-card">{title}</Card>;
 }

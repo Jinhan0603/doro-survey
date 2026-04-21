@@ -1,10 +1,12 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
+import { Badge } from '../components/common/Badge';
 import { AppShell } from '../components/layout/AppShell';
 import { AnswerWall } from '../components/display/AnswerWall';
 import { DisplayStage } from '../components/display/DisplayStage';
 import { ResultChart } from '../components/display/ResultChart';
+import { WaitingState } from '../components/survey/WaitingState';
 import { firebaseConfigStatus } from '../firebase/client';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
@@ -16,10 +18,11 @@ import {
   previewTextAnswers,
 } from '../data/previewQuestions';
 import { buildChoiceResults, getApprovedTextAnswers } from '../utils/stats';
-import { Badge } from '../components/common/Badge';
+
+type DisplayMode = 'choice' | 'text' | 'collecting';
 
 function DisplayPreview() {
-  const [mode, setMode] = useState<'choice' | 'text' | 'collecting'>('choice');
+  const [mode, setMode] = useState<DisplayMode>('choice');
   const choiceQuestion = previewQuestions[1];
   const textQuestion = previewQuestions[2];
 
@@ -58,31 +61,41 @@ function DisplayPreview() {
         <ResultChart data={previewChartData} />
       </DisplayStage>
     );
-  }, [choiceQuestion.order, choiceQuestion.prompt, choiceQuestion.title, mode, textQuestion.order, textQuestion.prompt, textQuestion.title]);
+  }, [
+    choiceQuestion.order,
+    choiceQuestion.prompt,
+    choiceQuestion.title,
+    mode,
+    textQuestion.order,
+    textQuestion.prompt,
+    textQuestion.title,
+  ]);
+
+  const modeLabels: Record<DisplayMode, string> = {
+    choice: '객관식 결과',
+    text: '주관식 답변',
+    collecting: '수집 중',
+  };
 
   return (
     <AppShell
+      compact
       actions={
         <div className="hero-actions">
-          <Button size="sm" variant={mode === 'choice' ? 'primary' : 'secondary'} onClick={() => setMode('choice')}>
-            객관식 결과
-          </Button>
-          <Button size="sm" variant={mode === 'text' ? 'primary' : 'secondary'} onClick={() => setMode('text')}>
-            승인 답변
-          </Button>
-          <Button
-            size="sm"
-            variant={mode === 'collecting' ? 'primary' : 'secondary'}
-            onClick={() => setMode('collecting')}
-          >
-            수집 중
-          </Button>
+          <Badge>미리보기 모드</Badge>
+          {(['choice', 'text', 'collecting'] as DisplayMode[]).map((m) => (
+            <Button
+              key={m}
+              size="sm"
+              variant={mode === m ? 'primary' : 'secondary'}
+              onClick={() => setMode(m)}
+            >
+              {modeLabels[m]}
+            </Button>
+          ))}
         </div>
       }
-      description="Firebase 설정이 없어서 현재는 발표용 화면 preview를 보여줍니다."
-      eyebrow="Display Preview"
-      status="presentation-only stage"
-      title="학생들과 함께 보는 결과 화면"
+      title="발표 화면"
     >
       <div className="stack stack--wide">{stage}</div>
     </AppShell>
@@ -101,27 +114,17 @@ export function DisplayPage() {
 
   if (authLoading) {
     return (
-      <AppShell
-        description="Display 접근 권한을 확인하고 있습니다."
-        eyebrow="Display Live"
-        status="checking auth"
-        title="발표 화면 연결 중"
-      >
-        <Card className="banner-card">관리자 인증 상태를 확인하고 있습니다.</Card>
+      <AppShell compact title="발표 화면">
+        <WaitingState description="잠시만 기다려주세요." title="접근 권한을 확인하는 중입니다" />
       </AppShell>
     );
   }
 
   if (!user) {
     return (
-      <AppShell
-        description="v1에서는 같은 브라우저에서 Admin 로그인된 상태일 때만 Display를 엽니다."
-        eyebrow="Display Live"
-        status="admin auth required"
-        title="Display는 관리자 인증이 필요합니다"
-      >
+      <AppShell compact title="발표 화면">
         <Card className="banner-card banner-card--error">
-          먼저 Admin 화면에서 로그인한 뒤 이 Display 화면을 다시 열어주세요.
+          먼저 Admin 화면에서 로그인한 뒤 이 화면을 다시 열어주세요.
         </Card>
       </AppShell>
     );
@@ -130,7 +133,9 @@ export function DisplayPage() {
   let content: ReactNode = null;
 
   if (loading) {
-    content = <Card className="banner-card">현재 질문과 답변을 불러오는 중입니다.</Card>;
+    content = (
+      <WaitingState description="잠시만 기다려주세요." title="질문과 답변을 불러오는 중입니다" />
+    );
   } else if (error) {
     content = <Card className="banner-card banner-card--error">{error}</Card>;
   } else if (!session || !activeQuestion) {
@@ -145,7 +150,7 @@ export function DisplayPage() {
         <h2>{activeQuestion.title}</h2>
         <p>{activeQuestion.prompt}</p>
         <strong>답변 수집 중</strong>
-        <span>강사가 결과 공개를 눌러야 그래프 또는 승인 답변이 나타납니다.</span>
+        <span>결과 공개를 누르면 그래프 또는 승인 답변이 나타납니다.</span>
       </Card>
     );
   } else if (activeQuestion.type === 'choice') {
@@ -175,9 +180,10 @@ export function DisplayPage() {
 
   return (
     <AppShell
+      compact
       actions={
         <div className="hero-actions">
-          <Badge tone="success">live display</Badge>
+          <Badge tone="success">실시간 연결</Badge>
           <Badge>{sessionId}</Badge>
           {session ? (
             <Badge tone={session.showResults ? 'accent' : 'default'}>
@@ -186,10 +192,7 @@ export function DisplayPage() {
           ) : null}
         </div>
       }
-      description="Display는 Admin이 공개한 현재 질문 결과만 보여주는 발표 전용 화면입니다."
-      eyebrow="Display Live"
-      status={user.email ?? 'authenticated'}
-      title="프로젝터용 실시간 결과 화면"
+      title="발표 화면"
     >
       <div className="stack stack--wide">{content}</div>
     </AppShell>
