@@ -9,33 +9,28 @@ type UseSessionResult = {
   error: string | null;
 };
 
-export function useSession(sessionId: string): UseSessionResult {
+export function useSession(sessionId: string, { enabled = true } = {}): UseSessionResult {
+  const shouldSubscribe = enabled && firebaseConfigStatus.isConfigured;
+
   const [state, setState] = useState<UseSessionResult>({
     session: null,
-    loading: firebaseConfigStatus.isConfigured,
+    loading: shouldSubscribe,
     error: null,
   });
 
   useEffect(() => {
-    if (!firebaseConfigStatus.isConfigured) {
+    if (!shouldSubscribe) {
+      setState({ session: null, loading: false, error: null });
       return undefined;
     }
 
     return subscribeSession(sessionId, (session) => {
-      setState((current) => ({
-        session,
-        loading: false,
-        error: current.error,
-      }));
+      setState({ session, loading: false, error: null });
     });
-  }, [sessionId]);
+  }, [sessionId, shouldSubscribe]);
 
-  if (!firebaseConfigStatus.isConfigured) {
-    return {
-      session: null,
-      loading: false,
-      error: null,
-    };
+  if (!shouldSubscribe) {
+    return { session: null, loading: false, error: null };
   }
 
   return state;

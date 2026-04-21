@@ -381,7 +381,9 @@ export function StudentPage() {
   const sessionId = useSessionId();
   const liveEnabled = firebaseConfigStatus.isConfigured;
   const { user, loading: authLoading } = useAuth();
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId);
+  // Wait for auth before subscribing to Firestore — Firestore rules require isSignedIn()
+  const firestoreEnabled = !authLoading && !!user;
+  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
   const { answer: existingAnswer } = useOwnAnswer(sessionId, activeQuestion?.id, user?.uid);
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);

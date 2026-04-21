@@ -9,33 +9,28 @@ type UseQuestionsResult = {
   error: string | null;
 };
 
-export function useQuestions(sessionId: string): UseQuestionsResult {
+export function useQuestions(sessionId: string, { enabled = true } = {}): UseQuestionsResult {
+  const shouldSubscribe = enabled && firebaseConfigStatus.isConfigured;
+
   const [state, setState] = useState<UseQuestionsResult>({
     questions: [],
-    loading: firebaseConfigStatus.isConfigured,
+    loading: shouldSubscribe,
     error: null,
   });
 
   useEffect(() => {
-    if (!firebaseConfigStatus.isConfigured) {
+    if (!shouldSubscribe) {
+      setState({ questions: [], loading: false, error: null });
       return undefined;
     }
 
     return subscribeQuestions(sessionId, (questions) => {
-      setState((current) => ({
-        questions,
-        loading: false,
-        error: current.error,
-      }));
+      setState({ questions, loading: false, error: null });
     });
-  }, [sessionId]);
+  }, [sessionId, shouldSubscribe]);
 
-  if (!firebaseConfigStatus.isConfigured) {
-    return {
-      questions: [],
-      loading: false,
-      error: null,
-    };
+  if (!shouldSubscribe) {
+    return { questions: [], loading: false, error: null };
   }
 
   return state;
