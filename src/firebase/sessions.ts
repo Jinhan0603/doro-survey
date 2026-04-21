@@ -23,10 +23,15 @@ function getQuestionRef(sessionId: string, questionId: string) {
 export function subscribeSession(
   sessionId: string,
   callback: (session: SessionDoc | null) => void,
+  onError?: (error: Error) => void,
 ): Unsubscribe {
-  return onSnapshot(getSessionRef(sessionId), (snapshot) => {
-    callback(snapshot.exists() ? (snapshot.data() as SessionDoc) : null);
-  });
+  return onSnapshot(
+    getSessionRef(sessionId),
+    (snapshot) => {
+      callback(snapshot.exists() ? (snapshot.data() as SessionDoc) : null);
+    },
+    (error) => onError?.(error),
+  );
 }
 
 export async function updateSession(

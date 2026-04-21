@@ -24,9 +24,14 @@ export function useSession(sessionId: string, { enabled = true } = {}): UseSessi
       return undefined;
     }
 
-    return subscribeSession(sessionId, (session) => {
-      setState({ session, loading: false, error: null });
-    });
+    // Mark as loading when (re-)subscribing
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
+    return subscribeSession(
+      sessionId,
+      (session) => setState({ session, loading: false, error: null }),
+      (error) => setState({ session: null, loading: false, error: error.message }),
+    );
   }, [sessionId, shouldSubscribe]);
 
   if (!shouldSubscribe) {

@@ -20,14 +20,17 @@ function getQuestionRef(sessionId: string, questionId: string) {
 export function subscribeQuestions(
   sessionId: string,
   callback: (questions: QuestionDoc[]) => void,
+  onError?: (error: Error) => void,
 ): Unsubscribe {
   const questionsQuery = query(getQuestionsCollection(sessionId), orderBy('order', 'asc'));
 
-  return onSnapshot(questionsQuery, (snapshot) => {
-    callback(
-      snapshot.docs.map((documentSnapshot) => documentSnapshot.data() as QuestionDoc),
-    );
-  });
+  return onSnapshot(
+    questionsQuery,
+    (snapshot) => {
+      callback(snapshot.docs.map((d) => d.data() as QuestionDoc));
+    },
+    (error) => onError?.(error),
+  );
 }
 
 export function subscribeQuestion(

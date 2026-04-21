@@ -24,9 +24,14 @@ export function useQuestions(sessionId: string, { enabled = true } = {}): UseQue
       return undefined;
     }
 
-    return subscribeQuestions(sessionId, (questions) => {
-      setState({ questions, loading: false, error: null });
-    });
+    // Mark as loading when (re-)subscribing
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
+    return subscribeQuestions(
+      sessionId,
+      (questions) => setState({ questions, loading: false, error: null }),
+      (error) => setState({ questions: [], loading: false, error: error.message }),
+    );
   }, [sessionId, shouldSubscribe]);
 
   if (!shouldSubscribe) {

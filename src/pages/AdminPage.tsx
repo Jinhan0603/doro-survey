@@ -110,7 +110,9 @@ function AdminPreview() {
 export function AdminPage() {
   const sessionId = useSessionId();
   const { user, loading: authLoading } = useAuth();
-  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId);
+  // Wait for auth before subscribing — Firestore rules require isSignedIn()
+  const firestoreEnabled = !authLoading && !!user;
+  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
   const { answers } = useAnswers(sessionId, activeQuestion?.id);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
