@@ -153,3 +153,28 @@ src/
 ├── data/           # 미리보기용 더미 데이터, seed 질문 세트
 └── styles/         # global.css (Apple-inspired 디자인 시스템)
 ```
+
+
+---
+
+## V2 데이터 구조 안내
+
+**V2 is additive and preserves existing session data.**
+
+- 기존 `sessions/{sessionId}/questions/{questionId}/answers/{uid}` 구조는 변경되지 않습니다.
+- V1 데이터를 수정/삭제/이동하지 않습니다.
+- V2는 새 컬렉션을 추가하는 방식으로 구현됩니다 (additive migration).
+
+### 새 컬렉션 (V2)
+
+| 컬렉션 | 설명 |
+|--------|------|
+| `lessonTemplates/{templateId}` | 수업 템플릿 메타데이터 |
+| `lessonTemplates/{templateId}/interactions/{interactionId}` | 각 인터랙션 (질문) 정의 |
+| `lessonTemplates/{templateId}/slides/{slideId}` | 슬라이드 정보 |
+| `users/{uid}` | 사용자 프로필 (강사/관리자) |
+
+### schemaVersion
+
+- V1 기존 세션 문서: `schemaVersion` 필드 없음 — 정상 동작 유지
+- V2 새 문서: `schemaVersion: 2`

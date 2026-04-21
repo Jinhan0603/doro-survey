@@ -77,6 +77,22 @@ service cloud.firestore {
     match /lessonTemplates/{templateId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdmin();
+
+      match /slides/{slideId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+      }
+
+      match /interactions/{interactionId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    match /users/{uid} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow create, update: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow delete: if isAdmin();
     }
 
     match /sessions/{sessionId} {

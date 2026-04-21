@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { subscribeTemplates } from '../firebase/lessonTemplates';
+import { subscribeSharedLessonTemplates } from '../firebase/lessonTemplates';
 import { firebaseConfigStatus } from '../firebase/client';
 import type { LessonTemplateDoc } from '../firebase/types';
 
@@ -26,7 +26,7 @@ export function useTemplates({ enabled = true } = {}): UseTemplatesResult {
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    const unsubscribe = subscribeTemplates(
+    const unsubscribe = subscribeSharedLessonTemplates(
       (templates) => setState({ templates, loading: false, error: null }),
     );
 

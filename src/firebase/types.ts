@@ -1,9 +1,10 @@
 import type { Timestamp } from 'firebase/firestore';
 
+// ──────────────────────────────────────────────────────────────
+// V1 types (preserved — do not change)
+// ──────────────────────────────────────────────────────────────
+
 export type QuestionType = 'choice' | 'text';
-export type InteractionType = 'survey' | 'quiz' | 'discussion' | 'reflection';
-export type InteractionVisibility = 'public' | 'teacher-only';
-export type PhaseType = '도입' | '이론' | '실습' | '윤리' | '마무리';
 
 export type SessionDoc = {
   title: string;
@@ -11,7 +12,8 @@ export type SessionDoc = {
   accepting: boolean;
   showResults: boolean;
   templateId?: string | null;
-  currentPhase?: PhaseType | null;
+  currentPhase?: LessonPhase | null;
+  schemaVersion?: number;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 };
@@ -25,9 +27,12 @@ export type QuestionDoc = {
   choices: string[];
   maxLength: number;
   visible: boolean;
-  phase?: PhaseType | null;
+  // V2 optional fields — existing V1 docs without these still work
+  phase?: LessonPhase | null;
   interactionType?: InteractionType | null;
-  visibility?: InteractionVisibility | null;
+  inputType?: QuestionInputType | null;
+  visibility?: ResultVisibility | null;
+  purpose?: InteractionPurpose | null;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 };
@@ -45,32 +50,81 @@ export type AnswerDoc = {
 
 export type SeedQuestion = Omit<QuestionDoc, 'createdAt' | 'updatedAt'>;
 
-// V2: Lesson Templates
+// ──────────────────────────────────────────────────────────────
+// V2 enum types
+// ──────────────────────────────────────────────────────────────
 
-export type TemplateQuestion = {
+export type LessonPhase = 'intro' | 'theory' | 'practice' | 'ethics' | 'wrapup';
+
+export type InteractionPurpose = 'learning' | 'ops' | 'reflection';
+
+export type ResultVisibility = 'public' | 'teacher-only' | 'hidden';
+
+export type InteractionType =
+  | 'prior-knowledge'
+  | 'prediction'
+  | 'concept-check'
+  | 'confidence-check'
+  | 'readiness-check'
+  | 'progress-check'
+  | 'troubleshoot'
+  | 'ethics-case'
+  | 'exit-ticket';
+
+export type QuestionInputType = 'choice' | 'text' | 'multi' | 'scale' | 'status';
+
+export type UserRole = 'admin' | 'teacher';
+
+// ──────────────────────────────────────────────────────────────
+// V2 Firestore document types
+// ──────────────────────────────────────────────────────────────
+
+export type LessonTemplateDoc = {
+  id: string;
+  ownerUid: string;
+  title: string;
+  subject: string;
+  description: string;
+  shared: boolean;
+  schemaVersion: 2;
+  createdAt?: Timestamp | null;
+  updatedAt?: Timestamp | null;
+};
+
+export type LessonSlideDoc = {
+  id: string;
   order: number;
-  type: QuestionType;
+  phase: LessonPhase;
+  title: string;
+  content: string;
+  imageUrl?: string | null;
+  createdAt?: Timestamp | null;
+  updatedAt?: Timestamp | null;
+};
+
+export type LessonInteractionDoc = {
+  id: string;
+  order: number;
+  phase: LessonPhase;
   interactionType: InteractionType;
-  visibility: InteractionVisibility;
+  purpose: InteractionPurpose;
+  inputType: QuestionInputType;
+  visibility: ResultVisibility;
   title: string;
   prompt: string;
   choices: string[];
   maxLength: number;
+  schemaVersion: 2;
+  createdAt?: Timestamp | null;
+  updatedAt?: Timestamp | null;
 };
 
-export type TemplatePhase = {
-  id: string;
-  type: PhaseType;
-  label: string;
-  questions: TemplateQuestion[];
-};
-
-export type LessonTemplateDoc = {
-  id: string;
-  title: string;
-  subject: string;
-  description: string;
-  phases: TemplatePhase[];
+export type UserProfileDoc = {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  schemaVersion: 2;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 };
