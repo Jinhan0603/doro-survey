@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import { Badge } from '../common/Badge';
 import { Card } from '../common/Card';
-import type { PreviewQuestion } from '../../data/previewQuestions';
+import type { QuestionDoc } from '../../firebase/types';
+import { getQuestionTypeLabel } from '../../utils/questionRuntime';
 
 type QuestionListProps = {
-  questions: PreviewQuestion[];
+  questions: Array<Pick<QuestionDoc, 'id' | 'order' | 'title' | 'prompt' | 'type' | 'inputType'>>;
   activeQuestionId: string;
   onSelect(questionId: string): void;
 };
@@ -29,7 +30,7 @@ export function QuestionList({ questions, activeQuestionId, onSelect }: Question
               <strong>{question.title}</strong>
               <small>{question.prompt}</small>
             </div>
-            <small className="question-list__type">{question.type === 'choice' ? '객관식' : '주관식'}</small>
+            <small className="question-list__type">{getQuestionTypeLabel(question)}</small>
           </button>
         ))}
       </div>

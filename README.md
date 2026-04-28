@@ -1,180 +1,437 @@
-# DORO Live Survey
+# DORO Live Survey V2
 
-> 학생들이 QR로 실시간 답변하고, 강사가 결과를 바로 공개하는 **수업용 실시간 설문 시스템**입니다.
+> DOROSSAEM 기술/툴/실습형 수업을 위한 참여 설계 + 실시간 운영 시스템
 
----
+DORO Live Survey V2는 기존 실시간 설문 엔진 위에 **lesson template planner**를 얹은 제품입니다.
+강사는 수업 전에 phase별 interaction 흐름을 템플릿으로 설계하고, 수업 중에는 Student/Admin/Display 화면으로 그대로 운영할 수 있습니다.
 
-## 바로가기 링크
-
-| 화면 | 링크 | 누가 사용하나요? |
-|------|------|-----------------|
-| **학생 화면** | [열기](https://jinhan0603.github.io/doro-survey/#/student?session=robot-startup-2026) | 수업 참여 학생 |
-| **Admin 화면** | [열기](https://jinhan0603.github.io/doro-survey/#/admin?session=robot-startup-2026) | 강사 (로그인 필요) |
-| **발표 화면** | [열기](https://jinhan0603.github.io/doro-survey/#/display?session=robot-startup-2026) | 강사 (빔프로젝터용) |
+이 프로젝트는 특정 강연이나 단일 주제 전용이 아니라, DOROSSAEM의 다양한 기술 수업 포맷을 공통 구조로 다루는 것을 목표로 합니다.
 
 ---
 
-## 화면별 역할
+## Overview
 
-### 학생 화면 (Student)
-- QR 코드 또는 링크로 접속합니다.
-- 닉네임을 입력하면 바로 현재 질문이 나타납니다.
-- 객관식 선택 또는 주관식 작성 후 제출하면 끝입니다.
-- 강사가 다음 질문을 열면 화면이 자동으로 바뀝니다.
+V2의 핵심은 아래 흐름을 한 제품 안에서 연결한 것입니다.
 
-### Admin 화면 (강사 전용)
-- 이메일/비밀번호로 로그인합니다.
-- 질문 목록에서 현재 질문을 선택합니다.
-- **응답 열기 / 마감** 버튼으로 수집 상태를 조작합니다.
-- **결과 공개** 버튼을 누르면 발표 화면에 그래프가 나타납니다.
-- 주관식 답변은 승인/숨김 처리 후 공개할 수 있습니다.
-- CSV 다운로드로 답변 데이터를 저장할 수 있습니다.
-
-### 발표 화면 (Display)
-- Admin 로그인 후 같은 브라우저에서 엽니다.
-- 빔프로젝터나 큰 화면에 띄워두면 됩니다.
-- Admin이 결과 공개를 누르는 순간 자동으로 그래프 또는 주관식 답변이 나타납니다.
+1. `Library`에서 내 템플릿과 공유 템플릿을 관리합니다.
+2. `Builder`에서 phase별 slides와 interaction block을 설계합니다.
+3. `Session New`에서 템플릿 기반 live session을 생성합니다.
+4. `Admin`에서 수업 중 질문 전환과 결과 공개를 운영합니다.
+5. `Student`는 모바일에서 현재 질문에 응답합니다.
+6. `Display`는 공개 가능한 결과만 프로젝터 화면에 보여줍니다.
 
 ---
 
-## 수업 전 테스트 체크리스트
+## V2 Scope
 
-수업 전날 아래 순서대로 확인하세요.
+이번 V2 범위는 아래 8개 축으로 구성됩니다.
 
-- [ ] **Admin 로그인 확인** — [Admin 화면](https://jinhan0603.github.io/doro-survey/#/admin?session=robot-startup-2026)에서 이메일/비밀번호로 로그인되는지 확인
-- [ ] **기본 질문 seed** — 로그인 후 상단의 `기본 질문 seed` 버튼 클릭 → 질문 목록이 뜨는지 확인
-- [ ] **학생 화면 접속** — [학생 화면](https://jinhan0603.github.io/doro-survey/#/student?session=robot-startup-2026)에서 닉네임 입력 → 질문이 나타나는지 확인
-- [ ] **응답 수집 테스트** — Admin에서 `응답 열기` → 학생 화면에서 답변 제출 → Admin 응답 테이블에 기록되는지 확인
-- [ ] **결과 공개 테스트** — Admin에서 `결과 공개하기` → 발표 화면에 그래프가 나타나는지 확인
-- [ ] **QR 코드 확인** — Admin 우측 QR 패널이 보이는지, QR로 학생 화면 접속이 되는지 확인
-- [ ] **모바일 확인** — 스마트폰으로 학생 링크 접속 → 닉네임 입력 → 답변 제출 흐름 확인
+1. startup 전용 문구를 일반적인 **실시간 기술 수업 시스템** 관점으로 정리
+2. `lessonTemplates` 기반 데이터 구조 추가
+3. `Library / Builder / Session New` 화면 및 라우트 추가
+4. 브라우저 전용 PPTX 추출 + phase 분류
+5. 외부 AI 없이 동작하는 규칙 기반 interaction generator
+6. `choice / text / multi / scale / status` 런타임 지원
+7. `public / teacher-only / hidden` 결과 visibility 분리
+8. admin allowlist를 유지한 채 `teacher` role과 조직 공유 모델 확장
 
 ---
 
-## 수업 당일 사용 순서
+## Class Flow
 
-```
-1. 강사: Admin 화면 로그인
-2. 강사: 기본 질문 seed 버튼 클릭 (처음 한 번만)
-3. 강사: 발표 화면을 빔프로젝터에 연결
-4. 강사: 학생들에게 QR 코드 또는 학생 링크 공유
-5. 강사: 원하는 질문 선택 → 응답 열기
-6. 학생: QR 접속 → 닉네임 입력 → 답변 제출
-7. 강사: 응답이 충분히 모이면 응답 마감
-8. 강사: 결과 공개 → 발표 화면에 그래프 표시
-9. 함께 결과를 보며 토론
-10. 다음 질문 선택 → 5번부터 반복
+DORO 표준 수업 arc는 다음과 같습니다.
+
+```text
+도입 → 이론 → 실습 → 윤리/활용 사례 → 마무리
 ```
 
+각 phase에는 하나 이상의 interaction block이 들어갑니다.
+
+- `prior-knowledge`
+- `prediction`
+- `concept-check`
+- `confidence-check`
+- `readiness-check`
+- `progress-check`
+- `troubleshoot`
+- `ethics-case`
+- `exit-ticket`
+
+Builder에서는 자주 쓰는 DORO 기본 버튼도 제공합니다.
+
+- 도입 질문 추가
+- 이론 체크 추가
+- 실습 준비 체크 추가
+- 실습 중간 체크 추가
+- 윤리 질문 추가
+- 마무리 질문 추가
+
 ---
 
-## 주의사항
+## Main Screens
 
-- 학생에게는 **학생 링크만** 공유하세요. Admin 링크를 공유하지 마세요.
-- 발표 화면은 Admin 로그인 후 **같은 브라우저**에서 새 탭으로 여세요.
-- 질문이 안 보이면 Admin에서 `기본 질문 seed` 버튼을 먼저 누르세요.
-- 주관식 답변은 Admin에서 **승인** 처리 후 발표 화면에 표시됩니다.
+### Home
+
+- 제품 개요와 역할별 진입점 제공
+- Student/Admin/Display/Library 동선 요약
+- `lesson template 만들기` 버튼과 `세션 만들기` 버튼 제공
+
+### Library
+
+- 내 lesson template 목록
+- 조직/공유 template 목록
+- 새 lesson template 만들기
+- 복제하기
+- visibility 변경
+- session 생성 진입
+
+### Builder
+
+- lesson template 제목/설명/대상학년/과목유형/사용툴 편집
+- phase별 섹션 UI
+- slides 목록 편집
+- interaction block 추가/수정/삭제/정렬
+- `interactionType / purpose / resultVisibility / inputType` 편집
+- `presenterNote / timingLabel` 편집
+- PPTX 업로드 기반 slides 추출/phase 분류
+- 규칙 기반 interaction 초안 생성
+
+### Session New
+
+- 템플릿 선택
+- `sessionId` 입력
+- `title` 입력
+- `createSessionFromLessonTemplate` 실행
+- 생성 후 Student/Admin/Display 링크와 QR 제공
+
+### Student
+
+- 모바일 우선 참여 화면
+- 익명 로그인 유지
+- 현재 질문에 응답
+- 새 질문이 열리면 자동 갱신
+
+### Admin
+
+- 강사용 운영 화면
+- 현재 질문 선택
+- 응답 열기/마감
+- 공개 가능한 질문만 Display 공개
+- teacher-only 결과는 Admin에서만 집계
+- CSV export 지원
+
+### Display
+
+- 프로젝터용 결과 화면
+- `public` 질문만 표시
+- `teacher-only / hidden` 질문은 표시하지 않음
 
 ---
 
-## 팀원 개발 환경 설정
+## PPTX Import
 
-Firebase 연결 없이도 미리보기 모드로 UI를 확인할 수 있습니다.
+Builder는 PPTX 원본 파일을 **브라우저에서만** 읽습니다.
+
+- 서버 저장 금지
+- Firebase Storage 사용 금지
+- 추출된 슬라이드 메타데이터만 템플릿에 반영
+
+사용 패키지:
+
+- `jszip`
+- `fast-xml-parser`
+
+추출 유틸:
+
+- [src/utils/pptx.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/pptx.ts>)
+- `extractSlidesFromPptx(file: File): Promise<ExtractedSlide[]>`
+
+`ExtractedSlide`는 다음 정보를 제공합니다.
+
+- `slideNumber`
+- `title`
+- `text`
+- `rawTexts`
+- `detectedPhase`
+- `phaseConfidence`
+
+phase 분류 규칙:
+
+- `intro`: 도입, 목표, 왜, 문제, 궁금, 해볼까요
+- `theory`: 원리, 개념, 구조, 설명, 특징, 문법, 알고리즘
+- `practice`: 실습, 따라하기, 조립, 코딩, 설정, 만들기, 미션, 활동
+- `ethics`: 윤리, 사례, 활용, 저작권, 개인정보, 안전, 책임, 오용, 한계
+- `wrapup`: 정리, 회고, 퀴즈, 발표, 오늘 배운 것, 다음 시간
+
+강사는 Builder에서 자동 분류 결과를 수동으로 수정할 수 있습니다.
+
+---
+
+## Interaction Generator
+
+외부 AI API는 사용하지 않습니다.
+interaction 초안은 브라우저에서 **규칙 기반**으로 생성되며, 생성 후 강사가 직접 수정할 수 있습니다.
+
+생성 유틸:
+
+- [src/utils/interactionGenerator.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/interactionGenerator.ts>)
+- `generateInteractionsFromSlides(slides, options)`
+
+옵션:
+
+- `subjectType`: `ai | robot | making | coding | mixed`
+- `audienceLevel`: `elementary | middle | high | university`
+- `density`: `low | medium | high`
+
+대표 규칙:
+
+- `intro`에서 prior-knowledge / prediction / confidence-check 생성
+- `theory`에서 concept-check / confidence-check 생성
+- `practice` 시작 전 readiness-check 자동 생성
+- practice slide가 3장 이상이면 progress-check 자동 생성
+- ethics slide가 있으면 ethics-case 자동 생성
+- 마지막 2~3장을 기준으로 exit-ticket 생성
+
+---
+
+## Runtime Model
+
+기존 `choice / text` 질문은 그대로 유지하면서 V2 타입을 확장합니다.
+
+지원 input type:
+
+- `choice`
+- `text`
+- `multi`
+- `scale`
+- `status`
+
+답변 저장 구조:
+
+- 기존 `answer`, `answerText` 유지
+- V2 optional 필드 추가:
+  - `answerKind`
+  - `answerValue`
+  - `answerValues`
+  - `displayAnswer`
+
+하위 호환성 원칙:
+
+- 기존 answer docs export 가능
+- 기존 Student/Admin/Display 흐름 유지
+- V1 question doc도 fallback으로 동작
+
+관련 파일:
+
+- [src/firebase/types.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/firebase/types.ts>)
+- [src/firebase/answers.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/firebase/answers.ts>)
+- [src/utils/questionRuntime.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/questionRuntime.ts>)
+- [src/utils/stats.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/stats.ts>)
+
+---
+
+## Visibility Model
+
+질문 결과 visibility는 다음 3단계입니다.
+
+- `public`
+- `teacher-only`
+- `hidden`
+
+동작 원칙:
+
+- `public`: Display에 표시 가능
+- `teacher-only`: Admin에서만 집계
+- `hidden`: Display 비노출
+
+예시:
+
+- intro/theory 기본값은 `public`
+- readiness-check, progress-check, troubleshoot 기본값은 `teacher-only`
+- exit-ticket은 기본적으로 `hidden` 또는 강사 판단에 따라 조정 가능
+
+---
+
+## Sharing And Permissions
+
+V2는 기존 **admin allowlist** 구조를 유지하면서 `teacher` role을 추가합니다.
+
+### admin
+
+- Firebase Email/Password 로그인
+- allowlist 이메일 기준 전역 관리자
+- 전체 `users`, `lessonTemplates`, `sessions`, `answers` read/write/delete 가능
+
+### teacher
+
+- Firebase Email/Password 로그인
+- `users/{uid}`에 `role: "teacher"` 프로필 저장
+- 자기 lesson template 생성/수정/삭제 가능
+- 같은 조직의 `org` template와 전체 `shared` template read 가능
+- 자기 session read/write 가능
+- 자기 session answer read 가능
+- 응답 숨김/삭제 같은 전역 moderation은 admin allowlist 계정에서 수행
+
+### student
+
+- Firebase Anonymous Auth 유지
+- `session`, `question` 문서 read 가능
+- 자기 `answer` 문서 create/update 가능
+- 다른 학생 `answer` read 불가
+
+### template visibility
+
+- `private`: 작성자 본인만 사용
+- `org`: 같은 `organizationId`의 강사에게 공개
+- `shared`: 조직을 넘어 모든 강사에게 공개
+- legacy `shared: true` 문서는 하위 호환을 위해 계속 read 가능
+
+권한 규칙 파일:
+
+- [firestore.rules](</C:/Users/User/Documents/Jindex/doro-survey/firestore.rules>)
+
+인덱스:
+
+- [firestore.indexes.json](</C:/Users/User/Documents/Jindex/doro-survey/firestore.indexes.json>)
+
+---
+
+## Routes
+
+GitHub Pages 배포를 위해 `HashRouter`를 유지합니다.
+
+| Route | Description |
+|------|------|
+| `/` | Home |
+| `/library` | lesson template library |
+| `/builder` | 새 lesson template 작성 |
+| `/builder/:templateId` | 기존 template 편집 |
+| `/session-new` | template 기반 live session 생성 |
+| `/student?session=<id>` | 학생 참여 화면 |
+| `/admin?session=<id>` | 강사 운영 화면 |
+| `/display?session=<id>` | 발표 화면 |
+| `/planner` | 기존 링크 호환용 alias, 현재 library로 연결 |
+
+라우터 정의:
+
+- [src/app/router.tsx](</C:/Users/User/Documents/Jindex/doro-survey/src/app/router.tsx>)
+
+---
+
+## Data Model
+
+기존 live survey 세션 구조는 유지하면서 V2 컬렉션을 추가하는 방식입니다.
+
+기존 세션 구조:
+
+```text
+sessions/{sessionId}
+sessions/{sessionId}/questions/{questionId}
+sessions/{sessionId}/questions/{questionId}/answers/{uid}
+```
+
+V2 추가 컬렉션:
+
+```text
+users/{uid}
+lessonTemplates/{templateId}
+lessonTemplates/{templateId}/slides/{slideId}
+lessonTemplates/{templateId}/interactions/{interactionId}
+```
+
+핵심 타입 정의:
+
+- `LessonTemplateDoc`
+- `LessonSlideDoc`
+- `LessonInteractionDoc`
+- `UserProfileDoc`
+
+참고:
+
+- [src/firebase/types.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/firebase/types.ts>)
+
+---
+
+## Tech Stack
+
+| 항목 | 내용 |
+|------|------|
+| 프레임워크 | React 19 + TypeScript |
+| 번들러 | Vite |
+| 라우터 | React Router + HashRouter |
+| 데이터 | Firebase Firestore |
+| 인증 | 학생: Anonymous Auth / 강사: Email + Password |
+| 차트 | Recharts |
+| QR | qrcode.react |
+| PPTX 분석 | jszip, fast-xml-parser |
+| ID 생성 | nanoid |
+| 배포 | GitHub Pages |
+
+---
+
+## Local Development
 
 ```bash
-# 저장소 복제
 git clone https://github.com/Jinhan0603/doro-survey.git
 cd doro-survey
-
-# 패키지 설치
 npm install
-
-# 개발 서버 실행 (Firebase 없이도 미리보기 가능)
 npm run dev
 ```
 
-브라우저에서 `http://localhost:5173/doro-survey/` 접속
+기본 접속 주소:
 
-### Firebase 연결 (실제 데이터 사용 시)
+```text
+http://localhost:5173/doro-survey/
+```
 
-`.env.example` 파일을 복사해서 `.env` 파일을 만들고 Firebase 프로젝트 설정값을 입력하세요.
+---
+
+## Environment Variables
+
+`.env.example`를 복사해 `.env` 파일을 만들고 Firebase 설정값을 입력합니다.
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` 파일 내용:
-
-```
+```env
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...
 VITE_FIREBASE_PROJECT_ID=...
 VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
-VITE_DEFAULT_SESSION_ID=robot-startup-2026
+VITE_DEFAULT_SESSION_ID=doro-tech-class-2026
 VITE_APP_NAME=DORO Live Survey
 ```
 
-### 빌드 및 배포
+---
+
+## Build
 
 ```bash
-npm run build       # 빌드 확인
-git push origin main  # main에 push하면 GitHub Actions가 자동 배포
+npm run build
 ```
+
+현재 저장소는 최종 반영 시점 기준으로 `npm run build` 통과를 유지합니다.
 
 ---
 
-## 기술 스택
+## Security And Constraints
 
-| 항목 | 내용 |
-|------|------|
-| 프레임워크 | React 19 + TypeScript |
-| 빌드 도구 | Vite |
-| 백엔드 | Firebase (Firestore + Auth) |
-| 배포 | GitHub Pages (GitHub Actions 자동 배포) |
-| 인증 | 학생: 익명 로그인 / 강사: Email + Password |
-
----
-
-## 프로젝트 구조
-
-```
-src/
-├── pages/          # 학생(Student), 관리자(Admin), 발표(Display), 홈(Home) 페이지
-├── components/
-│   ├── admin/      # 질문 목록, 운영 제어, QR 패널, 응답 테이블
-│   ├── common/     # 공용 Button, Card, Badge, Input
-│   ├── display/    # 발표용 결과 차트, 답변 월
-│   ├── layout/     # AppShell, PageHeader (공통 레이아웃)
-│   └── survey/     # 질문 카드, 객관식, 주관식, 대기 상태
-├── firebase/       # Firestore CRUD, Auth, 타입 정의
-├── hooks/          # useAuth, useSession, useActiveQuestion, useAnswers
-├── data/           # 미리보기용 더미 데이터, seed 질문 세트
-└── styles/         # global.css (Apple-inspired 디자인 시스템)
-```
-
+- admin 비밀번호를 프론트 코드에 저장하지 않습니다.
+- admin allowlist는 유지하고 teacher는 Firestore role 문서로 확장합니다.
+- `dangerouslySetInnerHTML`을 사용하지 않습니다.
+- 학생 텍스트 답변은 300자 이내로 제한합니다.
+- 입력은 trim 처리합니다.
+- PPTX 원본 파일은 브라우저에서만 읽고 서버에 저장하지 않습니다.
+- Firebase Storage는 사용하지 않습니다.
+- Cloud Functions나 별도 백엔드를 추가하지 않습니다.
 
 ---
 
-## V2 데이터 구조 안내
+## Notes
 
-**V2 is additive and preserves existing session data.**
-
-- 기존 `sessions/{sessionId}/questions/{questionId}/answers/{uid}` 구조는 변경되지 않습니다.
-- V1 데이터를 수정/삭제/이동하지 않습니다.
-- V2는 새 컬렉션을 추가하는 방식으로 구현됩니다 (additive migration).
-
-### 새 컬렉션 (V2)
-
-| 컬렉션 | 설명 |
-|--------|------|
-| `lessonTemplates/{templateId}` | 수업 템플릿 메타데이터 |
-| `lessonTemplates/{templateId}/interactions/{interactionId}` | 각 인터랙션 (질문) 정의 |
-| `lessonTemplates/{templateId}/slides/{slideId}` | 슬라이드 정보 |
-| `users/{uid}` | 사용자 프로필 (강사/관리자) |
-
-### schemaVersion
-
-- V1 기존 세션 문서: `schemaVersion` 필드 없음 — 정상 동작 유지
-- V2 새 문서: `schemaVersion: 2`
+- Display 화면은 현재 이메일 로그인된 강사/관리자 브라우저 컨텍스트에서 사용합니다.
+- Student 익명 로그인과 Teacher/Admin 이메일 로그인을 분리해 동작합니다.
+- `/student`, `/admin`, `/display` 기존 런타임은 V2 타입 추가 이후에도 하위 호환을 유지하도록 설계했습니다.

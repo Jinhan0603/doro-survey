@@ -22,6 +22,21 @@ const PlannerPage = lazy(async () => {
   return { default: module.PlannerPage };
 });
 
+const LessonTemplateLibraryPage = lazy(async () => {
+  const module = await import('../pages/LessonTemplateLibraryPage');
+  return { default: module.LessonTemplateLibraryPage };
+});
+
+const LessonTemplateBuilderPage = lazy(async () => {
+  const module = await import('../pages/LessonTemplateBuilderPage');
+  return { default: module.LessonTemplateBuilderPage };
+});
+
+const NewLessonSessionPage = lazy(async () => {
+  const module = await import('../pages/NewLessonSessionPage');
+  return { default: module.NewLessonSessionPage };
+});
+
 const NotFoundPage = lazy(async () => {
   const module = await import('../pages/NotFoundPage');
   return { default: module.NotFoundPage };
@@ -34,6 +49,10 @@ export function AppRouter() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/planner" element={<PlannerPage />} />
+          <Route path="/library" element={<LessonTemplateLibraryPage />} />
+          <Route path="/builder" element={<LessonTemplateBuilderPage />} />
+          <Route path="/builder/:templateId" element={<LessonTemplateBuilderPage />} />
+          <Route path="/session-new" element={<NewLessonSessionPage />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/display" element={<DisplayPage />} />

@@ -10,7 +10,7 @@ import { seedQuestions } from '../data/seedQuestions';
 import { defaultSessionId, requireDb } from './client';
 import type { SeedQuestion, SessionDoc } from './types';
 
-export const DEFAULT_SESSION_TITLE = '로봇으로 창업하기';
+export const DEFAULT_SESSION_TITLE = 'DORO 기술 실습 수업';
 
 function getSessionRef(sessionId: string) {
   return doc(requireDb(), 'sessions', sessionId);
@@ -52,6 +52,10 @@ export async function seedSession(
   sessionId = defaultSessionId,
   title = DEFAULT_SESSION_TITLE,
   questions: SeedQuestion[] = seedQuestions,
+  owner?: {
+    uid?: string;
+    organizationId?: string;
+  },
 ) {
   const database = requireDb();
   const batch = writeBatch(database);
@@ -64,6 +68,8 @@ export async function seedSession(
       activeQuestionId,
       accepting: false,
       showResults: false,
+      ownerUid: owner?.uid ?? null,
+      organizationId: owner?.organizationId ?? null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },

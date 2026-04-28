@@ -1,4 +1,65 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "lessonTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lessonTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "templateVisibility",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "organizationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lessonTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "templateVisibility",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "lessonTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "shared",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

@@ -13,6 +13,8 @@ export type SessionDoc = {
   showResults: boolean;
   templateId?: string | null;
   currentPhase?: LessonPhase | null;
+  ownerUid?: string | null;
+  organizationId?: string | null;
   schemaVersion?: number;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
@@ -33,6 +35,8 @@ export type QuestionDoc = {
   inputType?: QuestionInputType | null;
   visibility?: ResultVisibility | null;
   purpose?: InteractionPurpose | null;
+  presenterNote?: string | null;
+  timingLabel?: string | null;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 };
@@ -42,6 +46,10 @@ export type AnswerDoc = {
   nickname: string;
   answer: string | null;
   answerText: string | null;
+  answerKind?: QuestionInputType | null;
+  answerValue?: string | null;
+  answerValues?: string[] | null;
+  displayAnswer?: string | null;
   approved: boolean;
   hidden: boolean;
   createdAt?: Timestamp | null;
@@ -60,6 +68,8 @@ export type InteractionPurpose = 'learning' | 'ops' | 'reflection';
 
 export type ResultVisibility = 'public' | 'teacher-only' | 'hidden';
 
+export type TemplateVisibility = 'private' | 'org' | 'shared';
+
 export type InteractionType =
   | 'prior-knowledge'
   | 'prediction'
@@ -73,6 +83,8 @@ export type InteractionType =
 
 export type QuestionInputType = 'choice' | 'text' | 'multi' | 'scale' | 'status';
 
+export type AnswerKind = QuestionInputType;
+
 export type UserRole = 'admin' | 'teacher';
 
 // ──────────────────────────────────────────────────────────────
@@ -82,10 +94,16 @@ export type UserRole = 'admin' | 'teacher';
 export type LessonTemplateDoc = {
   id: string;
   ownerUid: string;
+  organizationId?: string | null;
   title: string;
   subject: string;
   description: string;
   shared: boolean;
+  templateVisibility?: TemplateVisibility | null;
+  targetGrade?: string | null;
+  toolTags?: string[] | null;
+  slideCount?: number | null;
+  interactionCount?: number | null;
   schemaVersion: 2;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
@@ -97,6 +115,9 @@ export type LessonSlideDoc = {
   phase: LessonPhase;
   title: string;
   content: string;
+  slideNumber?: number | null;
+  detectedPhase?: LessonPhase | null;
+  phaseConfidence?: number | null;
   imageUrl?: string | null;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
@@ -114,6 +135,8 @@ export type LessonInteractionDoc = {
   prompt: string;
   choices: string[];
   maxLength: number;
+  presenterNote?: string | null;
+  timingLabel?: string | null;
   schemaVersion: 2;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
@@ -124,6 +147,7 @@ export type UserProfileDoc = {
   email: string;
   displayName: string;
   role: UserRole;
+  organizationId?: string | null;
   schemaVersion: 2;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;

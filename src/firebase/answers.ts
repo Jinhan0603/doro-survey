@@ -13,15 +13,17 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { requireDb } from './client';
-import type { AnswerDoc, QuestionType } from './types';
+import type { AnswerDoc, AnswerKind } from './types';
 
 type UpsertAnswerInput = {
   sessionId: string;
   questionId: string;
   uid: string;
   nickname: string;
-  questionType: QuestionType;
-  value: string;
+  answerKind: AnswerKind;
+  value?: string | null;
+  values?: string[];
+  displayAnswer: string;
 };
 
 type UpdateAnswerModerationInput = {
@@ -44,12 +46,17 @@ export function subscribeAnswers(
   sessionId: string,
   questionId: string,
   callback: (answers: AnswerDoc[]) => void,
+  onError?: (error: Error) => void,
 ): Unsubscribe {
   const answersQuery = query(getAnswersCollection(sessionId, questionId), orderBy('updatedAt', 'desc'));
 
-  return onSnapshot(answersQuery, (snapshot) => {
-    callback(snapshot.docs.map((documentSnapshot) => documentSnapshot.data() as AnswerDoc));
-  });
+  return onSnapshot(
+    answersQuery,
+    (snapshot) => {
+      callback(snapshot.docs.map((documentSnapshot) => documentSnapshot.data() as AnswerDoc));
+    },
+    (error) => onError?.(error),
+  );
 }
 
 export function subscribeOwnAnswer(
@@ -57,10 +64,15 @@ export function subscribeOwnAnswer(
   questionId: string,
   uid: string,
   callback: (answer: AnswerDoc | null) => void,
+  onError?: (error: Error) => void,
 ): Unsubscribe {
-  return onSnapshot(getAnswerRef(sessionId, questionId, uid), (snapshot) => {
-    callback(snapshot.exists() ? (snapshot.data() as AnswerDoc) : null);
-  });
+  return onSnapshot(
+    getAnswerRef(sessionId, questionId, uid),
+    (snapshot) => {
+      callback(snapshot.exists() ? (snapshot.data() as AnswerDoc) : null);
+    },
+    (error) => onError?.(error),
+  );
 }
 
 export async function upsertAnswer({
@@ -68,19 +80,36 @@ export async function upsertAnswer({
   questionId,
   uid,
   nickname,
-  questionType,
-  value,
+  answerKind,
+  value = null,
+  values = [],
+  displayAnswer,
 }: UpsertAnswerInput) {
   const answerRef = getAnswerRef(sessionId, questionId, uid);
   const existing = await getDoc(answerRef);
   const trimmedNickname = nickname.trim();
-  const trimmedValue = value.trim();
+  const trimmedValue = value?.trim() ?? null;
+  const trimmedValues = values.map((item) => item.trim()).filter(Boolean);
+  const normalizedDisplayAnswer = displayAnswer.trim();
+
+  const legacyAnswer =
+    answerKind === 'text'
+      ? null
+      : answerKind === 'multi'
+        ? trimmedValues.join(' | ')
+        : trimmedValue;
+
+  const legacyAnswerText = answerKind === 'text' ? trimmedValue : null;
 
   const basePayload: Omit<AnswerDoc, 'createdAt' | 'updatedAt'> = {
     uid,
     nickname: trimmedNickname,
-    answer: questionType === 'choice' ? trimmedValue : null,
-    answerText: questionType === 'text' ? trimmedValue : null,
+    answer: legacyAnswer,
+    answerText: legacyAnswerText,
+    answerKind,
+    answerValue: answerKind === 'multi' ? null : trimmedValue,
+    answerValues: answerKind === 'multi' ? trimmedValues : null,
+    displayAnswer: normalizedDisplayAnswer,
     approved: false,
     hidden: false,
   };
@@ -97,6 +126,15 @@ export async function upsertAnswer({
     ...basePayload,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  }).catch(async (error: unknown) => {
+    // If two tabs submit the first answer at nearly the same time, the second
+    // write can be evaluated as an update after the first create wins.
+    await updateDoc(answerRef, {
+      ...basePayload,
+      updatedAt: serverTimestamp(),
+    }).catch(() => {
+      throw error;
+    });
   });
 }
 

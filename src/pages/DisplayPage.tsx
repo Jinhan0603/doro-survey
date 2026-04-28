@@ -2,6 +2,7 @@ import { type ReactNode, useMemo, useState } from 'react';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
+import { StatusSummary } from '../components/common/StatusSummary';
 import { AppShell } from '../components/layout/AppShell';
 import { AnswerWall } from '../components/display/AnswerWall';
 import { DisplayStage } from '../components/display/DisplayStage';
@@ -17,7 +18,8 @@ import {
   previewQuestions,
   previewTextAnswers,
 } from '../data/previewQuestions';
-import { buildChoiceResults, getApprovedTextAnswers } from '../utils/stats';
+import { buildChoiceResults, buildStatusResults, getApprovedTextAnswers } from '../utils/stats';
+import { getQuestionInputType, getQuestionResultVisibility, isDisplayableQuestion } from '../utils/questionRuntime';
 
 type DisplayMode = 'choice' | 'text' | 'collecting';
 
@@ -105,8 +107,11 @@ function DisplayPreview() {
 export function DisplayPage() {
   const sessionId = useSessionId();
   const { user, loading: authLoading } = useAuth();
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId);
-  const { answers } = useAnswers(sessionId, activeQuestion?.id);
+  const hasTeacherAuth = Boolean(user?.email);
+  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, {
+    enabled: !authLoading && hasTeacherAuth,
+  });
+  const { answers, error: answersError } = useAnswers(sessionId, hasTeacherAuth ? activeQuestion?.id : undefined);
 
   if (!firebaseConfigStatus.isConfigured) {
     return <DisplayPreview />;
@@ -120,11 +125,13 @@ export function DisplayPage() {
     );
   }
 
-  if (!user) {
+  if (!hasTeacherAuth) {
     return (
       <AppShell compact title="발표 화면">
         <Card className="banner-card banner-card--error">
-          먼저 Admin 화면에서 로그인한 뒤 이 화면을 다시 열어주세요.
+          {user && !user.email
+            ? '학생 익명 로그인 상태입니다. 먼저 Admin 화면에서 강사 계정으로 로그인한 뒤 이 화면을 다시 열어주세요.'
+            : '먼저 Admin 화면에서 로그인한 뒤 이 화면을 다시 열어주세요.'}
         </Card>
       </AppShell>
     );
@@ -136,12 +143,23 @@ export function DisplayPage() {
     content = (
       <WaitingState description="잠시만 기다려주세요." title="질문과 답변을 불러오는 중입니다" />
     );
-  } else if (error) {
-    content = <Card className="banner-card banner-card--error">{error}</Card>;
+  } else if (error || answersError) {
+    content = <Card className="banner-card banner-card--error">{error ?? answersError}</Card>;
   } else if (!session || !activeQuestion) {
     content = (
       <Card className="banner-card">
         Admin에서 세션을 seed 하고 현재 질문을 열면 이 화면이 자동으로 연결됩니다.
+      </Card>
+    );
+  } else if (!isDisplayableQuestion(activeQuestion)) {
+    content = (
+      <Card className="collecting-stage" tone="muted">
+        <strong>발표 화면 비노출 질문</strong>
+        <span>
+          {getQuestionResultVisibility(activeQuestion) === 'teacher-only'
+            ? '이 질문 결과는 강사 화면에서만 집계됩니다.'
+            : '이 질문 결과는 발표 화면에 표시되지 않습니다.'}
+        </span>
       </Card>
     );
   } else if (!session.showResults) {
@@ -153,18 +171,7 @@ export function DisplayPage() {
         <span>결과 공개를 누르면 그래프 또는 승인 답변이 나타납니다.</span>
       </Card>
     );
-  } else if (activeQuestion.type === 'choice') {
-    content = (
-      <DisplayStage
-        prompt={activeQuestion.prompt}
-        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
-        responseCount={answers.length}
-        title={activeQuestion.title}
-      >
-        <ResultChart data={buildChoiceResults(activeQuestion, answers)} />
-      </DisplayStage>
-    );
-  } else {
+  } else if (getQuestionInputType(activeQuestion) === 'text') {
     const approvedAnswers = getApprovedTextAnswers(answers);
     content = (
       <DisplayStage
@@ -174,6 +181,33 @@ export function DisplayPage() {
         title={activeQuestion.title}
       >
         <AnswerWall answers={approvedAnswers} />
+      </DisplayStage>
+    );
+  } else if (getQuestionInputType(activeQuestion) === 'status') {
+    content = (
+      <DisplayStage
+        prompt={activeQuestion.prompt}
+        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
+        responseCount={answers.length}
+        title={activeQuestion.title}
+      >
+        <StatusSummary
+          items={buildStatusResults(activeQuestion, answers).map((item) => ({
+            label: item.name,
+            value: item.value,
+          }))}
+        />
+      </DisplayStage>
+    );
+  } else {
+    content = (
+      <DisplayStage
+        prompt={activeQuestion.prompt}
+        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
+        responseCount={answers.length}
+        title={activeQuestion.title}
+      >
+        <ResultChart data={buildChoiceResults(activeQuestion, answers)} />
       </DisplayStage>
     );
   }

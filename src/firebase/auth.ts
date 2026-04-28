@@ -48,7 +48,7 @@ export async function signInAdminWithEmail(email: string, password: string) {
     return await signInWithEmailAndPassword(requireAuth(), email.trim(), password);
   } catch (error) {
     throw new Error(
-      formatAuthError(error, '관리자 로그인에 실패했습니다. 이메일/비밀번호 계정과 인증 설정을 확인해주세요.'),
+      formatAuthError(error, '강사 로그인에 실패했습니다. 이메일/비밀번호 계정과 인증 설정을 확인해주세요.'),
     );
   }
 }

@@ -27,13 +27,26 @@ export function useAnswers(sessionId: string, questionId: string | null | undefi
       return undefined;
     }
 
-    return subscribeAnswers(sessionId, questionId, (answers) => {
-      setState((current) => ({
-        answers,
-        loading: false,
-        error: current.error,
-      }));
-    });
+    setState((current) => ({ ...current, loading: true, error: null }));
+
+    return subscribeAnswers(
+      sessionId,
+      questionId,
+      (answers) => {
+        setState({
+          answers,
+          loading: false,
+          error: null,
+        });
+      },
+      (error) => {
+        setState((current) => ({
+          answers: current.answers,
+          loading: false,
+          error: error.message,
+        }));
+      },
+    );
   }, [questionId, sessionId]);
 
   if (!firebaseConfigStatus.isConfigured || !questionId) {
@@ -63,13 +76,27 @@ export function useOwnAnswer(
       return undefined;
     }
 
-    return subscribeOwnAnswer(sessionId, questionId, uid, (answer) => {
-      setState((current) => ({
-        answer,
-        loading: false,
-        error: current.error,
-      }));
-    });
+    setState((current) => ({ ...current, loading: true, error: null }));
+
+    return subscribeOwnAnswer(
+      sessionId,
+      questionId,
+      uid,
+      (answer) => {
+        setState({
+          answer,
+          loading: false,
+          error: null,
+        });
+      },
+      (error) => {
+        setState((current) => ({
+          answer: current.answer,
+          loading: false,
+          error: error.message,
+        }));
+      },
+    );
   }, [questionId, sessionId, uid]);
 
   if (!firebaseConfigStatus.isConfigured || !questionId || !uid) {

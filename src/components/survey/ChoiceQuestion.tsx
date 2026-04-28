@@ -1,14 +1,21 @@
+import clsx from 'clsx';
 import { Button } from '../common/Button';
 
 type ChoiceQuestionProps = {
   choices: string[];
   selectedChoice?: string;
+  layout?: 'stack' | 'compact';
   onSelect(choice: string): void;
 };
 
-export function ChoiceQuestion({ choices, selectedChoice, onSelect }: ChoiceQuestionProps) {
+export function ChoiceQuestion({
+  choices,
+  selectedChoice,
+  layout = 'stack',
+  onSelect,
+}: ChoiceQuestionProps) {
   return (
-    <div className="choice-grid">
+    <div className={clsx('choice-grid', layout === 'compact' && 'choice-grid--compact')}>
       {choices.map((choice) => {
         const active = choice === selectedChoice;
 

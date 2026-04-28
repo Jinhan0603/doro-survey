@@ -59,7 +59,7 @@ if (firebaseConfigStatus.isConfigured) {
 }
 
 export { app, auth, db };
-export const defaultSessionId = import.meta.env.VITE_DEFAULT_SESSION_ID?.trim() || 'robot-startup-2026';
+export const defaultSessionId = import.meta.env.VITE_DEFAULT_SESSION_ID?.trim() || 'doro-tech-class-2026';
 export const appName = import.meta.env.VITE_APP_NAME?.trim() || 'DORO Live Survey';
 
 export function getFirebaseConfigError() {

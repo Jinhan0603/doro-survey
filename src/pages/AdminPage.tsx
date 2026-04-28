@@ -7,21 +7,30 @@ import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
+import { StatusSummary } from '../components/common/StatusSummary';
 import { AppShell } from '../components/layout/AppShell';
 import { WaitingState } from '../components/survey/WaitingState';
 import { signInAdminWithEmail, signOutUser } from '../firebase/auth';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { appName, firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
-import { type QuestionDoc } from '../firebase/types';
+import { inferRoleFromEmail } from '../firebase/users';
+import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useAuth } from '../hooks/useAuth';
+import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
 import { previewAnswerRows, previewQuestions } from '../data/previewQuestions';
 import { seedQuestions } from '../data/seedQuestions';
 import { downloadCsv } from '../utils/csv';
-import { formatTimestamp, getAnswerSummary } from '../utils/stats';
+import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
+import {
+  getDisplayAnswer,
+  getQuestionInputType,
+  getQuestionResultVisibility,
+  isModeratedQuestion,
+} from '../utils/questionRuntime';
 import { buildAppUrl } from '../utils/urls';
 
 function AdminPreview() {
@@ -30,7 +39,7 @@ function AdminPreview() {
   const [showResults, setShowResults] = useState(false);
 
   const activeQuestion = previewQuestions.find((q) => q.id === activeQuestionId) ?? previewQuestions[0];
-  const studentUrl = useMemo(() => buildAppUrl('/student', 'robot-startup-2026'), []);
+  const studentUrl = useMemo(() => buildAppUrl('/student', 'doro-tech-class-2026'), []);
 
   return (
     <AppShell
@@ -110,10 +119,12 @@ function AdminPreview() {
 export function AdminPage() {
   const sessionId = useSessionId();
   const { user, loading: authLoading } = useAuth();
+  const hasTeacherAuth = Boolean(user?.email);
+  const { profile } = useUserProfile(user?.uid);
   // Wait for auth before subscribing — Firestore rules require isSignedIn()
-  const firestoreEnabled = !authLoading && !!user;
+  const firestoreEnabled = !authLoading && hasTeacherAuth;
   const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
-  const { answers } = useAnswers(sessionId, activeQuestion?.id);
+  const { answers, error: answersError } = useAnswers(sessionId, activeQuestion?.id);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
@@ -129,6 +140,26 @@ export function AdminPage() {
   const displayQuestions = questions.length > 0 ? questions : seedQuestions;
   const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
   const hiddenCount = answers.filter((a) => a.hidden).length;
+  const activeInputType = activeQuestion ? getQuestionInputType(activeQuestion) : null;
+  const activeVisibility: ResultVisibility = activeQuestion
+    ? getQuestionResultVisibility(activeQuestion)
+    : 'public';
+  const moderatedQuestion = activeQuestion ? isModeratedQuestion(activeQuestion) : false;
+  const statusResults = activeQuestion && activeInputType === 'status'
+    ? buildStatusResults(activeQuestion, answers)
+    : [];
+  const needHelpCount = statusResults.find((item) => item.name === 'need_help')?.value ?? 0;
+  const completedCount =
+    (statusResults.find((item) => item.name === 'done')?.value ?? 0) +
+    (statusResults.find((item) => item.name === 'ready')?.value ?? 0);
+  const controlNote = activeQuestion
+    ? activeVisibility === 'teacher-only'
+      ? '이 질문 결과는 Admin에서만 집계되며 Display에는 공개되지 않습니다.'
+      : activeVisibility === 'hidden'
+        ? '이 질문 결과는 Display에 표시되지 않습니다.'
+        : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.'
+    : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.';
+  const canManageAnswerDocs = (profile?.role ?? inferRoleFromEmail(user?.email)) === 'admin';
 
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
     value ? onLabel : offLabel;
@@ -153,7 +184,7 @@ export function AdminPage() {
       setAuthError(null);
       await signInAdminWithEmail(email, password);
     } catch (nextError) {
-      setAuthError(nextError instanceof Error ? nextError.message : '관리자 로그인에 실패했습니다.');
+      setAuthError(nextError instanceof Error ? nextError.message : '강사 로그인에 실패했습니다.');
     } finally {
       setBusy(false);
     }
@@ -161,7 +192,10 @@ export function AdminPage() {
 
   const handleSeed = async () => {
     await runAdminAction(
-      () => seedSession(sessionId),
+      () => seedSession(sessionId, undefined, undefined, {
+        uid: user?.uid,
+        organizationId: profile?.organizationId ?? 'dorossaem',
+      }),
       '세션과 기본 질문 12개를 Firestore에 업로드했습니다.',
     );
   };
@@ -202,12 +236,14 @@ export function AdminPage() {
   const handleExportCsv = (question: QuestionDoc) => {
     downloadCsv(
       `${sessionId}-${question.id}-answers.csv`,
-      ['uid', 'nickname', 'type', 'answer', 'approved', 'hidden'],
+      ['uid', 'nickname', 'type', 'inputType', 'answer', 'displayAnswer', 'approved', 'hidden'],
       answers.map((a) => [
         a.uid,
         a.nickname,
         question.type,
-        getAnswerSummary(question, a),
+        getQuestionInputType(question),
+        a.answer ?? a.answerText ?? a.answerValue ?? a.answerValues?.join(' | ') ?? '',
+        getDisplayAnswer(a),
         a.approved,
         a.hidden,
       ]),
@@ -220,16 +256,20 @@ export function AdminPage() {
         nickname: answer.nickname,
         answer: getAnswerSummary(activeQuestion, answer),
         statusLabel:
-          activeQuestion.type === 'text'
+          moderatedQuestion
             ? answer.hidden
               ? '숨김'
               : answer.approved
                 ? '승인됨'
                 : '검토 필요'
-            : '집계됨',
+            : activeVisibility === 'teacher-only'
+              ? '강사용 집계'
+              : activeVisibility === 'hidden'
+                ? '비공개 집계'
+                : '집계됨',
         submittedAt: formatTimestamp(answer.updatedAt ?? answer.createdAt),
         actions:
-          activeQuestion.type === 'text' ? (
+          moderatedQuestion && canManageAnswerDocs ? (
             <div className="inline-actions">
               <Button
                 disabled={busy}
@@ -282,16 +322,21 @@ export function AdminPage() {
     );
   }
 
-  if (!user) {
+  if (!hasTeacherAuth) {
     return (
-      <AppShell compact title={`${appName} 관리자 로그인`}>
+      <AppShell compact title={`${appName} 강사 로그인`}>
         <div className="auth-layout">
           <Card className="auth-card">
             <div className="section-heading">
-              <h3>관리자 로그인</h3>
+              <h3>강사 로그인</h3>
               <Badge tone="accent">{sessionId}</Badge>
             </div>
             <div className="stack">
+              {user && !user.email ? (
+                <div className="inline-message inline-message--error">
+                  학생 익명 로그인 상태입니다. 강사 계정으로 다시 로그인해주세요.
+                </div>
+              ) : null}
               <Input
                 autoComplete="email"
                 label="이메일"
@@ -370,19 +415,20 @@ export function AdminPage() {
               <strong>{answers.length}</strong>
             </div>
             <div className="status-tile">
-              <span>승인된 답변</span>
-              <strong>{approvedCount}</strong>
+              <span>{moderatedQuestion ? '승인된 답변' : '질문 타입'}</span>
+              <strong>{moderatedQuestion ? approvedCount : activeInputType ?? '—'}</strong>
             </div>
             <div className="status-tile">
-              <span>숨김 답변</span>
-              <strong>{hiddenCount}</strong>
+              <span>{moderatedQuestion ? '숨김 답변' : '표시 범위'}</span>
+              <strong>{moderatedQuestion ? hiddenCount : activeVisibility}</strong>
             </div>
           </Card>
 
           <AdminControls
             accepting={session?.accepting ?? false}
             disabled={busy}
-            note="현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다."
+            note={controlNote}
+            resultVisibility={activeVisibility}
             showResults={session?.showResults ?? false}
             onToggleAccepting={() => {
               void runAdminAction(
@@ -391,6 +437,9 @@ export function AdminPage() {
               );
             }}
             onToggleResults={() => {
+              if (activeVisibility !== 'public') {
+                return;
+              }
               void runAdminAction(
                 () => updateSession(sessionId, { showResults: !(session?.showResults ?? false) }),
                 `결과 공개를 ${(session?.showResults ?? false) ? '비공개' : '공개'}로 변경했습니다.`,
@@ -407,6 +456,7 @@ export function AdminPage() {
             </div>
             {loading ? <p>질문을 불러오는 중입니다.</p> : null}
             {error ? <div className="inline-message inline-message--error">{error}</div> : null}
+            {answersError ? <div className="inline-message inline-message--error">{answersError}</div> : null}
             {!activeQuestion && !loading ? <p>기본 질문 seed 후 질문을 선택해주세요.</p> : null}
             {activeQuestion ? (
               <>
@@ -432,37 +482,66 @@ export function AdminPage() {
             ) : null}
           </Card>
 
+          {activeQuestion && activeInputType === 'status' ? (
+            <Card className="metric-panel">
+              <div className="section-heading">
+                <h3>
+                  {activeQuestion.interactionType === 'readiness-check'
+                    ? '실습 준비 상태'
+                    : activeQuestion.interactionType === 'progress-check'
+                      ? '실습 진행 상태'
+                      : '상태 집계'}
+                </h3>
+                <Badge tone="accent">{answers.length} responses</Badge>
+              </div>
+              <StatusSummary items={statusResults.map((item) => ({ label: item.name, value: item.value }))} />
+              <div className="inline-message">
+                {activeQuestion.interactionType === 'readiness-check'
+                  ? `ready/done ${completedCount}명, need_help ${needHelpCount}명으로 실습 시작 가능 상태를 빠르게 확인할 수 있습니다.`
+                  : activeQuestion.interactionType === 'progress-check'
+                    ? `done/ready ${completedCount}명, need_help ${needHelpCount}명으로 중간 점검 상태를 빠르게 해석할 수 있습니다.`
+                    : `현재 상태 응답 ${answers.length}개를 Admin에서만 실시간 집계 중입니다.`}
+              </div>
+            </Card>
+          ) : null}
+
           {activeQuestion ? <AnswerTable rows={answerRows} title="실시간 응답" /> : null}
 
-          <div className="danger-zone">
-            <div className="danger-zone__header">
-              <h3 className="danger-zone__title">응답 초기화</h3>
-              <p className="danger-zone__desc">
-                테스트 응답을 삭제하고 수업을 깨끗하게 시작할 수 있습니다.<br />
-                삭제 후에는 되돌릴 수 없습니다. 수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
-              </p>
+          {canManageAnswerDocs ? (
+            <div className="danger-zone">
+              <div className="danger-zone__header">
+                <h3 className="danger-zone__title">응답 초기화</h3>
+                <p className="danger-zone__desc">
+                  테스트 응답을 삭제하고 수업을 깨끗하게 시작할 수 있습니다.<br />
+                  삭제 후에는 되돌릴 수 없습니다. 수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
+                </p>
+              </div>
+              <div className="danger-zone__buttons">
+                <Button
+                  className="button--danger"
+                  disabled={busy || !activeQuestion}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { void handleResetQuestion(); }}
+                >
+                  현재 질문 응답 초기화
+                </Button>
+                <Button
+                  className="button--danger button--danger-strong"
+                  disabled={busy || displayQuestions.length === 0}
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { void handleResetSession(); }}
+                >
+                  전체 응답 초기화
+                </Button>
+              </div>
             </div>
-            <div className="danger-zone__buttons">
-              <Button
-                className="button--danger"
-                disabled={busy || !activeQuestion}
-                size="sm"
-                variant="secondary"
-                onClick={() => { void handleResetQuestion(); }}
-              >
-                현재 질문 응답 초기화
-              </Button>
-              <Button
-                className="button--danger button--danger-strong"
-                disabled={busy || displayQuestions.length === 0}
-                size="sm"
-                variant="secondary"
-                onClick={() => { void handleResetSession(); }}
-              >
-                전체 응답 초기화
-              </Button>
+          ) : (
+            <div className="inline-message">
+              teacher role은 자기 세션 응답을 읽고 집계할 수 있지만, 응답 숨김/삭제 같은 전역 moderation 작업은 admin allowlist 계정에서만 수행합니다.
             </div>
-          </div>
+          )}
         </div>
 
         <div className="stack">

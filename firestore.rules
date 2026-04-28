@@ -13,14 +13,162 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function isAnonymousUser() {
+      return isSignedIn()
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function isEmailUser() {
       return isSignedIn()
         && request.auth.token.email != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isAdmin() {
+      return isEmailUser()
         && request.auth.token.email in adminEmails();
+    }
+
+    function hasCurrentUserProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserOrgMatches(orgId) {
+      return hasCurrentUserProfile()
+        && orgId is string
+        && currentUserDoc().data.organizationId is string
+        && currentUserDoc().data.organizationId == orgId;
     }
 
     function isOwnAnswer(uid) {
       return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function lessonTemplateDoc(templateId) {
+      return get(/databases/$(database)/documents/lessonTemplates/$(templateId));
+    }
+
+    function canReadTemplateData(data) {
+      return isAdmin()
+        || (isEmailUser() && data.ownerUid == request.auth.uid)
+        || (isEmailUser() && data.templateVisibility == 'shared')
+        || (isEmailUser() && data.templateVisibility == 'org' && currentUserOrgMatches(data.organizationId))
+        || (
+          isEmailUser()
+          && data.shared == true
+          && (!data.keys().hasAny(['templateVisibility']) || data.templateVisibility == null)
+        );
+    }
+
+    function canReadTemplate(templateId) {
+      return lessonTemplateDoc(templateId).data != null
+        && canReadTemplateData(lessonTemplateDoc(templateId).data);
+    }
+
+    function canCreateOwnTemplate() {
+      return isEmailUser()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.subject is string
+        && request.resource.data.description is string
+        && (!request.resource.data.keys().hasAny(['templateVisibility'])
+          || request.resource.data.templateVisibility == 'private'
+          || request.resource.data.templateVisibility == 'org'
+          || request.resource.data.templateVisibility == 'shared')
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || request.resource.data.organizationId is string)
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || currentUserOrgMatches(request.resource.data.organizationId))
+        && (!request.resource.data.keys().hasAny(['shared'])
+          || request.resource.data.shared is bool);
+    }
+
+    function canUpdateOwnTemplate() {
+      return isEmailUser()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.ownerUid == request.auth.uid
+        && (!request.resource.data.keys().hasAny(['templateVisibility'])
+          || request.resource.data.templateVisibility == 'private'
+          || request.resource.data.templateVisibility == 'org'
+          || request.resource.data.templateVisibility == 'shared')
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || request.resource.data.organizationId is string)
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || currentUserOrgMatches(request.resource.data.organizationId))
+        && (!request.resource.data.keys().hasAny(['shared'])
+          || request.resource.data.shared is bool);
+    }
+
+    function sessionDoc(sessionId) {
+      return get(/databases/$(database)/documents/sessions/$(sessionId));
+    }
+
+    function isSessionOwner(sessionId) {
+      return isEmailUser()
+        && exists(/databases/$(database)/documents/sessions/$(sessionId))
+        && sessionDoc(sessionId).data.ownerUid == request.auth.uid;
+    }
+
+    function canReadSessionData(data) {
+      return isAdmin()
+        || isAnonymousUser()
+        || (isEmailUser() && data.ownerUid == request.auth.uid);
+    }
+
+    function canCreateOwnSession() {
+      return isEmailUser()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || request.resource.data.organizationId is string)
+        && (!request.resource.data.keys().hasAny(['organizationId'])
+          || request.resource.data.organizationId == null
+          || currentUserOrgMatches(request.resource.data.organizationId));
+    }
+
+    function canUpdateOwnSession() {
+      return isEmailUser()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    function validOwnUserProfile(uid) {
+      return isEmailUser()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'displayName',
+          'role',
+          'organizationId',
+          'schemaVersion',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.organizationId is string
+        && request.resource.data.organizationId.size() > 0
+        && request.resource.data.schemaVersion == 2
+        && (
+          (isAdmin() && request.resource.data.role == 'admin')
+          || (!isAdmin() && request.resource.data.role == 'teacher')
+        );
     }
 
     function validNickname() {
@@ -30,20 +178,53 @@ service cloud.firestore {
     }
 
     function validAnswerShape() {
-      return (!('answer' in request.resource.data) || request.resource.data.answer == null || request.resource.data.answer is string)
+      return (!('answer' in request.resource.data) || request.resource.data.answer == null || (
+          request.resource.data.answer is string
+          && request.resource.data.answer.size() <= 300
+        ))
         && (!('answerText' in request.resource.data) || request.resource.data.answerText == null || (
           request.resource.data.answerText is string
           && request.resource.data.answerText.size() <= 300
+        ))
+        && (!('answerKind' in request.resource.data) || request.resource.data.answerKind == null || (
+          request.resource.data.answerKind == 'choice'
+          || request.resource.data.answerKind == 'text'
+          || request.resource.data.answerKind == 'multi'
+          || request.resource.data.answerKind == 'scale'
+          || request.resource.data.answerKind == 'status'
+        ))
+        && (!('answerValue' in request.resource.data) || request.resource.data.answerValue == null || (
+          request.resource.data.answerValue is string
+          && request.resource.data.answerValue.size() <= 300
+        ))
+        && (!('answerValues' in request.resource.data) || request.resource.data.answerValues == null || (
+          request.resource.data.answerValues is list
+          && request.resource.data.answerValues.size() <= 20
+        ))
+        && (!('displayAnswer' in request.resource.data) || request.resource.data.displayAnswer == null || (
+          request.resource.data.displayAnswer is string
+          && request.resource.data.displayAnswer.size() <= 300
         ));
     }
 
-    function studentCreatesAnswer(uid) {
+    function sessionAcceptsStudentAnswer(sessionId, questionId) {
+      return exists(/databases/$(database)/documents/sessions/$(sessionId))
+        && sessionDoc(sessionId).data.accepting == true
+        && sessionDoc(sessionId).data.activeQuestionId == questionId;
+    }
+
+    function studentCreatesAnswer(sessionId, questionId, uid) {
       return isOwnAnswer(uid)
+        && sessionAcceptsStudentAnswer(sessionId, questionId)
         && request.resource.data.keys().hasOnly([
           'uid',
           'nickname',
           'answer',
           'answerText',
+          'answerKind',
+          'answerValue',
+          'answerValues',
+          'displayAnswer',
           'approved',
           'hidden',
           'createdAt',
@@ -56,12 +237,17 @@ service cloud.firestore {
         && validAnswerShape();
     }
 
-    function studentUpdatesAnswer(uid) {
+    function studentUpdatesAnswer(sessionId, questionId, uid) {
       return isOwnAnswer(uid)
+        && sessionAcceptsStudentAnswer(sessionId, questionId)
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'nickname',
           'answer',
           'answerText',
+          'answerKind',
+          'answerValue',
+          'answerValues',
+          'displayAnswer',
           'updatedAt'
         ])
         && request.resource.data.uid == resource.data.uid
@@ -74,39 +260,49 @@ service cloud.firestore {
         && validAnswerShape();
     }
 
-    match /lessonTemplates/{templateId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-
-      match /slides/{slideId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isAdmin();
-      }
-
-      match /interactions/{interactionId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isAdmin();
-      }
-    }
-
     match /users/{uid} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
-      allow create, update: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow read: if isAdmin() || (isEmailUser() && request.auth.uid == uid);
+      allow create, update: if isAdmin() || validOwnUserProfile(uid);
       allow delete: if isAdmin();
     }
 
+    match /lessonTemplates/{templateId} {
+      allow read: if canReadTemplateData(resource.data);
+      allow create: if isAdmin() || canCreateOwnTemplate();
+      allow update: if isAdmin() || canUpdateOwnTemplate();
+      allow delete: if isAdmin() || (isEmailUser() && resource.data.ownerUid == request.auth.uid);
+
+      match /slides/{slideId} {
+        allow read: if canReadTemplate(templateId);
+        allow create, update, delete: if isAdmin() || (
+          isEmailUser()
+          && lessonTemplateDoc(templateId).data.ownerUid == request.auth.uid
+        );
+      }
+
+      match /interactions/{interactionId} {
+        allow read: if canReadTemplate(templateId);
+        allow create, update, delete: if isAdmin() || (
+          isEmailUser()
+          && lessonTemplateDoc(templateId).data.ownerUid == request.auth.uid
+        );
+      }
+    }
+
     match /sessions/{sessionId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow read: if canReadSessionData(resource.data);
+      allow create: if isAdmin() || canCreateOwnSession();
+      allow update: if isAdmin() || canUpdateOwnSession();
+      allow delete: if isAdmin() || (isEmailUser() && resource.data.ownerUid == request.auth.uid);
 
       match /questions/{questionId} {
-        allow read: if isSignedIn();
-        allow create, update, delete: if isAdmin();
+        allow read: if isAdmin() || isAnonymousUser() || isSessionOwner(sessionId);
+        allow create, update, delete: if isAdmin() || isSessionOwner(sessionId);
 
         match /answers/{uid} {
-          allow read: if isAdmin() || isOwnAnswer(uid);
-          allow create: if isAdmin() || studentCreatesAnswer(uid);
-          allow update: if isAdmin() || studentUpdatesAnswer(uid);
+          allow read: if isAdmin() || isOwnAnswer(uid) || isSessionOwner(sessionId);
+          allow create: if isAdmin() || studentCreatesAnswer(sessionId, questionId, uid);
+          allow update: if isAdmin() || studentUpdatesAnswer(sessionId, questionId, uid);
           allow delete: if isAdmin();
         }
       }

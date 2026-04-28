@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { firebaseConfigStatus } from '../firebase/client';
 import { signInStudentAnonymously } from '../firebase/auth';
 import { upsertAnswer } from '../firebase/answers';
@@ -13,10 +13,12 @@ import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { ChoiceQuestion } from '../components/survey/ChoiceQuestion';
+import { MultiQuestion } from '../components/survey/MultiQuestion';
 import { QuestionCard } from '../components/survey/QuestionCard';
 import { TextQuestion } from '../components/survey/TextQuestion';
 import { WaitingState } from '../components/survey/WaitingState';
 import { previewQuestions } from '../data/previewQuestions';
+import { getAnswerValue, getAnswerValues, getQuestionChoices, getQuestionInputType } from '../utils/questionRuntime';
 
 type PreviewMode = 'choice' | 'text' | 'waiting';
 type SubmitState = 'idle' | 'submitting' | 'success';
@@ -112,7 +114,7 @@ function SubmitSuccess({ onEdit }: { onEdit: () => void }) {
       </div>
       <h2 className="submit-success__heading">답변이 제출되었습니다</h2>
       <p className="submit-success__desc">
-        대표님이 결과를 공개하면<br />함께 확인할 수 있어요.
+        강사님이 결과를 공개하면<br />함께 확인할 수 있어요.
       </p>
       <button className="submit-success__edit" type="button" onClick={onEdit}>
         답변 수정하기
@@ -137,7 +139,7 @@ function StudentPreview() {
     if (mode === 'waiting') {
       return (
         <WaitingState
-          description="대표님이 다음 질문을 열면 자동으로 바뀝니다."
+          description="강사님이 다음 질문을 열면 자동으로 바뀝니다."
           title="다음 질문을 기다리는 중입니다"
         />
       );
@@ -257,6 +259,23 @@ function buildQuestionCard(question: QuestionDoc, children: ReactNode, footer: R
   );
 }
 
+function isSingleSelectInputType(inputType: ReturnType<typeof getQuestionInputType>) {
+  return inputType === 'choice' || inputType === 'scale' || inputType === 'status';
+}
+
+function formatSubmitError(error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+  if (message.includes('permission-denied')) {
+    return '응답 수집이 마감되었거나 현재 질문이 변경되었습니다. 화면을 확인한 뒤 다시 제출해주세요.';
+  }
+
+  if (message.includes('unavailable') || message.includes('network')) {
+    return '네트워크 연결이 불안정합니다. 잠시 후 다시 제출해주세요.';
+  }
+
+  return message || '답변 저장에 실패했습니다.';
+}
+
 type LiveQuestionFormProps = {
   question: QuestionDoc;
   sessionId: string;
@@ -273,48 +292,92 @@ function LiveQuestionForm({
   uid,
 }: LiveQuestionFormProps) {
   const [choiceDraft, setChoiceDraft] = useState<string | null>(null);
+  const [multiDraft, setMultiDraft] = useState<string[] | null>(null);
   const [textDraft, setTextDraft] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const selectedChoice = choiceDraft ?? existingAnswer?.answer ?? '';
+  const submittingRef = useRef(false);
+  const inputType = getQuestionInputType(question);
+  const choices = getQuestionChoices(question);
+  const selectedChoice = choiceDraft ?? (existingAnswer ? getAnswerValue(existingAnswer) : '');
+  const selectedChoices = multiDraft ?? (existingAnswer ? getAnswerValues(existingAnswer) : []);
   const textValue = textDraft ?? existingAnswer?.answerText ?? '';
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+
     const normalizedNickname = normalizeNickname(nickname);
     if (!normalizedNickname) {
       setSubmitError('닉네임을 먼저 입력해주세요.');
       return;
     }
 
-    const rawValue = question.type === 'choice' ? selectedChoice : textValue;
-    const normalizedValue =
-      question.type === 'choice'
-        ? rawValue.trim()
-        : normalizeTextAnswer(rawValue, question.maxLength || 300);
-
-    if (!normalizedValue) {
-      setSubmitError('답변을 입력하거나 선택해주세요.');
-      return;
-    }
-
     try {
+      submittingRef.current = true;
       setSubmitState('submitting');
       setSubmitError(null);
-      await upsertAnswer({
-        sessionId,
-        questionId: question.id,
-        uid,
-        nickname: normalizedNickname,
-        questionType: question.type,
-        value: normalizedValue,
-      });
+
+      if (isSingleSelectInputType(inputType)) {
+        const normalizedValue = selectedChoice.trim();
+        if (!normalizedValue) {
+          setSubmitError('답변을 입력하거나 선택해주세요.');
+          setSubmitState('idle');
+          return;
+        }
+
+        await upsertAnswer({
+          sessionId,
+          questionId: question.id,
+          uid,
+          nickname: normalizedNickname,
+          answerKind: inputType,
+          value: normalizedValue,
+          displayAnswer: normalizedValue,
+        });
+      } else if (inputType === 'multi') {
+        const normalizedValues = selectedChoices.map((item) => item.trim()).filter(Boolean);
+        if (normalizedValues.length === 0) {
+          setSubmitError('하나 이상 선택해주세요.');
+          setSubmitState('idle');
+          return;
+        }
+
+        await upsertAnswer({
+          sessionId,
+          questionId: question.id,
+          uid,
+          nickname: normalizedNickname,
+          answerKind: 'multi',
+          values: normalizedValues,
+          displayAnswer: normalizedValues.join(' | '),
+        });
+      } else {
+        const normalizedValue = normalizeTextAnswer(textValue, question.maxLength || 300);
+        if (!normalizedValue) {
+          setSubmitError('답변을 입력하거나 선택해주세요.');
+          setSubmitState('idle');
+          return;
+        }
+
+        await upsertAnswer({
+          sessionId,
+          questionId: question.id,
+          uid,
+          nickname: normalizedNickname,
+          answerKind: 'text',
+          value: normalizedValue,
+          displayAnswer: normalizedValue,
+        });
+      }
+
       setSubmitState('success');
       setShowSuccess(true);
     } catch (nextError) {
       setSubmitState('idle');
-      setSubmitError(nextError instanceof Error ? nextError.message : '답변 저장에 실패했습니다.');
+      setSubmitError(formatSubmitError(nextError));
+    } finally {
+      submittingRef.current = false;
     }
   };
 
@@ -332,9 +395,13 @@ function LiveQuestionForm({
       ) : null}
       <Button
         fullWidth
-        disabled={
-          isSubmitting || (question.type === 'choice' ? !selectedChoice : !textValue.trim())
-        }
+        disabled={isSubmitting || (
+          isSingleSelectInputType(inputType)
+            ? !selectedChoice
+            : inputType === 'multi'
+              ? selectedChoices.length === 0
+              : !textValue.trim()
+        )}
         size="lg"
         onClick={handleSubmit}
       >
@@ -346,11 +413,49 @@ function LiveQuestionForm({
     </>
   );
 
-  if (question.type === 'choice') {
+  if (inputType === 'choice') {
     return buildQuestionCard(
       question,
       <ChoiceQuestion
-        choices={question.choices}
+        choices={choices}
+        selectedChoice={selectedChoice}
+        onSelect={(value) => {
+          setSubmitError(null);
+          setSubmitState('idle');
+          setChoiceDraft(value);
+        }}
+      />,
+      footer,
+    );
+  }
+
+  if (inputType === 'multi') {
+    return buildQuestionCard(
+      question,
+      <MultiQuestion
+        choices={choices}
+        selectedChoices={selectedChoices}
+        onToggle={(value) => {
+          setSubmitError(null);
+          setSubmitState('idle');
+          setMultiDraft((current) => {
+            const base = current ?? selectedChoices;
+            return base.includes(value)
+              ? base.filter((item) => item !== value)
+              : [...base, value];
+          });
+        }}
+      />,
+      footer,
+    );
+  }
+
+  if (inputType === 'scale' || inputType === 'status') {
+    return buildQuestionCard(
+      question,
+      <ChoiceQuestion
+        choices={choices}
+        layout="compact"
         selectedChoice={selectedChoice}
         onSelect={(value) => {
           setSubmitError(null);
@@ -384,7 +489,7 @@ export function StudentPage() {
   // Wait for auth before subscribing to Firestore — Firestore rules require isSignedIn()
   const firestoreEnabled = !authLoading && !!user;
   const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
-  const { answer: existingAnswer } = useOwnAnswer(sessionId, activeQuestion?.id, user?.uid);
+  const { answer: existingAnswer, error: ownAnswerError } = useOwnAnswer(sessionId, activeQuestion?.id, user?.uid);
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -433,16 +538,16 @@ export function StudentPage() {
       );
     }
 
-    if (authError || error) {
+    if (authError || error || ownAnswerError) {
       return (
-        <Card className="banner-card banner-card--error">{authError ?? error}</Card>
+        <Card className="banner-card banner-card--error">{authError ?? error ?? ownAnswerError}</Card>
       );
     }
 
     if (!session || !activeQuestion) {
       return (
         <WaitingState
-          description="대표님이 질문을 열면 자동으로 표시됩니다."
+          description="강사님이 질문을 열면 자동으로 표시됩니다."
           title="질문을 기다리는 중입니다"
         />
       );
@@ -451,7 +556,7 @@ export function StudentPage() {
     if (!session.accepting) {
       return (
         <WaitingState
-          description="대표님이 다음 질문을 열면 자동으로 바뀝니다."
+          description="강사님이 다음 질문을 열면 자동으로 바뀝니다."
           title="답변이 마감되었습니다"
         />
       );

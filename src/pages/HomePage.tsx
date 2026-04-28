@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { ArrowRight, ClipboardCopy, LayoutTemplate, MonitorPlay, ShieldCheck, Smartphone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  ArrowRight,
+  ClipboardCopy,
+  LayoutTemplate,
+  MonitorPlay,
+  PlayCircle,
+  ShieldCheck,
+  Smartphone,
+} from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
@@ -7,7 +16,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { previewSessionId } from '../data/previewQuestions';
 import { buildAppUrl, buildHashPath } from '../utils/urls';
 
-const REAL_SESSION = 'robot-startup-2026';
+const REAL_SESSION = 'doro-tech-class-2026';
 
 const screens = [
   {
@@ -32,18 +41,18 @@ const screens = [
     badge: '발표용',
   },
   {
-    href: '#/planner',
+    href: '#/library',
     icon: LayoutTemplate,
-    title: '수업 플래너',
-    description: '수업 전에 단계별 질문을 설계하고 템플릿으로 저장합니다. 도입→이론→실습→윤리→마무리 구조로 설계합니다.',
+    title: '템플릿 라이브러리',
+    description: 'lesson template을 만들고 복제한 뒤, 실제 수업 session으로 바로 연결합니다.',
     badge: '강사 전용',
   },
 ];
 
 const usageSteps = [
-  '수업 플래너에서 수업 템플릿을 미리 만듭니다. (도입→이론→실습→윤리→마무리)',
+  'Library 또는 Builder에서 lesson template을 만듭니다. (도입→이론→실습→윤리→마무리)',
+  'Session 만들기 화면에서 템플릿 기반 live session을 생성합니다.',
   'Admin 화면에서 관리자 계정으로 로그인합니다.',
-  '기본 질문 seed 버튼을 눌러 질문 세트를 불러옵니다.',
   '학생에게 QR 코드 또는 아래 링크를 공유합니다.',
   '질문을 선택하고 응답 수집을 Open으로 둡니다.',
   '답변이 충분히 모이면 Closed로 마감합니다.',
@@ -55,7 +64,7 @@ const cautions = [
   '학생에게는 학생용 링크만 공유하세요.',
   'Admin 화면은 강사만 사용하고 비밀번호를 노출하지 마세요.',
   'Display 화면은 Admin 로그인 후 같은 브라우저에서 여세요.',
-  '질문이 안 보이면 Admin에서 기본 질문 seed를 먼저 누르세요.',
+  '새 session을 만들 때는 수업마다 다른 sessionId를 사용하세요.',
 ];
 
 export function HomePage() {
@@ -71,9 +80,21 @@ export function HomePage() {
 
   return (
     <AppShell
-      description="학생들은 QR로 답변하고, 강사는 Admin에서 질문을 넘기고, Display 화면으로 결과를 함께 봅니다."
+      actions={
+        <div className="hero-actions">
+          <Link className="builder-link-button" to="/builder">
+            <LayoutTemplate size={16} />
+            lesson template 만들기
+          </Link>
+          <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
+            <PlayCircle size={16} />
+            세션 만들기
+          </Link>
+        </div>
+      }
+      description="학생은 QR로 참여하고, 강사는 Admin에서 흐름을 제어하며, Display 화면으로 결과를 함께 보는 실시간 수업 참여 시스템입니다."
       eyebrow="DORO Live Survey"
-      title="실시간 수업 반응 시스템"
+      title="실시간 수업 참여 시스템"
     >
       <div className="stack stack--wide">
 
@@ -113,7 +134,7 @@ export function HomePage() {
             </Button>
           </div>
           <p className="share-card__hint">
-            이 링크를 QR로 만들거나 카카오톡 등으로 공유하면 학생들이 바로 입장할 수 있습니다.
+            이 링크를 QR로 만들거나 메신저로 공유하면 학생들이 바로 입장할 수 있습니다.
           </p>
         </Card>
 

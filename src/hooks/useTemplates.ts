@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { subscribeSharedLessonTemplates } from '../firebase/lessonTemplates';
 import { firebaseConfigStatus } from '../firebase/client';
+import { DEFAULT_ORGANIZATION_ID } from '../firebase/users';
 import type { LessonTemplateDoc } from '../firebase/types';
 
 type UseTemplatesResult = {
@@ -26,11 +27,14 @@ export function useTemplates({ enabled = true } = {}): UseTemplatesResult {
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    const unsubscribe = subscribeSharedLessonTemplates(
-      (templates) => setState({ templates, loading: false, error: null }),
+    const unsubscribeList = subscribeSharedLessonTemplates(
+      DEFAULT_ORGANIZATION_ID,
+      (templates: LessonTemplateDoc[]) => setState({ templates, loading: false, error: null }),
     );
 
-    return unsubscribe;
+    return () => {
+      unsubscribeList.forEach((unsubscribe) => unsubscribe());
+    };
   }, [shouldSubscribe]);
 
   return state;
