@@ -22,6 +22,26 @@ V2의 핵심은 아래 흐름을 한 제품 안에서 연결한 것입니다.
 
 ---
 
+## Version Notes
+
+README에는 V1과 V2의 운영 맥락을 계속 남깁니다.
+
+### V1 Live Survey
+
+- Student/Admin/Display 중심의 실시간 설문 엔진
+- `sessions/{sessionId}/questions/{questionId}/answers/{uid}` 구조
+- 로봇 창업 강의(`robot-startup-2026`)에서 사용한 과거 질문 세트 유지
+- Admin의 seed 선택에서 `과거 로봇 창업 강의 질문`으로 다시 업로드 가능
+
+### V2 Lesson Template Planner
+
+- V1 실시간 엔진 위에 lesson template planner를 추가
+- 수업 phase, slide, interaction block, visibility를 사전 설계
+- DOROSSAEM 기술/툴/실습형 수업에 공통 적용하는 현재 질문 세트 유지
+- Admin의 seed 선택에서 `현재 기술 수업 질문`으로 업로드 가능
+
+---
+
 ## V2 Scope
 
 이번 V2 범위는 아래 8개 축으로 구성됩니다.
@@ -115,6 +135,7 @@ Builder에서는 자주 쓰는 DORO 기본 버튼도 제공합니다.
 
 - 강사용 운영 화면
 - 현재 질문 선택
+- seed 질문 세트 선택: `현재 기술 수업 질문` / `과거 로봇 창업 강의 질문`
 - 응답 열기/마감
 - 공개 가능한 질문만 Display 공개
 - teacher-only 결과는 Admin에서만 집계

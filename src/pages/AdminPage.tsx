@@ -22,7 +22,12 @@ import { useAuth } from '../hooks/useAuth';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
 import { previewAnswerRows, previewQuestions } from '../data/previewQuestions';
-import { seedQuestions } from '../data/seedQuestions';
+import {
+  defaultSeedQuestionSetId,
+  getSeedQuestionSet,
+  seedQuestionSets,
+  type SeedQuestionSetId,
+} from '../data/seedQuestionSets';
 import { downloadCsv } from '../utils/csv';
 import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
 import {
@@ -130,6 +135,7 @@ export function AdminPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [seedQuestionSetId, setSeedQuestionSetId] = useState<SeedQuestionSetId>(defaultSeedQuestionSetId);
   const [busy, setBusy] = useState(false);
 
   if (!firebaseConfigStatus.isConfigured) {
@@ -137,7 +143,8 @@ export function AdminPage() {
   }
 
   const studentUrl = buildAppUrl('/student', sessionId);
-  const displayQuestions = questions.length > 0 ? questions : seedQuestions;
+  const selectedSeedQuestionSet = getSeedQuestionSet(seedQuestionSetId);
+  const displayQuestions = questions.length > 0 ? questions : selectedSeedQuestionSet.questions;
   const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
   const hiddenCount = answers.filter((a) => a.hidden).length;
   const activeInputType = activeQuestion ? getQuestionInputType(activeQuestion) : null;
@@ -191,12 +198,19 @@ export function AdminPage() {
   };
 
   const handleSeed = async () => {
+    const confirmed =
+      questions.length === 0 ||
+      window.confirm(
+        `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 현재 세션에 업로드합니다.\n\n같은 ID(q01~q12)의 기존 질문은 덮어씁니다. 기존 응답은 자동 삭제되지 않으므로, 수업 전 전환이면 먼저 전체 응답 초기화를 권장합니다.\n\n계속하시겠습니까?`,
+      );
+    if (!confirmed) return;
+
     await runAdminAction(
-      () => seedSession(sessionId, undefined, undefined, {
+      () => seedSession(sessionId, selectedSeedQuestionSet.sessionTitle, selectedSeedQuestionSet.questions, {
         uid: user?.uid,
         organizationId: profile?.organizationId ?? 'dorossaem',
       }),
-      '세션과 기본 질문 12개를 Firestore에 업로드했습니다.',
+      `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 Firestore에 업로드했습니다.`,
     );
   };
 
@@ -386,8 +400,23 @@ export function AdminPage() {
       actions={
         <div className="hero-actions">
           <Badge tone="success">로그인 완료</Badge>
+          <label className="seed-set-picker">
+            <span>Seed</span>
+            <select
+              className="select-sm"
+              disabled={busy}
+              value={seedQuestionSetId}
+              onChange={(event) => setSeedQuestionSetId(event.target.value as SeedQuestionSetId)}
+            >
+              {seedQuestionSets.map((set) => (
+                <option key={set.id} value={set.id}>
+                  {set.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
-            {busy ? '작업 중...' : '기본 질문 seed'}
+            {busy ? '작업 중...' : '선택 질문 seed'}
           </Button>
           <Button disabled={busy} size="sm" variant="ghost" onClick={() => signOutUser()}>
             로그아웃

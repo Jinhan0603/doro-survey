@@ -238,6 +238,16 @@ button:disabled {
   gap: 10px;
 }
 
+.seed-set-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
