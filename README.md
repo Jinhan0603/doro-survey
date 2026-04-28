@@ -9,6 +9,40 @@ DORO Live Survey V2는 기존 실시간 설문 엔진 위에 **lesson template p
 
 ---
 
+## Access Links
+
+GitHub Pages 배포 주소:
+
+- [DORO Live Survey Home](https://jinhan0603.github.io/doro-survey/)
+
+### V1 Live Survey
+
+기존 로봇 창업 강의 세션(`robot-startup-2026`) 접근 링크입니다. Admin에서 seed를 실행할 때 `과거 로봇 창업 강의 질문`을 선택하면 이 세션에 V1 질문 세트를 다시 올릴 수 있습니다.
+
+| Screen | Link |
+|------|------|
+| Admin | [V1 Admin - robot-startup-2026](https://jinhan0603.github.io/doro-survey/#/admin?session=robot-startup-2026) |
+| Student | [V1 Student - robot-startup-2026](https://jinhan0603.github.io/doro-survey/#/student?session=robot-startup-2026) |
+| Display | [V1 Display - robot-startup-2026](https://jinhan0603.github.io/doro-survey/#/display?session=robot-startup-2026) |
+
+### V2 Lesson Template Planner
+
+현재 V2 템플릿 설계/세션 생성 흐름 접근 링크입니다. Admin에서 seed를 실행할 때 `현재 기술 수업 질문`을 선택하면 V2 기본 기술 수업 질문 세트를 올릴 수 있습니다.
+
+| Screen | Link |
+|------|------|
+| Home | [V2 Home](https://jinhan0603.github.io/doro-survey/) |
+| Library | [V2 Lesson Template Library](https://jinhan0603.github.io/doro-survey/#/library) |
+| Builder | [V2 Lesson Template Builder](https://jinhan0603.github.io/doro-survey/#/builder) |
+| Session New | [V2 New Lesson Session](https://jinhan0603.github.io/doro-survey/#/session-new) |
+| Admin | [V2 Admin - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/admin?session=doro-tech-class-2026) |
+| Student | [V2 Student - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/student?session=doro-tech-class-2026) |
+| Display | [V2 Display - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/display?session=doro-tech-class-2026) |
+
+Admin, Display, Library, Builder, Session New는 강사/관리자 Email/Password 로그인이 필요합니다. Student 화면은 익명 로그인으로 참여합니다.
+
+---
+
 ## Overview
 
 V2의 핵심은 아래 흐름을 한 제품 안에서 연결한 것입니다.
