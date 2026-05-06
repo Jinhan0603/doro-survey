@@ -251,15 +251,15 @@ function PhaseSection({
           </div>
         </div>
         <div className="builder-phase-card__meta">
-          <Badge>{slides.length} slides</Badge>
-          <Badge>{orderedInteractions.length} interactions</Badge>
+          <Badge>슬라이드 {slides.length}개</Badge>
+          <Badge>질문 {orderedInteractions.length}개</Badge>
         </div>
       </div>
 
       <div className="builder-phase-card__content">
         <div className="builder-phase-card__column">
           <div className="builder-phase-card__column-head">
-            <strong>Slides</strong>
+            <strong>슬라이드</strong>
             <span>{slides.length === 0 ? '배정된 슬라이드 없음' : 'PPTX 기반 분류 결과'}</span>
           </div>
           <div className="builder-slide-list">
@@ -301,16 +301,16 @@ function PhaseSection({
 
         <div className="builder-phase-card__column">
           <div className="builder-phase-card__column-head">
-            <strong>Interaction Blocks</strong>
+            <strong>질문 블록</strong>
             <Button size="sm" variant="secondary" onClick={() => onInteractionAdd(phase)}>
-              + Interaction
+              + 질문
             </Button>
           </div>
 
           <div className="builder-interaction-list">
             {orderedInteractions.length === 0 ? (
               <div className="builder-empty-state">
-                <p>아직 interaction block이 없습니다. 아래 기본 버튼 또는 + Interaction으로 추가하세요.</p>
+                <p>아직 질문 블록이 없습니다. 기본 블록 버튼이나 + 질문으로 추가하세요.</p>
               </div>
             ) : (
               orderedInteractions.map((interaction, index) => (
@@ -357,7 +357,7 @@ function PhaseSection({
 
                   <div className="builder-interaction-card__grid">
                     <label className="form-field">
-                      <span className="form-label">Phase</span>
+                      <span className="form-label">수업 구간</span>
                       <select
                         className="select-sm"
                         value={interaction.phase}
@@ -374,7 +374,7 @@ function PhaseSection({
                     </label>
 
                     <label className="form-field">
-                      <span className="form-label">Interaction type</span>
+                      <span className="form-label">질문 역할</span>
                       <select
                         className="select-sm"
                         value={interaction.interactionType}
@@ -394,7 +394,7 @@ function PhaseSection({
                     </label>
 
                     <label className="form-field">
-                      <span className="form-label">Purpose</span>
+                      <span className="form-label">사용 목적</span>
                       <select
                         className="select-sm"
                         value={interaction.purpose}
@@ -414,7 +414,7 @@ function PhaseSection({
                     </label>
 
                     <label className="form-field">
-                      <span className="form-label">Result visibility</span>
+                      <span className="form-label">결과 공개 범위</span>
                       <select
                         className="select-sm"
                         value={interaction.visibility}
@@ -434,7 +434,7 @@ function PhaseSection({
                     </label>
 
                     <label className="form-field">
-                      <span className="form-label">Input type</span>
+                      <span className="form-label">응답 방식</span>
                       <select
                         className="select-sm"
                         value={interaction.inputType}
@@ -454,7 +454,7 @@ function PhaseSection({
                     </label>
 
                     <Input
-                      label="Timing label"
+                      label="진행 시간"
                       value={interaction.timingLabel ?? ''}
                       placeholder="예: 3분"
                       onChange={(event) =>
@@ -464,7 +464,7 @@ function PhaseSection({
                   </div>
 
                   <label className="form-field">
-                    <span className="form-label">Prompt</span>
+                    <span className="form-label">질문 문장</span>
                     <textarea
                       className="textarea"
                       rows={3}
@@ -479,7 +479,7 @@ function PhaseSection({
                     interaction.inputType === 'status' ||
                     interaction.inputType === 'scale') ? (
                     <label className="form-field">
-                      <span className="form-label">Choices</span>
+                      <span className="form-label">선택지</span>
                       <textarea
                         className="textarea"
                         rows={3}
@@ -515,7 +515,7 @@ function PhaseSection({
                       }
                     />
                     <label className="form-field">
-                      <span className="form-label">Presenter note</span>
+                      <span className="form-label">강사용 진행 메모</span>
                       <textarea
                         className="textarea"
                         rows={3}
@@ -976,9 +976,9 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     <div className="builder-page">
       <div className="builder-toolbar">
         <div className="builder-toolbar__copy">
-          <Badge tone="accent">{templateId ? 'Builder' : 'New Template'}</Badge>
-          <h2>{templateId ? 'Lesson Template Builder' : '새 lesson template'}</h2>
-          <p>수업 메타데이터, phase 구획, PPTX 슬라이드, interaction block을 한 화면에서 정리합니다.</p>
+          <Badge tone="accent">{templateId ? '템플릿 편집' : '새 템플릿'}</Badge>
+          <h2>{templateId ? '수업 템플릿 편집' : '새 수업 템플릿'}</h2>
+          <p>반복해서 쓸 수업 질문 흐름을 구간별로 설계합니다.</p>
         </div>
         <div className="builder-toolbar__actions">
           <Button size="sm" variant="ghost" onClick={() => navigate('/library')}>
@@ -986,7 +986,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           </Button>
           {templateId ? (
             <Link className="builder-link-button" to={`/session-new?template=${templateId}`}>
-              세션 만들기
+              세션 열기
             </Link>
           ) : null}
           <Button disabled={busy} size="sm" onClick={() => void handleSave()}>
@@ -1000,14 +1000,14 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         <div className="builder-section-head">
           <div>
             <h3>수업 기본 정보</h3>
-            <p>템플릿 메타데이터를 저장하면 library와 session 생성 화면에서 바로 사용할 수 있습니다.</p>
+            <p>저장한 템플릿은 라이브러리와 템플릿 세션 열기 화면에서 바로 사용할 수 있습니다.</p>
           </div>
-          <Badge>{sortedInteractions.length} interactions</Badge>
+          <Badge>질문 {sortedInteractions.length}개</Badge>
         </div>
 
         <div className="builder-meta-grid">
           <Input
-            label="Lesson template 제목"
+            label="템플릿 제목"
             placeholder="예: AI 이미지 생성 실습"
             value={form.title}
             onChange={(event) => handleFormPatch({ title: event.target.value })}
@@ -1044,7 +1044,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         </label>
 
         <label className="form-field">
-          <span className="form-label">Template visibility</span>
+          <span className="form-label">공개 범위</span>
           <select
             className="select-sm"
             value={form.templateVisibility}
@@ -1064,11 +1064,11 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       <Card className="builder-upload-card">
         <div className="builder-section-head">
           <div>
-            <h3>PPTX 기반 phase 분류</h3>
-            <p>원본 PPTX는 브라우저에서만 읽고 저장하지 않습니다. 추출된 슬라이드 메타데이터만 템플릿에 반영됩니다.</p>
+            <h3>PPTX 슬라이드 가져오기</h3>
+            <p>원본 PPTX는 브라우저에서만 읽고 저장하지 않습니다. 추출된 슬라이드 텍스트만 템플릿 구성에 사용합니다.</p>
           </div>
           <Badge tone={sourceFileName ? 'success' : 'default'}>
-            {sourceFileName ?? 'PPTX not loaded'}
+            {sourceFileName ?? 'PPTX 없음'}
           </Badge>
         </div>
 
@@ -1091,8 +1091,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             {overallSummary.map((summary) => (
               <div key={summary.phase} className="builder-summary-tile">
                 <PhaseTag phase={summary.phase} />
-                <strong>{summary.slideCount} slides</strong>
-                <span>{summary.interactionCount} interactions</span>
+                <strong>슬라이드 {summary.slideCount}개</strong>
+                <span>질문 {summary.interactionCount}개</span>
               </div>
             ))}
           </div>
@@ -1121,18 +1121,18 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       <Card className="builder-preset-card">
         <div className="builder-section-head">
           <div>
-            <h3>interaction 초안 만들기</h3>
-            <p>외부 AI 없이 슬라이드 phase와 subject/audience/density 규칙으로 초안을 생성합니다.</p>
+            <h3>질문 초안 만들기</h3>
+            <p>슬라이드 구간과 수업 정보를 바탕으로 질문 초안을 제안합니다.</p>
           </div>
           <Button size="sm" variant="secondary" onClick={handleGenerateDrafts}>
             <Sparkles size={16} />
-            interaction 초안 만들기
+            질문 초안 만들기
           </Button>
         </div>
 
         <div className="builder-generator-grid">
           <label className="form-field">
-            <span className="form-label">Subject type</span>
+            <span className="form-label">수업 분야</span>
             <select
               className="select-sm"
               value={generatorOptions.subjectType}
@@ -1151,7 +1151,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           </label>
 
           <label className="form-field">
-            <span className="form-label">Audience level</span>
+            <span className="form-label">대상 수준</span>
             <select
               className="select-sm"
               value={generatorOptions.audienceLevel}
@@ -1170,7 +1170,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           </label>
 
           <label className="form-field">
-            <span className="form-label">Density</span>
+            <span className="form-label">질문 밀도</span>
             <select
               className="select-sm"
               value={generatorOptions.density}
@@ -1206,8 +1206,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       <Card className="builder-preset-card">
         <div className="builder-section-head">
           <div>
-            <h3>DORO 기본 interaction block</h3>
-            <p>자주 쓰는 수업 흐름 버튼으로 기본 블록을 빠르게 추가합니다.</p>
+            <h3>DORO 기본 질문 블록</h3>
+            <p>자주 쓰는 수업 질문을 구간별로 빠르게 추가합니다.</p>
           </div>
           <Sparkles size={18} />
         </div>
@@ -1258,9 +1258,9 @@ export function LessonTemplateBuilderPage() {
   return (
     <TeacherGate
       compact
-      description="기술 실습형 lesson template을 설계하고 PPTX 슬라이드 기준으로 phase를 정리합니다."
+      description="반복해서 쓸 수업 질문 흐름을 만들고, 필요하면 PPTX 슬라이드 기준으로 구간을 정리합니다."
       eyebrow="DORO Builder"
-      title="Lesson Template Builder"
+      title="수업 템플릿 빌더"
       actions={() => (
         <div className="hero-actions">
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
@@ -1270,11 +1270,11 @@ export function LessonTemplateBuilderPage() {
       )}
       loginAside={
         <Card className="banner-card">
-          <h3>Builder에서 할 수 있는 일</h3>
+          <h3>템플릿을 만드는 경우</h3>
           <ul className="flow-list flow-list--bullet">
-            <li>도입, 이론, 실습, 윤리, 마무리 phase별로 수업 흐름을 설계합니다.</li>
-            <li>PPTX 슬라이드 텍스트를 읽어 phase를 자동 제안합니다.</li>
-            <li>실습 준비 체크, 윤리 질문, 마무리 회고까지 기본 block을 바로 추가합니다.</li>
+            <li>도입, 이론, 실습, 윤리, 마무리 구간별로 질문을 배치합니다.</li>
+            <li>PPTX 슬라이드 텍스트를 읽어 수업 구간을 제안합니다.</li>
+            <li>실습 준비 체크, 윤리 질문, 마무리 회고를 기본 블록으로 추가합니다.</li>
           </ul>
         </Card>
       }

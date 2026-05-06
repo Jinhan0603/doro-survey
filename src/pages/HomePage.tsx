@@ -19,53 +19,67 @@ import { buildAppUrl, buildHashPath } from '../utils/urls';
 
 const REAL_SESSION = 'doro-tech-class-2026';
 
-const screens = [
+const workflows = [
+  {
+    href: '/custom-session',
+    icon: PencilLine,
+    title: '직접 질문 만들기',
+    description: '오늘 수업에서 쓸 질문만 입력해 학생 QR, Admin, Display 링크를 바로 만듭니다.',
+    badge: '빠른 시작',
+    cta: '질문 만들기',
+    primary: true,
+  },
+  {
+    href: '/builder',
+    icon: LayoutTemplate,
+    title: '수업 템플릿 설계',
+    description: '도입, 이론, 실습, 윤리, 마무리 흐름으로 반복 수업용 질문 묶음을 설계합니다.',
+    badge: '반복 수업',
+    cta: '템플릿 만들기',
+    primary: false,
+  },
+  {
+    href: '/session-new',
+    icon: PlayCircle,
+    title: '템플릿으로 세션 열기',
+    description: '저장된 템플릿을 실제 live session으로 바꾸고 학생에게 공유할 QR을 생성합니다.',
+    badge: '수업 운영',
+    cta: '세션 만들기',
+    primary: false,
+  },
+];
+
+const liveScreens = [
   {
     href: buildHashPath('/student', previewSessionId),
     icon: Smartphone,
-    title: '학생 입장하기',
-    description: 'QR로 접속한 학생용 화면입니다. 닉네임을 적고 현재 질문에 바로 답합니다.',
+    title: 'Student',
+    description: '학생은 QR로 들어와 닉네임을 입력하고 현재 열린 질문에 답합니다.',
     badge: '학생용',
   },
   {
     href: buildHashPath('/admin', previewSessionId),
     icon: ShieldCheck,
-    title: '관리자 화면',
-    description: '질문 전환, 응답 마감, 결과 공개, 주관식 승인, CSV 다운로드를 한 화면에서 조작합니다.',
+    title: 'Admin',
+    description: '강사는 질문 전환, 응답 열기/마감, 결과 공개, 주관식 승인을 진행합니다.',
     badge: '강사용',
   },
   {
     href: buildHashPath('/display', previewSessionId),
     icon: MonitorPlay,
-    title: '발표 화면',
-    description: '빔프로젝터에 띄워 학생들과 결과를 함께 보는 화면입니다.',
+    title: 'Display',
+    description: '공개로 설정한 결과만 프로젝터 화면에 크게 보여줍니다.',
     badge: '발표용',
-  },
-  {
-    href: '#/library',
-    icon: LayoutTemplate,
-    title: '템플릿 라이브러리',
-    description: 'lesson template을 만들고 복제한 뒤, 실제 수업 session으로 바로 연결합니다.',
-    badge: '강사 전용',
-  },
-  {
-    href: '#/custom-session',
-    icon: PencilLine,
-    title: '직접 질문 만들기',
-    description: '템플릿 없이 질문을 직접 입력하고 학생 링크와 QR을 바로 생성합니다.',
-    badge: 'V2 빠른 생성',
   },
 ];
 
 const usageSteps = [
-  'Library 또는 Builder에서 lesson template을 만듭니다. (도입→이론→실습→윤리→마무리)',
-  'Session 만들기 화면에서 템플릿 기반 live session을 생성합니다.',
-  'Admin 화면에서 관리자 계정으로 로그인합니다.',
-  '학생에게 QR 코드 또는 아래 링크를 공유합니다.',
-  '질문을 선택하고 응답 수집을 Open으로 둡니다.',
-  '답변이 충분히 모이면 Closed로 마감합니다.',
-  '결과 공개를 Visible로 바꾸면 Display 화면에 그래프가 나타납니다.',
-  'Display 화면을 보며 학생들과 함께 토론하고, 다음 질문으로 넘어갑니다.',
+  '일회성 수업은 직접 질문 만들기에서 바로 세션을 생성합니다.',
+  '반복 수업은 Builder에서 템플릿을 먼저 만들고 Session에서 세션을 생성합니다.',
+  '학생에게는 Student QR 또는 링크만 공유합니다.',
+  'Admin에서 현재 질문을 선택하고 응답 수집을 엽니다.',
+  '응답이 모이면 수집을 마감하고 필요한 질문만 Display에 공개합니다.',
+  '결과를 보며 토론한 뒤 다음 질문으로 넘어갑니다.',
 ];
 
 const cautions = [
@@ -90,52 +104,86 @@ export function HomePage() {
     <AppShell
       actions={
         <div className="hero-actions">
-          <Link className="builder-link-button" to="/builder">
-            <LayoutTemplate size={16} />
-            lesson template 만들기
-          </Link>
           <Link className="builder-link-button" to="/custom-session">
             <PencilLine size={16} />
             직접 질문 만들기
           </Link>
+          <Link className="builder-link-button builder-link-button--ghost" to="/builder">
+            <LayoutTemplate size={16} />
+            템플릿 설계
+          </Link>
           <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
             <PlayCircle size={16} />
-            세션 만들기
+            템플릿 세션 열기
           </Link>
         </div>
       }
-      description="학생은 QR로 참여하고, 강사는 Admin에서 흐름을 제어하며, Display 화면으로 결과를 함께 보는 실시간 수업 참여 시스템입니다."
-      eyebrow="DORO Live Survey"
-      title="실시간 수업 참여 시스템"
+      description="질문을 만들고, 학생에게 공유하고, 실시간 응답을 함께 보는 DORO 수업 운영 도구입니다."
+      eyebrow="DORO Live Survey V2"
+      title="질문 만들기부터 결과 공유까지"
     >
       <div className="stack stack--wide">
 
-        {/* 역할별 화면 카드 */}
-        <section className="feature-grid">
-          {screens.map((screen) => {
-            const Icon = screen.icon;
+        <section className="v2-flow-grid">
+          {workflows.map((workflow) => {
+            const Icon = workflow.icon;
             return (
-              <Card key={screen.title} className="feature-card">
-                <div className="feature-card__icon-row">
+              <Card
+                key={workflow.title}
+                className={workflow.primary ? 'v2-flow-card v2-flow-card--primary' : 'v2-flow-card'}
+              >
+                <div className="v2-flow-card__top">
                   <div className="feature-card__icon">
                     <Icon size={20} />
                   </div>
-                  <Badge>{screen.badge}</Badge>
+                  <Badge tone={workflow.primary ? 'success' : 'accent'}>{workflow.badge}</Badge>
                 </div>
-                <h3>{screen.title}</h3>
-                <p>{screen.description}</p>
-                <a className="feature-card__link" href={screen.href}>
-                  미리보기 열기 <ArrowRight size={16} />
-                </a>
+                <div className="v2-flow-card__copy">
+                  <h3>{workflow.title}</h3>
+                  <p>{workflow.description}</p>
+                </div>
+                <Link className="builder-link-button" to={workflow.href}>
+                  {workflow.cta} <ArrowRight size={16} />
+                </Link>
               </Card>
             );
           })}
         </section>
 
-        {/* 학생 공유 링크 */}
+        <section className="home-section">
+          <div className="home-section__head">
+            <div>
+              <h2>실시간 운영 화면</h2>
+              <p>세션을 만든 뒤에는 이 세 화면만 오가면 됩니다.</p>
+            </div>
+            <Badge>Live runtime</Badge>
+          </div>
+
+          <div className="feature-grid feature-grid--compact">
+            {liveScreens.map((screen) => {
+              const Icon = screen.icon;
+              return (
+                <Card key={screen.title} className="feature-card">
+                  <div className="feature-card__icon-row">
+                    <div className="feature-card__icon">
+                      <Icon size={20} />
+                    </div>
+                    <Badge>{screen.badge}</Badge>
+                  </div>
+                  <h3>{screen.title}</h3>
+                  <p>{screen.description}</p>
+                  <a className="feature-card__link" href={screen.href}>
+                    미리보기 열기 <ArrowRight size={16} />
+                  </a>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+
         <Card className="share-card">
           <div className="share-card__header">
-            <h3>학생에게 공유할 링크</h3>
+            <h3>기본 테스트 세션</h3>
             <Badge tone="success">세션: {REAL_SESSION}</Badge>
           </div>
           <div className="share-card__url">
@@ -146,16 +194,15 @@ export function HomePage() {
             </Button>
           </div>
           <p className="share-card__hint">
-            이 링크를 QR로 만들거나 메신저로 공유하면 학생들이 바로 입장할 수 있습니다.
+            새 수업은 직접 질문 만들기 또는 템플릿 세션 열기에서 별도 sessionId로 생성하세요.
           </p>
         </Card>
 
-        {/* 사용 가이드 */}
         <section className="overview-grid">
           <Card className="overview-card">
             <div className="section-heading">
-              <h3>수업 당일 사용 순서</h3>
-              <Badge tone="accent">강사 가이드</Badge>
+              <h3>운영 흐름</h3>
+              <Badge tone="accent">V2</Badge>
             </div>
             <ol className="flow-list">
               {usageSteps.map((step) => (

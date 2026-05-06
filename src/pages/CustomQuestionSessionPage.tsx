@@ -57,6 +57,20 @@ type CreatedSession = {
 
 const DEFAULT_SESSION_TITLE = 'DORO 직접 질문 세션';
 
+const INPUT_TYPE_HELP: Record<QuestionInputType, string> = {
+  choice: '하나만 고르는 투표형 질문입니다.',
+  text: '학생 생각을 짧은 문장으로 받습니다.',
+  multi: '여러 항목을 동시에 고를 수 있습니다.',
+  scale: '1~5처럼 정도를 빠르게 확인합니다.',
+  status: '준비, 진행, 도움 필요 같은 운영 상태를 봅니다.',
+};
+
+const VISIBILITY_HELP: Record<ResultVisibility, string> = {
+  public: 'Display에 공개할 수 있습니다.',
+  'teacher-only': 'Admin에서만 집계합니다.',
+  hidden: '결과 화면에 표시하지 않습니다.',
+};
+
 function createSessionIdSuggestion() {
   return `live-${nanoid(6).toLowerCase()}`;
 }
@@ -71,11 +85,11 @@ function getDefaultChoices(inputType: QuestionInputType) {
   }
 
   if (inputType === 'multi') {
-    return ['아이디어', '질문', '실습', '발표'].join('\n');
+    return ['개념 이해', '실습 진행', '질문 있음', '공유하고 싶음'].join('\n');
   }
 
   if (inputType === 'choice') {
-    return ['매우 그렇다', '그렇다', '보통이다', '아니다'].join('\n');
+    return ['처음이에요', '조금 해봤어요', '혼자 할 수 있어요', '친구에게 설명할 수 있어요'].join('\n');
   }
 
   return '';
@@ -104,10 +118,10 @@ function createInitialDrafts(): CustomQuestionDraft[] {
   return [
     createDraft({
       phase: 'intro',
-      title: '오늘 수업 기대 체크',
-      prompt: '오늘 주제에서 가장 기대되는 활동을 골라보세요.',
+      title: '오늘 주제 경험 체크',
+      prompt: '오늘 다룰 도구나 주제를 지금까지 어느 정도 사용해봤나요?',
       inputType: 'choice',
-      choicesText: ['새로운 도구 배우기', '직접 만들어보기', '친구들과 비교하기', '활용 사례 보기'].join('\n'),
+      choicesText: ['처음이에요', '조금 해봤어요', '혼자 할 수 있어요', '친구에게 설명할 수 있어요'].join('\n'),
     }),
     createDraft({
       phase: 'wrapup',
@@ -244,7 +258,7 @@ function QuestionEditor({
 
       <div className="builder-interaction-card__grid">
         <label className="form-field">
-          <span className="form-label">Phase</span>
+          <span className="form-label">수업 구간</span>
           <select
             className="select-sm"
             value={draft.phase}
@@ -259,7 +273,7 @@ function QuestionEditor({
         </label>
 
         <label className="form-field">
-          <span className="form-label">질문 타입</span>
+          <span className="form-label">응답 방식</span>
           <select className="select-sm" value={draft.inputType} onChange={handleInputTypeChange}>
             {(Object.entries(INPUT_TYPE_LABELS) as [QuestionInputType, string][]).map(([value, label]) => (
               <option key={value} value={value}>
@@ -267,10 +281,11 @@ function QuestionEditor({
               </option>
             ))}
           </select>
+          <span className="form-hint">{INPUT_TYPE_HELP[draft.inputType]}</span>
         </label>
 
         <label className="form-field">
-          <span className="form-label">결과 표시</span>
+          <span className="form-label">결과 공개 범위</span>
           <select
             className="select-sm"
             value={draft.visibility}
@@ -282,6 +297,7 @@ function QuestionEditor({
               </option>
             ))}
           </select>
+          <span className="form-hint">{VISIBILITY_HELP[draft.visibility]}</span>
         </label>
 
         {draft.inputType === 'text' ? (
@@ -302,10 +318,10 @@ function QuestionEditor({
       </div>
 
       <label className="form-field">
-        <span className="form-label">학생에게 보일 질문 문구</span>
+        <span className="form-label">질문 문장</span>
         <textarea
           className="textarea"
-          placeholder="질문을 입력하세요."
+          placeholder="학생 화면에 그대로 보일 질문을 입력하세요."
           rows={3}
           value={draft.prompt}
           onChange={(event) => onPatch(draft.clientId, { prompt: event.target.value })}
@@ -317,7 +333,7 @@ function QuestionEditor({
           <span className="form-label">선택지</span>
           <textarea
             className="textarea"
-            placeholder="한 줄에 하나씩 입력"
+            placeholder="학생이 고를 항목을 한 줄에 하나씩 입력하세요."
             rows={4}
             value={draft.choicesText}
             onChange={(event) => onPatch(draft.clientId, { choicesText: event.target.value })}
@@ -343,7 +359,7 @@ function CreatedSessionLinks({
         <div className="builder-section-head">
           <div>
             <h3>직접 질문 세션 생성 완료</h3>
-            <p>아래 링크는 기존 V1 실시간 응답/결과 화면으로 연결됩니다.</p>
+            <p>학생에게는 Student QR만 공유하고, 강사는 Admin에서 수업을 진행하세요.</p>
           </div>
           <Badge tone="success">{createdSession.sessionId}</Badge>
         </div>
@@ -424,6 +440,17 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
     );
   };
 
+  const handleAddQuestion = (inputType: QuestionInputType) => {
+    setDrafts((current) => [
+      ...current,
+      createDraft({
+        phase: PHASE_ORDER[Math.min(current.length, PHASE_ORDER.length - 1)],
+        inputType,
+        visibility: inputType === 'status' ? 'teacher-only' : 'public',
+      }),
+    ]);
+  };
+
   const handleCreate = async () => {
     const normalizedSessionId = normalizeSessionIdInput(sessionId);
 
@@ -466,85 +493,110 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="session-new-page custom-question-page">
-      <Card className="session-new-card" tone="accent">
-        <div className="builder-section-head">
-          <div>
-            <h3>직접 질문으로 live session 만들기</h3>
-            <p>질문을 직접 입력하면 기존 Student/Admin/Display 실시간 화면에서 바로 운영할 수 있습니다.</p>
+      <div className="custom-session-hero-grid">
+        <Card className="session-new-card" tone="accent">
+          <div className="builder-section-head">
+            <div>
+              <h3>1. 수업 링크 만들기</h3>
+              <p>sessionId는 학생 링크에 들어가는 짧은 주소입니다. 수업마다 새 ID를 쓰면 응답이 섞이지 않습니다.</p>
+            </div>
+            <Badge tone="accent">{drafts.length}개 질문</Badge>
           </div>
-          <Badge tone="accent">{drafts.length} questions</Badge>
-        </div>
 
-        <div className="session-new-grid">
-          <Input
-            label="sessionId"
-            placeholder="예: ai-class-0421"
-            value={sessionId}
-            onChange={(event) => setSessionId(normalizeSessionIdInput(event.target.value))}
-          />
-          <Input
-            label="세션 제목"
-            placeholder="예: AI 도구 실습 1반"
-            value={sessionTitle}
-            onChange={(event) => setSessionTitle(event.target.value)}
-          />
-        </div>
-
-        <div className="custom-session-options">
-          <label className="builder-checkbox">
-            <input
-              checked={startOpen}
-              type="checkbox"
-              onChange={(event) => setStartOpen(event.target.checked)}
+          <div className="session-new-grid">
+            <Input
+              hint="영문 소문자, 숫자, -, _만 사용합니다."
+              label="sessionId"
+              placeholder="예: ai-class-0421"
+              value={sessionId}
+              onChange={(event) => setSessionId(normalizeSessionIdInput(event.target.value))}
             />
-            <span>생성 직후 첫 질문 응답 수집 열기</span>
-          </label>
-          <div className="custom-session-stats">
-            <Badge>{questionSummary.choiceCount} choice</Badge>
-            <Badge>{questionSummary.textCount} text</Badge>
-            <Badge tone="success">{questionSummary.publicCount} display</Badge>
+            <Input
+              label="세션 제목"
+              placeholder="예: AI 도구 실습 1반"
+              value={sessionTitle}
+              onChange={(event) => setSessionTitle(event.target.value)}
+            />
           </div>
-        </div>
 
-        <div className="session-new-actions">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => setSessionId(createSessionIdSuggestion())}
-          >
-            추천 sessionId 다시 만들기
-          </Button>
-          <Button disabled={busy} onClick={() => void handleCreate()}>
-            <PlayCircle size={16} />
-            {busy ? '세션 생성 중...' : '직접 질문 세션 만들기'}
-          </Button>
-        </div>
+          <div className="custom-session-options">
+            <label className="builder-checkbox">
+              <input
+                checked={startOpen}
+                type="checkbox"
+                onChange={(event) => setStartOpen(event.target.checked)}
+              />
+              <span>생성 직후 첫 질문 응답 수집 열기</span>
+            </label>
+            <div className="custom-session-stats">
+              <Badge>{questionSummary.choiceCount} 선택형</Badge>
+              <Badge>{questionSummary.textCount} 서술형</Badge>
+              <Badge tone="success">{questionSummary.publicCount} 공개 가능</Badge>
+            </div>
+          </div>
 
-        {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-      </Card>
+          <div className="session-new-actions">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setSessionId(createSessionIdSuggestion())}
+            >
+              ID 다시 만들기
+            </Button>
+            <Button disabled={busy} onClick={() => void handleCreate()}>
+              <PlayCircle size={16} />
+              {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
+            </Button>
+          </div>
+
+          {error ? <div className="inline-message inline-message--error">{error}</div> : null}
+        </Card>
+
+        <Card className="custom-session-guide-card">
+          <div>
+            <Badge tone="success">수업 운영</Badge>
+            <h3>생성 후 운영</h3>
+          </div>
+          <div className="custom-guide-steps">
+            <div>
+              <strong>1</strong>
+              <span>Student QR 공유</span>
+            </div>
+            <div>
+              <strong>2</strong>
+              <span>Admin에서 질문 전환</span>
+            </div>
+            <div>
+              <strong>3</strong>
+              <span>Display로 공개 결과 보기</span>
+            </div>
+          </div>
+          <p>
+            공개 가능 질문은 발표 화면에 보여줄 수 있고, 강사용 질문은 Admin에서만 집계됩니다.
+          </p>
+        </Card>
+      </div>
 
       <Card className="builder-preset-card custom-question-list-card">
         <div className="builder-section-head">
           <div>
-            <h3>질문 목록</h3>
-            <p>객관식, 주관식, 복수 선택, 척도, 상태 체크를 섞어서 만들 수 있습니다.</p>
+            <h3>2. 질문 구성</h3>
+            <p>수업 순서대로 질문을 배치하세요. 첫 번째 질문이 생성 직후 현재 질문이 됩니다.</p>
           </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() =>
-              setDrafts((current) => [
-                ...current,
-                createDraft({
-                  phase: PHASE_ORDER[Math.min(current.length, PHASE_ORDER.length - 1)],
-                  inputType: 'choice',
-                }),
-              ])
-            }
-          >
-            <Plus size={16} />
-            질문 추가
-          </Button>
+          <div className="custom-question-add-row">
+            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
+              <Plus size={16} />
+              객관식
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('text')}>
+              <Plus size={16} />
+              주관식
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('status')}>
+              <Plus size={16} />
+              상태 체크
+            </Button>
+          </div>
         </div>
 
         <div className="builder-interaction-list">
@@ -573,9 +625,9 @@ export function CustomQuestionSessionPage() {
   return (
     <TeacherGate
       compact
-      description="템플릿 없이 질문을 직접 작성해 학생 링크를 공유하고, 기존 실시간 응답/결과 화면으로 운영합니다."
-      eyebrow="DORO V2 Quick Session"
-      title="직접 질문 만들기"
+      description="오늘 쓸 질문을 직접 입력하면 학생 QR, 강사용 Admin, 발표용 Display 링크가 한 번에 만들어집니다."
+      eyebrow="DORO V2"
+      title="질문 만들고 바로 공유하기"
       actions={() => (
         <div className="hero-actions">
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
@@ -585,11 +637,11 @@ export function CustomQuestionSessionPage() {
       )}
       loginAside={
         <Card className="banner-card">
-          <h3>직접 질문 세션</h3>
+          <h3>로그인 후 바로 할 수 있는 일</h3>
           <ul className="flow-list flow-list--bullet">
-            <li>템플릿을 만들지 않아도 즉시 질문 세트를 생성합니다.</li>
-            <li>생성된 질문은 기존 Student/Admin/Display 화면에서 그대로 동작합니다.</li>
-            <li>학생에게는 Student 링크 또는 QR만 공유하면 됩니다.</li>
+            <li>질문을 직접 입력해 세션을 만듭니다.</li>
+            <li>학생에게 QR을 공유합니다.</li>
+            <li>Admin과 Display로 실시간 응답을 봅니다.</li>
           </ul>
         </Card>
       }

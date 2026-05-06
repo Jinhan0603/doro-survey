@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom';
 
 const links = [
-  { to: '/', label: 'Home' },
-  { to: '/library', label: 'Library' },
-  { to: '/builder', label: 'Builder' },
-  { to: '/session-new', label: 'Session' },
-  { to: '/custom-session', label: 'Direct' },
+  { to: '/', label: '홈' },
+  { to: '/custom-session', label: '직접 만들기' },
+  { to: '/library', label: '템플릿' },
+  { to: '/builder', label: '빌더' },
+  { to: '/session-new', label: '세션 열기' },
   { to: '/student', label: 'Student' },
   { to: '/admin', label: 'Admin' },
   { to: '/display', label: 'Display' },

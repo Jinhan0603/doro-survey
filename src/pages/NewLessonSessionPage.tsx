@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
-import { ExternalLink, Link2, MonitorPlay, PlayCircle, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
+import { ExternalLink, Link2, MonitorPlay, PencilLine, PlayCircle, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
 import { TeacherGate } from '../components/teacher/TeacherGate';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
@@ -96,15 +96,15 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
       <Card className="session-new-card" tone="accent">
         <div className="builder-section-head">
           <div>
-            <h3>새 live session 만들기</h3>
-            <p>lesson template을 선택하고 sessionId와 제목을 입력하면 질문 세트가 바로 생성됩니다.</p>
+            <h3>템플릿으로 세션 열기</h3>
+            <p>저장된 수업 템플릿을 실제 운영용 세션으로 바꿉니다. 생성 후 학생 QR과 운영 링크가 만들어집니다.</p>
           </div>
-          <Badge tone="accent">{selectedTemplate ? 'Template linked' : 'Select template'}</Badge>
+          <Badge tone="accent">{selectedTemplate ? '템플릿 선택됨' : '템플릿 필요'}</Badge>
         </div>
 
         <div className="session-new-grid">
           <label className="form-field">
-            <span className="form-label">Lesson template</span>
+            <span className="form-label">수업 템플릿</span>
             <select
               className="select-sm session-new-select"
               value={selectedTemplateId}
@@ -125,7 +125,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
             onChange={(event) => setSessionId(event.target.value.trim().toLowerCase())}
           />
           <Input
-            label="Session title"
+            label="세션 제목"
             placeholder="예: AI 이미지 생성 실습 1반"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -134,11 +134,11 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
 
         <div className="session-new-actions">
           <Button size="sm" variant="secondary" onClick={() => setSessionId(createSessionIdSuggestion())}>
-            추천 sessionId 다시 만들기
+            ID 다시 만들기
           </Button>
           <Button disabled={busy || loading} onClick={() => void handleCreate()}>
             <PlayCircle size={16} />
-            {busy ? '세션 생성 중...' : 'createSessionFromLessonTemplate 실행'}
+            {busy ? '세션 생성 중...' : '템플릿으로 세션 만들기'}
           </Button>
         </div>
 
@@ -173,7 +173,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
             <div className="builder-section-head">
               <div>
                 <h3>생성 완료</h3>
-                <p>Student/Admin/Display 링크를 바로 열거나 복사해서 수업에 사용하세요.</p>
+                <p>학생에게는 Student QR을 공유하고, 강사는 Admin에서 질문 진행과 결과 공개를 제어하세요.</p>
               </div>
               <Badge tone="success">{sessionId}</Badge>
             </div>
@@ -234,11 +234,15 @@ export function NewLessonSessionPage() {
   return (
     <TeacherGate
       compact
-      description="lesson template에서 실제 live session을 생성하고 학생/Admin/Display 링크를 바로 배포합니다."
+      description="저장된 수업 템플릿을 실제 운영 세션으로 바꾸고 학생 QR, Admin, Display 링크를 생성합니다."
       eyebrow="DORO Session"
-      title="New Lesson Session"
+      title="템플릿 세션 열기"
       actions={() => (
         <div className="hero-actions">
+          <Link className="builder-link-button" to="/custom-session">
+            <PencilLine size={16} />
+            직접 질문 만들기
+          </Link>
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
             로그아웃
           </Button>
@@ -246,11 +250,11 @@ export function NewLessonSessionPage() {
       )}
       loginAside={
         <Card className="banner-card">
-          <h3>Session 생성 흐름</h3>
+          <h3>템플릿 세션 생성</h3>
           <ol className="flow-list">
-            <li>lesson template을 하나 고릅니다.</li>
+            <li>수업 템플릿을 하나 고릅니다.</li>
             <li>sessionId와 수업 제목을 입력합니다.</li>
-            <li>생성 후 QR과 Student/Admin/Display 링크를 바로 배포합니다.</li>
+            <li>생성 후 QR과 운영 링크를 사용합니다.</li>
           </ol>
         </Card>
       }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PlayCircle } from 'lucide-react';
+import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
@@ -41,7 +41,7 @@ function TemplateCard({
         <div className="library-template-card__labels">
           <Badge>{leadingLabel}</Badge>
           <Badge tone={visibility === 'private' ? 'default' : 'accent'}>
-            {visibility}
+            {TEMPLATE_VISIBILITY_LABELS[visibility]}
           </Badge>
         </div>
         <Link className="builder-link-button builder-link-button--ghost" to={`/builder/${template.id}`}>
@@ -57,8 +57,8 @@ function TemplateCard({
       <div className="library-template-card__meta">
         <span>{template.subject}</span>
         {template.targetGrade ? <span>{template.targetGrade}</span> : null}
-        <span>{template.interactionCount ?? 0} interactions</span>
-        <span>{template.slideCount ?? 0} slides</span>
+        <span>질문 {template.interactionCount ?? 0}개</span>
+        <span>슬라이드 {template.slideCount ?? 0}개</span>
       </div>
 
       {template.toolTags?.length ? (
@@ -82,7 +82,7 @@ function TemplateCard({
       <div className="library-template-card__actions">
         <Link className="builder-link-button" to={`/session-new?template=${template.id}`}>
           <PlayCircle size={16} />
-          세션 만들기
+          세션 열기
         </Link>
         <Button disabled={busy} size="sm" variant="secondary" onClick={() => onDuplicate(template.id)}>
           <CopyPlus size={16} />
@@ -92,7 +92,7 @@ function TemplateCard({
 
       {editable ? (
         <label className="form-field">
-          <span className="form-label">Visibility</span>
+          <span className="form-label">공개 범위</span>
           <select
             className="select-sm"
             value={visibility}
@@ -163,17 +163,21 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       <Card className="library-hero-card" tone="accent">
         <div className="library-hero-card__copy">
           <Badge tone="accent">Template Library</Badge>
-          <h2>DORO lesson template을 한 곳에서 관리합니다.</h2>
-          <p>기술 수업 흐름을 저장하고 복제한 뒤, 새 session으로 바로 이어서 운영할 수 있습니다.</p>
+          <h2>반복해서 쓸 수업 흐름을 관리합니다.</h2>
+          <p>자주 쓰는 질문 묶음은 템플릿으로 저장하고, 오늘만 쓸 질문은 직접 질문 만들기로 바로 시작하세요.</p>
         </div>
         <div className="library-hero-card__actions">
           <Link className="builder-link-button" to="/builder">
             <LayoutTemplate size={16} />
-            새 lesson template 만들기
+            새 템플릿 만들기
           </Link>
           <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
             <PlayCircle size={16} />
-            세션 만들기
+            템플릿 세션 열기
+          </Link>
+          <Link className="builder-link-button builder-link-button--ghost" to="/custom-session">
+            <PencilLine size={16} />
+            직접 질문 만들기
           </Link>
         </div>
       </Card>
@@ -184,8 +188,8 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       <div className="library-section">
         <div className="library-section__header">
           <div>
-            <h3>내 lesson template</h3>
-            <p>직접 만든 템플릿을 수정하고 복제하거나 새 session으로 연결합니다.</p>
+            <h3>내 수업 템플릿</h3>
+            <p>직접 만든 질문 흐름을 수정하고 새 운영 세션으로 연결합니다.</p>
           </div>
           <Badge tone="success">{myTemplates.length}개</Badge>
         </div>
@@ -197,8 +201,8 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
         ) : myTemplates.length === 0 ? (
           <Card className="library-empty-card">
             <FolderKanban size={20} />
-            <strong>아직 만든 lesson template이 없습니다.</strong>
-            <p>새 lesson template 만들기 버튼으로 첫 수업 템플릿을 시작하세요.</p>
+            <strong>아직 만든 템플릿이 없습니다.</strong>
+            <p>반복해서 쓸 수업은 템플릿으로, 오늘만 쓸 질문은 직접 질문 만들기로 시작하세요.</p>
           </Card>
         ) : (
           <div className="library-grid">
@@ -220,8 +224,8 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       <div className="library-section">
         <div className="library-section__header">
           <div>
-            <h3>조직/공유 template</h3>
-            <p>같은 조직 또는 전체 공유로 공개된 템플릿을 복제해서 내 수업용으로 가져올 수 있습니다.</p>
+            <h3>공유 템플릿</h3>
+            <p>같은 조직 또는 전체 공유 템플릿을 복제해 내 수업에 맞게 수정합니다.</p>
           </div>
           <Badge>{orgTemplates.length}개</Badge>
         </div>
@@ -230,7 +234,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           <Card className="library-empty-card">
             <BookCopy size={20} />
             <strong>아직 공유된 템플릿이 없습니다.</strong>
-            <p>내 템플릿 저장 시 조직 공유 옵션을 켜면 이 섹션에 나타납니다.</p>
+            <p>내 템플릿의 공개 범위를 조직 공유나 전체 공유로 바꾸면 이 섹션에 나타납니다.</p>
           </Card>
         ) : (
           <div className="library-grid">
@@ -255,9 +259,9 @@ export function LessonTemplateLibraryPage() {
   return (
     <TeacherGate
       compact
-      description="내 템플릿과 조직 공유 템플릿을 관리하고, builder 또는 새 session으로 바로 이동합니다."
+      description="반복해서 쓸 수업 질문 흐름을 저장하고, 필요할 때 실제 운영 세션으로 전환합니다."
       eyebrow="DORO Library"
-      title="Lesson Template Library"
+      title="수업 템플릿"
       actions={() => (
         <div className="hero-actions">
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
@@ -267,11 +271,11 @@ export function LessonTemplateLibraryPage() {
       )}
       loginAside={
         <Card className="banner-card">
-          <h3>Library에서 할 수 있는 일</h3>
+          <h3>템플릿을 쓰는 경우</h3>
           <ul className="flow-list flow-list--bullet">
-            <li>내 lesson template 목록과 조직 공유 template 목록을 따로 봅니다.</li>
-            <li>템플릿을 복제해 builder에서 다시 편집합니다.</li>
-            <li>선택한 템플릿으로 실제 session을 즉시 생성합니다.</li>
+            <li>같은 수업을 여러 반에서 반복합니다.</li>
+            <li>도입부터 마무리까지 질문 흐름을 미리 설계합니다.</li>
+            <li>저장한 흐름으로 새 운영 세션을 만듭니다.</li>
           </ul>
         </Card>
       }
