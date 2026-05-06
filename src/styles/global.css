@@ -2578,6 +2578,30 @@ button:disabled {
   justify-content: flex-end;
 }
 
+.custom-session-options,
+.custom-session-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.custom-session-options {
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(210, 210, 215, 0.72);
+  border-radius: 22px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.custom-session-stats {
+  justify-content: flex-end;
+}
+
+.custom-question-list-card {
+  padding: 24px;
+}
+
 .session-template-preview {
   align-items: center;
 }
@@ -2659,6 +2683,7 @@ button:disabled {
   .builder-slide-card__footer,
   .session-template-preview,
   .session-new-actions,
+  .custom-session-options,
   .session-links-footer {
     align-items: stretch;
     flex-direction: column;

@@ -5,6 +5,7 @@ const links = [
   { to: '/library', label: 'Library' },
   { to: '/builder', label: 'Builder' },
   { to: '/session-new', label: 'Session' },
+  { to: '/custom-session', label: 'Direct' },
   { to: '/student', label: 'Student' },
   { to: '/admin', label: 'Admin' },
   { to: '/display', label: 'Display' },

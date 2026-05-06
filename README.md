@@ -27,7 +27,7 @@ GitHub Pages 배포 주소:
 
 ### V2 Lesson Template Planner
 
-현재 V2 템플릿 설계/세션 생성 흐름 접근 링크입니다. Admin에서 seed를 실행할 때 `현재 기술 수업 질문`을 선택하면 V2 기본 기술 수업 질문 세트를 올릴 수 있습니다.
+현재 V2 템플릿 설계/세션 생성 흐름과 직접 질문 생성 흐름 접근 링크입니다. Admin에서 seed를 실행할 때 `현재 기술 수업 질문`을 선택하면 V2 기본 기술 수업 질문 세트를 올릴 수 있습니다.
 
 | Screen | Link |
 |------|------|
@@ -35,11 +35,12 @@ GitHub Pages 배포 주소:
 | Library | [V2 Lesson Template Library](https://jinhan0603.github.io/doro-survey/#/library) |
 | Builder | [V2 Lesson Template Builder](https://jinhan0603.github.io/doro-survey/#/builder) |
 | Session New | [V2 New Lesson Session](https://jinhan0603.github.io/doro-survey/#/session-new) |
+| Direct Question Session | [V2 Direct Question Session](https://jinhan0603.github.io/doro-survey/#/custom-session) |
 | Admin | [V2 Admin - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/admin?session=doro-tech-class-2026) |
 | Student | [V2 Student - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/student?session=doro-tech-class-2026) |
 | Display | [V2 Display - doro-tech-class-2026](https://jinhan0603.github.io/doro-survey/#/display?session=doro-tech-class-2026) |
 
-Admin, Display, Library, Builder, Session New는 강사/관리자 Email/Password 로그인이 필요합니다. Student 화면은 익명 로그인으로 참여합니다.
+Admin, Display, Library, Builder, Session New, Direct Question Session은 강사/관리자 Email/Password 로그인이 필요합니다. Student 화면은 익명 로그인으로 참여합니다.
 
 ---
 
@@ -50,9 +51,10 @@ V2의 핵심은 아래 흐름을 한 제품 안에서 연결한 것입니다.
 1. `Library`에서 내 템플릿과 공유 템플릿을 관리합니다.
 2. `Builder`에서 phase별 slides와 interaction block을 설계합니다.
 3. `Session New`에서 템플릿 기반 live session을 생성합니다.
-4. `Admin`에서 수업 중 질문 전환과 결과 공개를 운영합니다.
-5. `Student`는 모바일에서 현재 질문에 응답합니다.
-6. `Display`는 공개 가능한 결과만 프로젝터 화면에 보여줍니다.
+4. 빠른 수업이나 일회성 활동은 `Direct Question Session`에서 직접 질문을 작성해 live session을 생성합니다.
+5. `Admin`에서 수업 중 질문 전환과 결과 공개를 운영합니다.
+6. `Student`는 모바일에서 현재 질문에 응답합니다.
+7. `Display`는 공개 가능한 결과만 프로젝터 화면에 보여줍니다.
 
 ---
 
@@ -71,6 +73,7 @@ README에는 V1과 V2의 운영 맥락을 계속 남깁니다.
 
 - V1 실시간 엔진 위에 lesson template planner를 추가
 - 수업 phase, slide, interaction block, visibility를 사전 설계
+- 템플릿 없이 직접 질문을 작성해 즉시 live session을 생성하는 빠른 V2 경로 추가
 - DOROSSAEM 기술/툴/실습형 수업에 공통 적용하는 현재 질문 세트 유지
 - Admin의 seed 선택에서 `현재 기술 수업 질문`으로 업로드 가능
 
@@ -88,6 +91,7 @@ README에는 V1과 V2의 운영 맥락을 계속 남깁니다.
 6. `choice / text / multi / scale / status` 런타임 지원
 7. `public / teacher-only / hidden` 결과 visibility 분리
 8. admin allowlist를 유지한 채 `teacher` role과 조직 공유 모델 확장
+9. 직접 질문 기반 live session 생성 화면 추가
 
 ---
 
@@ -156,6 +160,14 @@ Builder에서는 자주 쓰는 DORO 기본 버튼도 제공합니다.
 - `sessionId` 입력
 - `title` 입력
 - `createSessionFromLessonTemplate` 실행
+- 생성 후 Student/Admin/Display 링크와 QR 제공
+
+### Direct Question Session
+
+- 템플릿 없이 직접 질문 작성
+- `choice / text / multi / scale / status` 질문 생성
+- `public / teacher-only / hidden` 결과 visibility 설정
+- 생성 직후 첫 질문 응답 수집을 열지 선택
 - 생성 후 Student/Admin/Display 링크와 QR 제공
 
 ### Student
@@ -362,6 +374,7 @@ GitHub Pages 배포를 위해 `HashRouter`를 유지합니다.
 | `/builder` | 새 lesson template 작성 |
 | `/builder/:templateId` | 기존 template 편집 |
 | `/session-new` | template 기반 live session 생성 |
+| `/custom-session` | 직접 질문 기반 live session 생성 |
 | `/student?session=<id>` | 학생 참여 화면 |
 | `/admin?session=<id>` | 강사 운영 화면 |
 | `/display?session=<id>` | 발표 화면 |
@@ -393,6 +406,8 @@ lessonTemplates/{templateId}
 lessonTemplates/{templateId}/slides/{slideId}
 lessonTemplates/{templateId}/interactions/{interactionId}
 ```
+
+직접 질문 세션은 새 컬렉션을 만들지 않고 기존 live survey 구조에 바로 저장됩니다.
 
 핵심 타입 정의:
 

@@ -455,6 +455,7 @@ export async function createSessionFromLessonTemplate(
       const questionRef = questionRefs[i + offset];
       // Map LessonInteractionDoc fields to QuestionDoc — V1-compatible
       const questionData = {
+        id: questionRef.id,
         order: interaction.order,
         // Map QuestionInputType to V1 QuestionType (choice/text fallback)
         type: (interaction.inputType === 'choice' ||

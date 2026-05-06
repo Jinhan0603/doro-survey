@@ -37,6 +37,11 @@ const NewLessonSessionPage = lazy(async () => {
   return { default: module.NewLessonSessionPage };
 });
 
+const CustomQuestionSessionPage = lazy(async () => {
+  const module = await import('../pages/CustomQuestionSessionPage');
+  return { default: module.CustomQuestionSessionPage };
+});
+
 const NotFoundPage = lazy(async () => {
   const module = await import('../pages/NotFoundPage');
   return { default: module.NotFoundPage };
@@ -53,6 +58,7 @@ export function AppRouter() {
           <Route path="/builder" element={<LessonTemplateBuilderPage />} />
           <Route path="/builder/:templateId" element={<LessonTemplateBuilderPage />} />
           <Route path="/session-new" element={<NewLessonSessionPage />} />
+          <Route path="/custom-session" element={<CustomQuestionSessionPage />} />
           <Route path="/student" element={<StudentPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/display" element={<DisplayPage />} />

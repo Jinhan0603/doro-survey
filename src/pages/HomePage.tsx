@@ -5,6 +5,7 @@ import {
   ClipboardCopy,
   LayoutTemplate,
   MonitorPlay,
+  PencilLine,
   PlayCircle,
   ShieldCheck,
   Smartphone,
@@ -47,6 +48,13 @@ const screens = [
     description: 'lesson template을 만들고 복제한 뒤, 실제 수업 session으로 바로 연결합니다.',
     badge: '강사 전용',
   },
+  {
+    href: '#/custom-session',
+    icon: PencilLine,
+    title: '직접 질문 만들기',
+    description: '템플릿 없이 질문을 직접 입력하고 학생 링크와 QR을 바로 생성합니다.',
+    badge: 'V2 빠른 생성',
+  },
 ];
 
 const usageSteps = [
@@ -85,6 +93,10 @@ export function HomePage() {
           <Link className="builder-link-button" to="/builder">
             <LayoutTemplate size={16} />
             lesson template 만들기
+          </Link>
+          <Link className="builder-link-button" to="/custom-session">
+            <PencilLine size={16} />
+            직접 질문 만들기
           </Link>
           <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
             <PlayCircle size={16} />

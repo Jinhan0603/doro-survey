@@ -27,7 +27,7 @@ export function subscribeQuestions(
   return onSnapshot(
     questionsQuery,
     (snapshot) => {
-      callback(snapshot.docs.map((d) => d.data() as QuestionDoc));
+      callback(snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as QuestionDoc));
     },
     (error) => onError?.(error),
   );
@@ -39,6 +39,6 @@ export function subscribeQuestion(
   callback: (question: QuestionDoc | null) => void,
 ): Unsubscribe {
   return onSnapshot(getQuestionRef(sessionId, questionId), (snapshot) => {
-    callback(snapshot.exists() ? (snapshot.data() as QuestionDoc) : null);
+    callback(snapshot.exists() ? ({ ...snapshot.data(), id: snapshot.id } as QuestionDoc) : null);
   });
 }
