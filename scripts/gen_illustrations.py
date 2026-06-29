@@ -72,21 +72,21 @@ def finalize(img, name, target_w):
 
 # ---------------------------------------------------------------- 1. phone + link + QR
 def gen_phone():
-    W, H = 360, 460
+    W, H = 420, 420          # square canvas so it fills the square card box
     img, d = canvas(W, H)
     # decorative dots
-    for (x, y, r, c) in [(40, 90, 9, BLUE_200), (322, 70, 11, BLUE_100),
-                         (40, 360, 12, BLUE_100), (320, 380, 9, GREEN),
-                         (300, 200, 7, BLUE_200), (60, 240, 7, BLUE_200)]:
+    for (x, y, r, c) in [(54, 118, 9, BLUE_200), (368, 96, 11, BLUE_100),
+                         (60, 312, 12, BLUE_100), (366, 330, 9, GREEN),
+                         (352, 214, 7, BLUE_200), (70, 220, 7, BLUE_200)]:
         d.ellipse([s(x - r), s(y - r), s(x + r), s(y + r)], fill=c)
-    # phone body
-    px0, py0, px1, py1 = 112, 48, 248, 412
-    rrect(d, (px0, py0, px1, py1), 34, fill=WHITE, outline=NAVY, width=10)
-    rrect(d, (px0 + 14, py0 + 26, px1 - 14, py1 - 26), 20, fill=BLUE_50)
+    # phone body (160 x 300 -> natural smartphone ratio ~0.53)
+    px0, py0, px1, py1 = 130, 62, 290, 362
+    rrect(d, (px0, py0, px1, py1), 30, fill=WHITE, outline=NAVY, width=9)
+    rrect(d, (px0 + 14, py0 + 24, px1 - 14, py1 - 24), 18, fill=BLUE_50)
     # speaker notch
-    d.rounded_rectangle([s(170), s(60), s(190), s(67)], radius=s(4), fill=BLUE_200)
+    d.rounded_rectangle([s(198), s(74), s(222), s(81)], radius=s(4), fill=BLUE_200)
     # link badge (top inside)
-    lcx, lcy = 180, 150
+    lcx, lcy = 210, 150
     d.ellipse([s(lcx - 36), s(lcy - 36), s(lcx + 36), s(lcy + 36)], fill=BLUE)
     # clean chain-link glyph: two interlocking capsule rings, tilted 45deg
     def capsule(L, Tk, wd):
@@ -106,7 +106,7 @@ def gen_phone():
     img.alpha_composite(cap, a)
     img.alpha_composite(cap, b)
     # QR block (bottom inside)
-    qx, qy, qs = 142, 230, 76
+    qx, qy, qs = 165, 228, 90
     rrect(d, (qx, qy, qx + qs, qy + qs), 10, fill=WHITE, outline=BLUE_100, width=3)
     n = 7
     cell = qs / n
@@ -133,7 +133,7 @@ def gen_phone():
         sz = (qs - 12) / n * 2.0
         d.rounded_rectangle([s(fx), s(fy), s(fx + sz), s(fy + sz)], radius=s(4),
                             outline=BLUE, width=s(3))
-    finalize(img, "1.png", 440)
+    finalize(img, "1.png", 460)
 
 
 # ---------------------------------------------------------------- 2. teacher dashboard
