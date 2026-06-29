@@ -305,8 +305,9 @@
 .dh-bottom-inner--steps { grid-template-columns: minmax(0, 1fr) 170px; }
 .dh-bottom-inner--checks { grid-template-columns: minmax(0, 1fr) 160px; }
 .dh-bottom-img { display: flex; align-items: center; justify-content: center; }
-.dh-bottom-img--steps img { width: 170px; height: 170px; object-fit: contain; }
-.dh-bottom-img--checks img { width: 160px; height: 160px; object-fit: contain; }
+/* size by width, let aspect drive height so the box hugs the art (no forced-square letterbox) */
+.dh-bottom-img--steps img { width: 170px; height: auto; max-height: 180px; object-fit: contain; }
+.dh-bottom-img--checks img { width: 150px; height: auto; max-height: 175px; object-fit: contain; }
 
 .dh-step { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: flex-start; margin-bottom: 10px; }
 .dh-step-num {
