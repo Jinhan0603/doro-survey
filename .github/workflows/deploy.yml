@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 permissions:
@@ -18,6 +19,7 @@ concurrency:
 jobs:
   build-pages:
     name: Build for GitHub Pages
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +52,7 @@ jobs:
 
   deploy-pages:
     name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -62,6 +65,7 @@ jobs:
 
   deploy-server:
     name: Deploy to survey.doroedu.co.kr
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -95,3 +99,11 @@ jobs:
           source: dist/*
           target: /home/ubuntu/survey
           strip_components: 1
+
+      - name: Fix permissions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 210.109.15.216
+          username: ubuntu
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: chmod -R 755 /home/ubuntu/survey/
