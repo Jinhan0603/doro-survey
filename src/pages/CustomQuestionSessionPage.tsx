@@ -455,47 +455,19 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="session-new-page custom-question-page">
-        <Card className="session-new-card" tone="accent">
-          <div className="builder-section-head">
-            <div>
-              <h3>1. 설문 링크 만들기</h3>
-            </div>
-          </div>
+      <Card className="session-new-card" tone="accent">
+        <div className="session-new-grid">
+          <Input
+            aria-label="세션 제목"
+            placeholder="세션 제목 (예: AI 도구 실습 1반)"
+            value={sessionTitle}
+            onChange={(event) => setSessionTitle(event.target.value)}
+          />
+        </div>
 
-          <div className="session-new-grid">
-            <Input
-              label="세션 제목"
-              placeholder="예: AI 도구 실습 1반"
-              value={sessionTitle}
-              onChange={(event) => setSessionTitle(event.target.value)}
-            />
-          </div>
-
-          <div className="custom-session-options">
-            <label className="builder-checkbox">
-              <input
-                checked={startOpen}
-                type="checkbox"
-                onChange={(event) => setStartOpen(event.target.checked)}
-              />
-              <span>생성 직후 첫 질문 응답 수집 열기</span>
-            </label>
-          </div>
-
-          <div className="session-new-actions">
-            <Button disabled={busy} onClick={() => void handleCreate()}>
-              <PlayCircle size={16} />
-              {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
-            </Button>
-          </div>
-
-          {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-        </Card>
-
-      <Card className="builder-preset-card custom-question-list-card">
         <div className="builder-section-head">
           <div>
-            <h3>2. 질문 구성</h3>
+            <h3>질문 구성</h3>
           </div>
           <div className="custom-question-add-row">
             <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
@@ -526,6 +498,26 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
             />
           ))}
         </div>
+
+        <div className="custom-session-options">
+          <label className="builder-checkbox">
+            <input
+              checked={startOpen}
+              type="checkbox"
+              onChange={(event) => setStartOpen(event.target.checked)}
+            />
+            <span>생성 직후 첫 질문 응답 수집 열기</span>
+          </label>
+        </div>
+
+        <div className="session-new-actions">
+          <Button disabled={busy} onClick={() => void handleCreate()}>
+            <PlayCircle size={16} />
+            {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
+          </Button>
+        </div>
+
+        {error ? <div className="inline-message inline-message--error">{error}</div> : null}
       </Card>
 
       {createdSession ? (
