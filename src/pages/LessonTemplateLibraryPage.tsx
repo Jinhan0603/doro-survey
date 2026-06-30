@@ -192,11 +192,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           </div>
         </div>
 
-        {loading ? (
-          <Card className="waiting-state">
-            <p>템플릿을 불러오는 중입니다.</p>
-          </Card>
-        ) : myTemplates.length === 0 ? (
+        {loading ? null : myTemplates.length === 0 ? (
           <Card className="library-empty-card">
             <FolderKanban size={20} />
             <strong>아직 만든 템플릿이 없습니다.</strong>

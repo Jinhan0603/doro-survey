@@ -8,7 +8,6 @@ import { AppShell } from '../components/layout/AppShell';
 import { AnswerWall } from '../components/display/AnswerWall';
 import { DisplayStage } from '../components/display/DisplayStage';
 import { ResultChart } from '../components/display/ResultChart';
-import { WaitingState } from '../components/survey/WaitingState';
 import { firebaseConfigStatus } from '../firebase/client';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
@@ -135,9 +134,7 @@ export function DisplayPage() {
   let content: ReactNode = null;
 
   if (loading) {
-    content = (
-      <WaitingState description="잠시만 기다려주세요." title="질문과 답변을 불러오는 중입니다" />
-    );
+    content = null;
   } else if (error || answersError) {
     content = <Card className="banner-card banner-card--error">{error ?? answersError}</Card>;
   } else if (!session || !activeQuestion) {

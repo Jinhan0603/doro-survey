@@ -540,12 +540,7 @@ export function StudentPage() {
 
   const liveContent = (() => {
     if (authLoading || loading) {
-      return (
-        <WaitingState
-          description="잠시만 기다려주세요."
-          title="연결하는 중입니다"
-        />
-      );
+      return null;
     }
 
     if (authError || error || ownAnswerError) {
@@ -573,12 +568,7 @@ export function StudentPage() {
     }
 
     if (!user) {
-      return (
-        <WaitingState
-          description="잠시만 기다려주세요."
-          title="연결하는 중입니다"
-        />
-      );
+      return null;
     }
 
     return (

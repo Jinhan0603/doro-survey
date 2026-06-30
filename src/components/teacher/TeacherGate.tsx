@@ -13,7 +13,6 @@ import type { User } from 'firebase/auth';
 import { usePresenterAuth } from '../../auth/AuthProvider';
 import { Card } from '../common/Card';
 import { AppShell } from '../layout/AppShell';
-import { WaitingState } from '../survey/WaitingState';
 
 type TeacherGateProps = {
   title?: string;
@@ -37,11 +36,7 @@ export function TeacherGate({
   const { status, user } = usePresenterAuth();
 
   if (status === 'loading') {
-    return (
-      <AppShell compact={compact} description={description} eyebrow={eyebrow} title={title}>
-        <WaitingState title="인증 확인 중..." description="잠시만 기다려주세요." />
-      </AppShell>
-    );
+    return null;
   }
 
   if (!user) {

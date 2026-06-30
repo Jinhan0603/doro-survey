@@ -5,7 +5,6 @@ import { TeacherGate } from '../components/teacher/TeacherGate';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
-import { WaitingState } from '../components/survey/WaitingState';
 import { useMySessions } from '../hooks/useMySessions';
 import { deleteSessionCascade } from '../firebase/sessions';
 import { buildAppUrl } from '../utils/urls';
@@ -52,9 +51,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
     <div className="stack">
       {deleteError ? <Card className="banner-card banner-card--error">{deleteError}</Card> : null}
 
-      {loading ? (
-        <WaitingState title="설문을 불러오는 중입니다" description="잠시만 기다려주세요." />
-      ) : error ? (
+      {loading ? null : error ? (
         <Card className="banner-card banner-card--error">{error}</Card>
       ) : sessions.length === 0 ? (
         // 진행 중인 설문이 없으면 시작 카드 없이 안내 메시지만 보여준다.

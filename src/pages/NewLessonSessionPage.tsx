@@ -159,12 +159,6 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
         {error ? <div className="inline-message inline-message--error">{error}</div> : null}
       </Card>
 
-      {loading ? (
-        <Card className="waiting-state">
-          <p>템플릿 목록을 불러오는 중입니다.</p>
-        </Card>
-      ) : null}
-
       {createdLinks ? (
         <div className="session-result-grid">
           <QrPanel url={createdLinks.student} />

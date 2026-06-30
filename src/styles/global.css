@@ -119,14 +119,6 @@ button:disabled {
   min-height: calc(100vh - 72px);
 }
 
-.route-loading {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-
 .app-shell__main {
   margin: 0 auto;
   max-width: 1280px;

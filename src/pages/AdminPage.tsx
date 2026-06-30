@@ -411,7 +411,6 @@ export function AdminPage() {
                 {activeQuestion ? `Q${String(activeQuestion.order).padStart(2, '0')}` : '—'}
               </Badge>
             </div>
-            {loading ? <p>질문을 불러오는 중입니다.</p> : null}
             {error ? <div className="inline-message inline-message--error">{error}</div> : null}
             {answersError ? <div className="inline-message inline-message--error">{answersError}</div> : null}
             {!activeQuestion && !loading ? <p>기본 질문 seed 후 질문을 선택해주세요.</p> : null}

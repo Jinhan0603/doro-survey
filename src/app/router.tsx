@@ -72,7 +72,7 @@ function PresenterLayout() {
 export function AppRouter() {
   return (
     <HashRouter>
-      <Suspense fallback={<div className="route-loading">Loading DORO Live Survey...</div>}>
+      <Suspense fallback={null}>
         <Routes>
           <Route path="/student" element={<StudentPage />} />
           <Route element={<PresenterLayout />}>

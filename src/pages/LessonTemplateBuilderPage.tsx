@@ -955,7 +955,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   );
 
   if (templateId && loading) {
-    return <Card className="waiting-state"><p>템플릿을 불러오는 중입니다.</p></Card>;
+    return null;
   }
 
   if (templateId && error) {
