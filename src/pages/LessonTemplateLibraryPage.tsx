@@ -7,7 +7,6 @@ import { Card } from '../components/common/Card';
 import { TeacherGate } from '../components/teacher/TeacherGate';
 import { PHASE_ORDER, PHASE_SHORT_LABELS } from '../data/lessonTemplatePresets';
 import { duplicateLessonTemplate, updateLessonTemplate } from '../firebase/lessonTemplates';
-import { signOutUser } from '../firebase/auth';
 import { useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
 import type { LessonTemplateDoc, TemplateVisibility } from '../firebase/types';
@@ -242,27 +241,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
 
 export function LessonTemplateLibraryPage() {
   return (
-    <TeacherGate
-      compact
-      title="설문지 템플릿"
-      actions={() => (
-        <div className="hero-actions">
-          <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
-            로그아웃
-          </Button>
-        </div>
-      )}
-      loginAside={
-        <Card className="banner-card">
-          <h3>템플릿을 쓰는 경우</h3>
-          <ul className="flow-list flow-list--bullet">
-            <li>같은 수업을 여러 반에서 반복합니다.</li>
-            <li>도입부터 마무리까지 질문 흐름을 미리 설계합니다.</li>
-            <li>저장한 흐름으로 새 운영 세션을 만듭니다.</li>
-          </ul>
-        </Card>
-      }
-    >
+    <TeacherGate compact>
       {(user) => <LessonTemplateLibraryContent ownerUid={user.uid} />}
     </TeacherGate>
   );
