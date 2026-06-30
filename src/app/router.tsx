@@ -39,6 +39,11 @@ const NewLessonSessionPage = lazy(async () => {
   return { default: module.NewLessonSessionPage };
 });
 
+const SessionsDashboardPage = lazy(async () => {
+  const module = await import('../pages/SessionsDashboardPage');
+  return { default: module.SessionsDashboardPage };
+});
+
 const CustomQuestionSessionPage = lazy(async () => {
   const module = await import('../pages/CustomQuestionSessionPage');
   return { default: module.CustomQuestionSessionPage };
@@ -69,6 +74,7 @@ export function AppRouter() {
           <Route path="/student" element={<StudentPage />} />
           <Route element={<PresenterLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/sessions" element={<SessionsDashboardPage />} />
             <Route path="/planner" element={<PlannerPage />} />
             <Route path="/library" element={<LessonTemplateLibraryPage />} />
             <Route path="/builder" element={<LessonTemplateBuilderPage />} />

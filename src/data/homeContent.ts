@@ -10,6 +10,7 @@ export type NavItem = { label: string; to: string; active?: boolean };
 
 export const navItems: NavItem[] = [
   { label: '홈', to: '/', active: true },
+  { label: '내 수업', to: '/sessions' },
   { label: '질문 만들기', to: '/custom-session' },
   { label: '템플릿', to: '/library' },
   { label: '수업 열기', to: '/session-new' },
