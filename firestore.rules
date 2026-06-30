@@ -275,7 +275,7 @@ service cloud.firestore {
           allow read: if isAdmin() || isOwnAnswer(uid) || isSessionOwner(sessionId);
           allow create: if isAdmin() || studentCreatesAnswer(sessionId, questionId, uid);
           allow update: if isAdmin() || studentUpdatesAnswer(sessionId, questionId, uid);
-          allow delete: if isAdmin();
+          allow delete: if isAdmin() || isSessionOwner(sessionId);
         }
       }
     }

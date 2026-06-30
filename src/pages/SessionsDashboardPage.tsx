@@ -7,6 +7,7 @@ import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { WaitingState } from '../components/survey/WaitingState';
 import { useMySessions } from '../hooks/useMySessions';
+import { deleteSessionCascade } from '../firebase/sessions';
 import { buildAppUrl } from '../utils/urls';
 
 function formatCreated(ts: Timestamp | null | undefined): string {
@@ -22,12 +23,29 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const navigate = useNavigate();
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const copyStudentLink = (id: string) => {
     navigator.clipboard.writeText(buildAppUrl('/student', id)).then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`"${title}" 수업을 삭제할까요?\n질문과 응답이 모두 영구 삭제되며 되돌릴 수 없습니다.`)) {
+      return;
+    }
+    try {
+      setDeletingId(id);
+      setDeleteError(null);
+      await deleteSessionCascade(id);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : '수업 삭제에 실패했습니다.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -46,6 +64,8 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
           </Button>
         </div>
       </Card>
+
+      {deleteError ? <Card className="banner-card banner-card--error">{deleteError}</Card> : null}
 
       {loading ? (
         <WaitingState title="수업을 불러오는 중입니다" description="잠시만 기다려주세요." />
@@ -77,6 +97,14 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               </Button>
               <Button size="sm" variant="ghost" onClick={() => copyStudentLink(session.id)}>
                 {copiedId === session.id ? '복사됨' : '학생 링크 복사'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={deletingId === session.id}
+                onClick={() => void handleDelete(session.id, session.title)}
+              >
+                {deletingId === session.id ? '삭제 중...' : '삭제'}
               </Button>
             </div>
           </Card>

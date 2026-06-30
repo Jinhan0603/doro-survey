@@ -99,7 +99,7 @@ jobs:
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 210.109.15.216
+          host: 210.109.82.243
           username: ubuntu
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           source: dist/*
@@ -109,7 +109,7 @@ jobs:
       - name: Fix permissions
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 210.109.15.216
+          host: 210.109.82.243
           username: ubuntu
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: chmod -R 755 /home/ubuntu/survey/

@@ -1,7 +1,9 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -104,6 +106,31 @@ export async function updateSession(
 
 export async function setActiveQuestionId(sessionId: string, questionId: string) {
   await updateSession(sessionId, { activeQuestionId: questionId });
+}
+
+const DELETE_BATCH_LIMIT = 400;
+
+/**
+ * Deletes a session and all of its nested data (each question's answers, then
+ * the questions, then the session doc). Allowed for the session owner/admin.
+ */
+export async function deleteSessionCascade(sessionId: string): Promise<void> {
+  const database = requireDb();
+  const questionsSnap = await getDocs(collection(database, 'sessions', sessionId, 'questions'));
+
+  for (const questionDoc of questionsSnap.docs) {
+    const answersSnap = await getDocs(
+      collection(database, 'sessions', sessionId, 'questions', questionDoc.id, 'answers'),
+    );
+    for (let i = 0; i < answersSnap.docs.length; i += DELETE_BATCH_LIMIT) {
+      const batch = writeBatch(database);
+      answersSnap.docs.slice(i, i + DELETE_BATCH_LIMIT).forEach((answer) => batch.delete(answer.ref));
+      await batch.commit();
+    }
+    await deleteDoc(questionDoc.ref);
+  }
+
+  await deleteDoc(getSessionRef(sessionId));
 }
 
 export async function seedSession(
