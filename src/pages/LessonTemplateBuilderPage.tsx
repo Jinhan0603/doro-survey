@@ -253,11 +253,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     const title = form.title.trim();
     const subject = form.subject.trim();
 
-    if (!title) {
-      setSaveError('템플릿 제목을 입력해주세요.');
-      return;
-    }
-
     try {
       setBusy(true);
       setSaveError(null);
@@ -371,7 +366,11 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
               <FileUp size={16} />
               PPTX에서 추출하기
             </Button>
-            <Button disabled={busy || questions.length === 0} size="sm" onClick={() => void handleSave()}>
+            <Button
+              disabled={busy || !form.title.trim() || questions.length === 0}
+              size="sm"
+              onClick={() => void handleSave()}
+            >
               <Save size={16} />
               {busy ? '저장 중...' : '저장'}
             </Button>
