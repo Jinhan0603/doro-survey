@@ -43,6 +43,9 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_DEFAULT_SESSION_ID: ${{ secrets.VITE_DEFAULT_SESSION_ID }}
           VITE_APP_NAME: ${{ secrets.VITE_APP_NAME }}
+          VITE_KEYCLOAK_ISSUER: ${{ secrets.VITE_KEYCLOAK_ISSUER }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
+          VITE_AUTH_EXCHANGE_URL: ${{ secrets.VITE_AUTH_EXCHANGE_URL }}
 
       - uses: actions/configure-pages@v5
 
@@ -89,6 +92,9 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_DEFAULT_SESSION_ID: ${{ secrets.VITE_DEFAULT_SESSION_ID }}
           VITE_APP_NAME: ${{ secrets.VITE_APP_NAME }}
+          VITE_KEYCLOAK_ISSUER: ${{ secrets.VITE_KEYCLOAK_ISSUER }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
+          VITE_AUTH_EXCHANGE_URL: ${{ secrets.VITE_AUTH_EXCHANGE_URL }}
 
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
