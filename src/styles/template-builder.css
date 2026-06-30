@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #0b7ff3;
+  color: #2563eb;
 }
 
 .builderPaneHeader h2 {
@@ -299,7 +299,7 @@
 .mobilePaneTab.isActive {
   border-color: #93c5fd;
   background: #eff6ff;
-  color: #0b7ff3;
+  color: #2563eb;
 }
 
 @media (max-width: 960px) {
