@@ -18,7 +18,7 @@ export function BottomInfoCards() {
             ))}
           </ol>
           <div className="dh-bottom-img dh-bottom-img--steps">
-            <img src={assetUrl('/images/4.png')} alt="수업 운영 순서를 나타내는 체크리스트 일러스트" loading="lazy" />
+            <img src={assetUrl('/images/workflow-checklist.png')} alt="수업 운영 순서를 나타내는 체크리스트 일러스트" loading="lazy" />
           </div>
         </div>
       </Card>
@@ -35,7 +35,7 @@ export function BottomInfoCards() {
             ))}
           </ul>
           <div className="dh-bottom-img dh-bottom-img--checks">
-            <img src={assetUrl('/images/5.png')} alt="안전한 공유를 나타내는 방패 체크 일러스트" loading="lazy" />
+            <img src={assetUrl('/images/secure-share.png')} alt="안전한 공유를 나타내는 방패 체크 일러스트" loading="lazy" />
           </div>
         </div>
       </Card>

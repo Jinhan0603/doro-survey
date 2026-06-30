@@ -1,4 +1,4 @@
-"""Generate the 5 homepage illustration assets (public/images/1..5.png).
+"""Generate the 5 homepage illustration assets (public/images/*.png).
 
 Flat geometric education-SaaS style, white background, drawn at 3x then
 downsampled with LANCZOS for crisp antialiased edges. Matches the supplied
@@ -133,7 +133,7 @@ def gen_phone():
         sz = (qs - 12) / n * 2.0
         d.rounded_rectangle([s(fx), s(fy), s(fx + sz), s(fy + sz)], radius=s(4),
                             outline=BLUE, width=s(3))
-    finalize(img, "1.png", 460)
+    finalize(img, "student-join.png", 460)
 
 
 # ---------------------------------------------------------------- 2. teacher dashboard
@@ -172,7 +172,7 @@ def gen_dashboard():
     d.pieslice([s(cx - r), s(cy - r), s(cx + r), s(cy + r)], 210, 270, fill=YELLOW)
     ir = 22
     d.ellipse([s(cx - ir), s(cy - ir), s(cx + ir), s(cy + ir)], fill=WHITE)
-    finalize(img, "2.png", 470)
+    finalize(img, "teacher-dashboard.png", 470)
 
 
 # ---------------------------------------------------------------- 3. result presentation screen
@@ -199,7 +199,7 @@ def gen_result():
     thick_line(d, [(184, 356), (276, 356)], 11, NAVY)
     thick_line(d, [(230, 336), (190, 356)], 9, NAVY)
     thick_line(d, [(230, 336), (270, 356)], 9, NAVY)
-    finalize(img, "3.png", 470)
+    finalize(img, "result-display.png", 470)
 
 
 # ---------------------------------------------------------------- 4. clipboard + plant
@@ -238,7 +238,7 @@ def gen_clipboard():
         ld.ellipse([0, 0, s(60), s(34)], fill=col)
         leaf = leaf.rotate(-(ang - 90) - 90, expand=True, resample=Image.BICUBIC)
         img.alpha_composite(leaf, (int(s(ex) - leaf.width / 2), int(s(ey) - leaf.height / 2)))
-    finalize(img, "4.png", 460)
+    finalize(img, "workflow-checklist.png", 460)
 
 
 # ---------------------------------------------------------------- 5. shield + check
@@ -277,7 +277,7 @@ def gen_shield():
     gcx, gcy, gr = cx, top + 150, 56
     d.ellipse([s(gcx - gr), s(gcy - gr), s(gcx + gr), s(gcy + gr)], fill=GREEN)
     check(d, gcx, gcy, 56, 12, WHITE)
-    finalize(img, "5.png", 420)
+    finalize(img, "secure-share.png", 420)
 
 
 if __name__ == "__main__":

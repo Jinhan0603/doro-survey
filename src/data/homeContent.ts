@@ -71,7 +71,7 @@ export const operationCards: OperationCard[] = [
     description: '학생은 링크나 QR 코드로 접속해 질문에 응답합니다.',
     action: '참여 링크 보기',
     to: `/student?session=${previewSessionId}`,
-    image: '/images/1.png',
+    image: '/images/student-join.png',
     alt: '학생 참여 링크와 QR 코드를 보여주는 휴대폰 일러스트',
   },
   {
@@ -79,7 +79,7 @@ export const operationCards: OperationCard[] = [
     description: '응답 현황을 확인하고 질문 진행과 결과 공개를 관리합니다.',
     action: '진행 화면 열기',
     to: `/admin?session=${previewSessionId}`,
-    image: '/images/2.png',
+    image: '/images/teacher-dashboard.png',
     alt: '교사용 진행 화면 대시보드 일러스트',
   },
   {
@@ -87,7 +87,7 @@ export const operationCards: OperationCard[] = [
     description: '교실 화면이나 프로젝터에 응답 결과를 크게 보여줍니다.',
     action: '공유 화면 열기',
     to: `/display?session=${previewSessionId}`,
-    image: '/images/3.png',
+    image: '/images/result-display.png',
     alt: '결과 공유 화면 차트 일러스트',
   },
 ];
