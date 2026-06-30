@@ -208,7 +208,6 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               {selected ? (
                 <SessionDetail
                   session={selected}
-                  copied={copiedId === selected.id}
                   deleting={deletingId === selected.id}
                   onOpenAdmin={() => navigate(`/admin?session=${selected.id}`)}
                   onOpenDisplay={() => navigate(`/display?session=${selected.id}`)}
