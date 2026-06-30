@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthProvider';
 import { AuthGate } from '../components/auth/AuthGate';
 import { AppHeader } from '../components/layout/AppHeader';
@@ -54,6 +54,12 @@ const NotFoundPage = lazy(async () => {
   return { default: module.NotFoundPage };
 });
 
+// 구 경로 /builder/:templateId → /custom-template/:templateId 로 파라미터 보존 리다이렉트.
+function RedirectBuilderToCustomTemplate() {
+  const { templateId } = useParams();
+  return <Navigate to={`/custom-template/${templateId ?? ''}`} replace />;
+}
+
 // Wraps every presenter route in the DoroGate auth gate. /student stays outside
 // this layout so students keep their anonymous-auth participation flow.
 function PresenterLayout() {
@@ -80,9 +86,13 @@ export function AppRouter() {
             <Route path="/" element={<Navigate to="/sessions" replace />} />
             <Route path="/sessions" element={<SessionsDashboardPage />} />
             <Route path="/planner" element={<PlannerPage />} />
-            <Route path="/library" element={<LessonTemplateLibraryPage />} />
-            <Route path="/builder" element={<LessonTemplateBuilderPage />} />
-            <Route path="/builder/:templateId" element={<LessonTemplateBuilderPage />} />
+            <Route path="/template" element={<LessonTemplateLibraryPage />} />
+            <Route path="/custom-template" element={<LessonTemplateBuilderPage />} />
+            <Route path="/custom-template/:templateId" element={<LessonTemplateBuilderPage />} />
+            {/* 구 경로 호환 리다이렉트 */}
+            <Route path="/library" element={<Navigate to="/template" replace />} />
+            <Route path="/builder" element={<Navigate to="/custom-template" replace />} />
+            <Route path="/builder/:templateId" element={<RedirectBuilderToCustomTemplate />} />
             <Route path="/session-new" element={<NewLessonSessionPage />} />
             <Route path="/custom-session" element={<CustomQuestionSessionPage />} />
             <Route path="/admin" element={<AdminPage />} />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LogOut, Menu, User } from 'lucide-react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { navItems } from '../../data/homeContent';
 import { usePresenterAuth } from '../../auth/AuthProvider';
 import { BrandLogo } from '../home/ui/BrandLogo';
@@ -12,7 +12,6 @@ import { BrandLogo } from '../home/ui/BrandLogo';
  */
 export function AppHeader() {
   const { logout } = usePresenterAuth();
-  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
@@ -48,23 +47,16 @@ export function AppHeader() {
         </Link>
 
         <nav className="dh-nav" aria-label="주요 메뉴">
-          {navItems.map((item) => {
-            // 템플릿 생성/편집(/builder)은 '설문지 템플릿' 탭으로 분류한다.
-            const matchesTemplateBuilder =
-              item.to === '/library' && location.pathname.startsWith('/builder');
-            return (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) =>
-                  isActive || matchesTemplateBuilder ? 'dh-nav--active' : undefined
-                }
-              >
-                {item.label}
-              </NavLink>
-            );
-          })}
+          {navItems.map((item) => (
+            <NavLink
+              key={item.label}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) => (isActive ? 'dh-nav--active' : undefined)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

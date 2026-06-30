@@ -332,7 +332,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       setSaveMessage('템플릿을 저장했습니다.');
 
       if (!templateId) {
-        navigate(`/builder/${currentTemplateId}`, { replace: true });
+        navigate(`/custom-template/${currentTemplateId}`, { replace: true });
       }
     } catch (saveErr) {
       setSaveError(saveErr instanceof Error ? saveErr.message : '템플릿 저장에 실패했습니다.');

@@ -9,5 +9,6 @@ export type NavItem = { label: string; to: string };
 export const navItems: NavItem[] = [
   { label: '진행 중인 설문', to: '/sessions' },
   { label: '설문 만들기', to: '/custom-session' },
-  { label: '설문지 템플릿', to: '/library' },
+  { label: '설문지 템플릿', to: '/template' },
+  { label: '템플릿 만들기', to: '/custom-template' },
 ];

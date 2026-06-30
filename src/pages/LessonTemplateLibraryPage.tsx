@@ -43,7 +43,7 @@ function TemplateCard({
             {TEMPLATE_VISIBILITY_LABELS[visibility]}
           </Badge>
         </div>
-        <Link className="builder-link-button builder-link-button--ghost" to={`/builder/${template.id}`}>
+        <Link className="builder-link-button builder-link-button--ghost" to={`/custom-template/${template.id}`}>
           편집
         </Link>
       </div>
@@ -132,7 +132,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
         uid: ownerUid,
         organizationId: profile?.organizationId ?? 'dorossaem',
       });
-      navigate(`/builder/${newTemplateId}`);
+      navigate(`/custom-template/${newTemplateId}`);
     } catch (nextError) {
       setActionError(
         nextError instanceof Error ? nextError.message : '템플릿 복제에 실패했습니다.',
@@ -164,7 +164,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           <h2>설문지 템플릿</h2>
         </div>
         <div className="builder-toolbar__actions">
-          <Link className="builder-link-button" to="/builder">
+          <Link className="builder-link-button" to="/custom-template">
             <LayoutTemplate size={16} />
             새 템플릿 만들기
           </Link>
