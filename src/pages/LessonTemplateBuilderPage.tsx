@@ -265,11 +265,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       return;
     }
 
-    if (sortedInteractions.length === 0) {
-      setSaveError('최소 하나의 interaction block이 필요합니다.');
-      return;
-    }
-
     try {
       setBusy(true);
       setSaveError(null);
@@ -378,7 +373,11 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
               세션 열기
             </Link>
           ) : null}
-          <Button disabled={busy} size="sm" onClick={() => void handleSave()}>
+          <Button
+            disabled={busy || sortedInteractions.length === 0}
+            size="sm"
+            onClick={() => void handleSave()}
+          >
             <Save size={16} />
             {busy ? '저장 중...' : '저장'}
           </Button>
