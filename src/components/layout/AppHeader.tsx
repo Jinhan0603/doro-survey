@@ -37,13 +37,12 @@ export function AppHeader() {
   return (
     <header className="dh-header">
       <div className="dh-header-inner">
-        <Link className="dh-brand" to="/" aria-label="도로 설문 홈">
+        <Link className="dh-brand" to="/" aria-label="DORO 실시간 설문 시스템 홈">
           <span className="dh-brand-logo">
             <BrandLogo size={40} />
           </span>
           <span>
-            <span className="dh-brand-title">도로 설문</span>
-            <span className="dh-brand-sub">실시간 수업 참여 도구</span>
+            <span className="dh-brand-title">DORO 실시간 설문 시스템</span>
           </span>
         </Link>
 
