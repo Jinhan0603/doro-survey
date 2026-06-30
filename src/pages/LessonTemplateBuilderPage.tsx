@@ -6,33 +6,35 @@ import { usePresenterAuth } from '../auth/AuthProvider';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
-import { InteractionEditorCard } from '../components/builder/InteractionEditorCard';
 import { PptxExtractModal } from '../components/builder/PptxExtractModal';
+// 질문 편집 카드는 설문 만들기 화면과 동일한 소스를 공유한다(한 곳만 고치면 양쪽 반영).
+import { QuestionEditor } from '../components/session/QuestionEditor';
+import {
+  createDraft,
+  parseChoices,
+  swapDrafts,
+  type CustomQuestionDraft,
+} from '../components/session/customQuestionDraft';
 import {
   DEFAULT_GENERATOR_OPTIONS,
   EMPTY_TEMPLATE,
   SHAREABLE_VISIBILITY_LABELS,
-  createEditableInteraction,
   createEditableSlide,
   formatToolTags,
-  getNextSortOrder,
   parseToolTags,
-  sortInteractions,
   sortSlides,
-  swapInteractionOrder,
-  type EditableInteraction,
   type EditableSlide,
   type GeneratorOptionsState,
   type TemplateFormState,
 } from '../components/builder/builderModel';
-import { INTERACTION_LABELS, createEmptyInteractionSeed } from '../data/lessonTemplatePresets';
 import {
   createLessonTemplate,
   saveLessonInteractions,
   saveLessonSlides,
   updateLessonTemplate,
 } from '../firebase/lessonTemplates';
-import type { TemplateVisibility } from '../firebase/types';
+import { inferInteractionType, inferPurpose } from '../firebase/sessions';
+import type { QuestionInputType, TemplateVisibility } from '../firebase/types';
 import { useLessonTemplateDetail } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
 import {
@@ -55,7 +57,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   const [form, setForm] = useState<TemplateFormState>(EMPTY_TEMPLATE);
   const [slides, setSlides] = useState<EditableSlide[]>([]);
-  const [interactions, setInteractions] = useState<EditableInteraction[]>([]);
+  const [questions, setQuestions] = useState<CustomQuestionDraft[]>([]);
   const [busy, setBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         hydratedTemplateRef.current = '__new__';
         setForm(EMPTY_TEMPLATE);
         setSlides([]);
-        setInteractions([]);
+        setQuestions([]);
       }
       return;
     }
@@ -107,31 +109,23 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         ),
       ),
     );
-    setInteractions(
-      sortInteractions(
-        loadedInteractions.map((interaction, index) =>
-          createEditableInteraction(
-            {
-              phase: interaction.phase,
-              interactionType: interaction.interactionType,
-              purpose: interaction.purpose,
-              inputType: interaction.inputType,
-              visibility: interaction.visibility,
-              title: interaction.title,
-              prompt: interaction.prompt,
-              choices: interaction.choices ?? [],
-              maxLength: interaction.maxLength ?? 300,
-              presenterNote: interaction.presenterNote ?? '',
-              timingLabel: interaction.timingLabel ?? '',
-            },
-            interaction.order ?? index + 1,
-          ),
+    setQuestions(
+      [...loadedInteractions]
+        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+        .map((interaction) =>
+          createDraft({
+            phase: interaction.phase,
+            title: interaction.title,
+            prompt: interaction.prompt,
+            inputType: interaction.inputType,
+            visibility: interaction.visibility,
+            choicesText: (interaction.choices ?? []).join('\n'),
+            maxLength: interaction.maxLength ?? 300,
+          }),
         ),
-      ),
     );
   }, [template, templateId, loadedSlides, loadedInteractions]);
 
-  const sortedInteractions = useMemo(() => sortInteractions(interactions), [interactions]);
   const sortedSlides = useMemo(() => sortSlides(slides), [slides]);
 
   useEffect(() => {
@@ -144,24 +138,18 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     setForm((current) => ({ ...current, ...patch }));
   };
 
-  // 평면 질문 목록에 빈 질문을 추가한다. phase는 데이터 호환용 기본값('intro').
-  const handleAddQuestion = () => {
-    setInteractions((current) => [
-      ...current,
-      createEditableInteraction(createEmptyInteractionSeed('intro'), getNextSortOrder(current)),
-    ]);
+  const handleAddQuestion = (inputType: QuestionInputType) => {
+    setQuestions((current) => [...current, createDraft({ inputType, visibility: 'public' })]);
   };
 
-  const handleInteractionPatch = (clientId: string, patch: Partial<EditableInteraction>) => {
-    setInteractions((current) =>
-      current.map((interaction) =>
-        interaction.clientId === clientId ? { ...interaction, ...patch } : interaction,
-      ),
+  const handleQuestionPatch = (clientId: string, patch: Partial<CustomQuestionDraft>) => {
+    setQuestions((current) =>
+      current.map((question) => (question.clientId === clientId ? { ...question, ...patch } : question)),
     );
   };
 
-  const handleInteractionDelete = (clientId: string) => {
-    setInteractions((current) => current.filter((interaction) => interaction.clientId !== clientId));
+  const handleQuestionDelete = (clientId: string) => {
+    setQuestions((current) => current.filter((question) => question.clientId !== clientId));
   };
 
   const handleGeneratorOptionPatch = (patch: Partial<GeneratorOptionsState>) => {
@@ -170,7 +158,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   const handleGenerateDrafts = () => {
     if (sortedSlides.length === 0) {
-      setGeneratorError('interaction 초안을 만들려면 먼저 PPTX를 올리거나 슬라이드를 준비해주세요.');
+      setGeneratorError('질문 초안을 만들려면 먼저 PPTX를 올리거나 슬라이드를 준비해주세요.');
       setGeneratorMessage(null);
       setGeneratedDrafts([]);
       return;
@@ -189,32 +177,34 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     );
 
     if (drafts.length === 0) {
-      setGeneratorError('현재 슬라이드 구조로는 생성할 초안이 없습니다. phase 배정을 먼저 확인해주세요.');
+      setGeneratorError('현재 슬라이드 구조로는 생성할 초안이 없습니다.');
       setGeneratorMessage(null);
       setGeneratedDrafts([]);
       return;
     }
 
     setGeneratorError(null);
-    setGeneratorMessage(`규칙 기반 interaction 초안 ${drafts.length}개를 생성했습니다.`);
+    setGeneratorMessage(`질문 초안 ${drafts.length}개를 생성했습니다.`);
     setGeneratedDrafts(drafts);
   };
 
   const handleApplyGeneratedDrafts = () => {
     if (generatedDrafts.length === 0) return;
 
-    setInteractions((current) => {
-      let next = [...current];
-
-      generatedDrafts.forEach((draft) => {
-        next = [
-          ...next,
-          createEditableInteraction(draft, getNextSortOrder(next)),
-        ];
-      });
-
-      return next;
-    });
+    setQuestions((current) => [
+      ...current,
+      ...generatedDrafts.map((draft) =>
+        createDraft({
+          phase: draft.phase,
+          title: draft.title,
+          prompt: draft.prompt,
+          inputType: draft.inputType,
+          visibility: draft.visibility,
+          choicesText: (draft.choices ?? []).join('\n'),
+          maxLength: draft.maxLength ?? 300,
+        }),
+      ),
+    ]);
 
     setGeneratorMessage('초안을 질문 목록에 반영했습니다. 저장 전에 각 질문을 수정해주세요.');
     setGeneratorError(null);
@@ -244,10 +234,10 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         ),
       );
       setSourceFileName(file.name);
-    } catch (error) {
+    } catch (uploadError) {
       setPptxError(
-        error instanceof Error
-          ? error.message
+        uploadError instanceof Error
+          ? uploadError.message
           : 'PPTX를 분석하는 중 오류가 발생했습니다. 다른 파일로 다시 시도해주세요.',
       );
     } finally {
@@ -287,7 +277,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           targetGrade: form.targetGrade,
           toolTags,
           slideCount: sortedSlides.length,
-          interactionCount: sortedInteractions.length,
+          interactionCount: questions.length,
         });
       } else {
         await updateLessonTemplate(currentTemplateId, {
@@ -299,7 +289,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           organizationId: profile?.organizationId ?? 'dorossaem',
           toolTags,
           slideCount: sortedSlides.length,
-          interactionCount: sortedInteractions.length,
+          interactionCount: questions.length,
         });
       }
 
@@ -318,19 +308,19 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         ),
         saveLessonInteractions(
           currentTemplateId,
-          sortedInteractions.map((interaction, index) => ({
+          questions.map((question, index) => ({
             order: index + 1,
-            phase: interaction.phase,
-            interactionType: interaction.interactionType,
-            purpose: interaction.purpose,
-            inputType: interaction.inputType,
-            visibility: interaction.visibility,
-            title: interaction.title.trim() || `${INTERACTION_LABELS[interaction.interactionType]} ${index + 1}`,
-            prompt: interaction.prompt.trim(),
-            choices: interaction.choices.map((choice) => choice.trim()).filter(Boolean),
-            maxLength: interaction.maxLength,
-            presenterNote: interaction.presenterNote?.trim() || '',
-            timingLabel: interaction.timingLabel?.trim() || '',
+            phase: question.phase,
+            interactionType: inferInteractionType(question.phase, question.inputType),
+            purpose: inferPurpose(question.phase, question.inputType),
+            inputType: question.inputType,
+            visibility: question.visibility,
+            title: question.title.trim() || `질문 ${index + 1}`,
+            prompt: question.prompt.trim(),
+            choices: parseChoices(question.choicesText),
+            maxLength: question.maxLength,
+            presenterNote: '',
+            timingLabel: '',
             schemaVersion: 2,
           })),
         ),
@@ -341,8 +331,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       if (!templateId) {
         navigate(`/builder/${currentTemplateId}`, { replace: true });
       }
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : '템플릿 저장에 실패했습니다.');
+    } catch (saveErr) {
+      setSaveError(saveErr instanceof Error ? saveErr.message : '템플릿 저장에 실패했습니다.');
     } finally {
       setBusy(false);
     }
@@ -373,11 +363,11 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
               세션 열기
             </Link>
           ) : null}
-          <Button
-            disabled={busy || sortedInteractions.length === 0}
-            size="sm"
-            onClick={() => void handleSave()}
-          >
+          <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
+            <FileUp size={16} />
+            PPTX에서 추출하기
+          </Button>
+          <Button disabled={busy || questions.length === 0} size="sm" onClick={() => void handleSave()}>
             <Save size={16} />
             {busy ? '저장 중...' : '저장'}
           </Button>
@@ -459,37 +449,35 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           <div>
             <h3>질문 목록</h3>
           </div>
-          <div className="builder-toolbar__actions">
-            <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
-              <FileUp size={16} />
-              PPTX에서 추출하기
+          <div className="custom-question-add-row">
+            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
+              + 객관식
             </Button>
-            <Button size="sm" onClick={handleAddQuestion}>
-              + 질문 추가
+            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('text')}>
+              + 주관식
             </Button>
           </div>
         </div>
 
-        <div className="builder-interaction-list">
-          {sortedInteractions.length === 0 ? (
-            <div className="builder-empty-state">
-              <p>아직 질문이 없습니다. '+ 질문 추가'로 직접 만들거나 'PPTX에서 추출하기'로 불러오세요.</p>
-            </div>
-          ) : (
-            sortedInteractions.map((interaction, index) => (
-              <InteractionEditorCard
-                key={interaction.clientId}
+        {questions.length === 0 ? (
+          <div className="builder-empty-state">
+            <p>아직 질문이 없습니다. '+ 객관식' 또는 '+ 주관식'으로 추가하거나 상단 'PPTX에서 추출하기'로 불러오세요.</p>
+          </div>
+        ) : (
+          <div className="questionList">
+            {questions.map((question, index) => (
+              <QuestionEditor
+                key={question.clientId}
+                canDelete
+                draft={question}
                 index={index}
-                interaction={interaction}
-                onInteractionPatch={handleInteractionPatch}
-                onInteractionDelete={handleInteractionDelete}
-                onInteractionMove={(clientId, direction) =>
-                  setInteractions((current) => swapInteractionOrder(current, clientId, direction))
-                }
+                onDelete={handleQuestionDelete}
+                onMove={(clientId, direction) => setQuestions((current) => swapDrafts(current, clientId, direction))}
+                onPatch={handleQuestionPatch}
               />
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {saveMessage ? <div className="inline-message">{saveMessage}</div> : null}
@@ -525,9 +513,9 @@ export function LessonTemplateBuilderPage() {
         <Card className="banner-card">
           <h3>템플릿을 만드는 경우</h3>
           <ul className="flow-list flow-list--bullet">
-            <li>도입, 이론, 실습, 윤리, 마무리 구간별로 질문을 배치합니다.</li>
-            <li>PPTX 슬라이드 텍스트를 읽어 수업 구간을 제안합니다.</li>
-            <li>실습 준비 체크, 윤리 질문, 마무리 회고를 기본 블록으로 추가합니다.</li>
+            <li>객관식·주관식 질문을 순서대로 배치합니다.</li>
+            <li>PPTX 슬라이드 텍스트를 읽어 질문 초안을 제안받을 수 있습니다.</li>
+            <li>저장한 템플릿으로 새 운영 세션을 만듭니다.</li>
           </ul>
         </Card>
       }

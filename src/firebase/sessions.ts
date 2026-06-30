@@ -239,7 +239,7 @@ function sanitizeChoices(inputType: QuestionInputType, choices: string[] | undef
   return [];
 }
 
-function inferInteractionType(phase: LessonPhase, inputType: QuestionInputType): InteractionType {
+export function inferInteractionType(phase: LessonPhase, inputType: QuestionInputType): InteractionType {
   if (phase === 'intro') return 'prior-knowledge';
   if (phase === 'practice') return inputType === 'status' ? 'readiness-check' : 'progress-check';
   if (phase === 'ethics') return 'ethics-case';
@@ -247,7 +247,7 @@ function inferInteractionType(phase: LessonPhase, inputType: QuestionInputType):
   return 'concept-check';
 }
 
-function inferPurpose(phase: LessonPhase, inputType: QuestionInputType): InteractionPurpose {
+export function inferPurpose(phase: LessonPhase, inputType: QuestionInputType): InteractionPurpose {
   if (inputType === 'status') return 'ops';
   if (phase === 'ethics' || phase === 'wrapup') return 'reflection';
   return 'learning';

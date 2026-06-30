@@ -1,5 +1,6 @@
 import { type ChangeEvent } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
+import '../../styles/survey-builder.css';
 import { PHASE_LABELS, PHASE_ORDER, VISIBILITY_LABELS } from '../../data/lessonTemplatePresets';
 import type { LessonPhase, ResultVisibility } from '../../firebase/types';
 import {
