@@ -154,7 +154,7 @@
 .questionList {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .emptyQuestionState {
@@ -203,14 +203,14 @@
 
 .questionCardInner {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 14px;
-  padding: 20px;
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px;
 }
 
 .questionNumberBadge {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -235,8 +235,8 @@
 
 .questionTitleInput {
   width: 100%;
-  height: 50px;
-  padding: 0 16px;
+  height: 44px;
+  padding: 0 14px;
   border: 1px solid #d4dbe8;
   border-radius: 14px;
   background: #ffffff;
@@ -263,8 +263,8 @@
 }
 
 .iconButton {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -299,8 +299,8 @@
 .questionSettingsGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 14px;
 }
 
 .formField {
@@ -309,7 +309,7 @@
 
 .formLabel {
   display: block;
-  margin-bottom: 7px;
+  margin-bottom: 5px;
   color: #4b5563;
   font-size: 12px;
   font-weight: 800;
@@ -319,7 +319,7 @@
 .formSelect,
 .formInput {
   width: 100%;
-  height: 42px;
+  height: 38px;
   padding: 0 12px;
   border: 1px solid #d4dbe8;
   border-radius: 10px;
@@ -338,20 +338,20 @@
 }
 
 .formHint {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #8b95a1;
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .questionBodyField {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .questionTextarea {
   width: 100%;
-  min-height: 88px;
-  padding: 15px 16px;
+  min-height: 64px;
+  padding: 11px 14px;
   border: 1px solid #d4dbe8;
   border-radius: 16px;
   background: #ffffff;
@@ -373,7 +373,7 @@
 }
 
 .optionEditor {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .optionEditorHead {
@@ -381,7 +381,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .optionEditorLabel {
@@ -409,19 +409,19 @@
 .optionList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .optionRow {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 36px;
+  grid-template-columns: 24px minmax(0, 1fr) 34px;
   gap: 8px;
   align-items: center;
 }
 
 .optionDragHandle {
   width: 24px;
-  height: 36px;
+  height: 34px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -438,7 +438,7 @@
 
 .optionInput {
   width: 100%;
-  height: 40px;
+  height: 36px;
   padding: 0 13px;
   border: 1px solid #d4dbe8;
   border-radius: 12px;
@@ -456,8 +456,8 @@
 }
 
 .optionRemoveButton {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -477,8 +477,8 @@
 }
 
 .addOptionButton {
-  margin-top: 10px;
-  height: 38px;
+  margin-top: 8px;
+  height: 34px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
