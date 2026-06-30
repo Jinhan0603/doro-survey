@@ -47,15 +47,40 @@
 
 .builderPanelHeader {
   flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   padding: 28px 28px 18px;
 }
 
-.builderTitleArea {
-  min-width: 0;
+.surveyNameField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 섹션 헤딩: 템플릿 빌더의 .builderPaneHeader 와 동일한 크기/느낌(아이콘 + 20px/800). */
+.builderSectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0b7ff3;
+}
+
+.builderSectionHeading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.questionSectionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .surveyTitleInputWrap {
@@ -100,7 +125,6 @@
   gap: 10px;
   align-items: center;
   justify-content: flex-end;
-  padding-top: 66px;
   white-space: nowrap;
 }
 

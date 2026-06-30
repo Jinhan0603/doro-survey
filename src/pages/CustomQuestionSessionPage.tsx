@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
-import { QrCode } from 'lucide-react';
+import { FileText, ListChecks, QrCode } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { CreatedSessionLinks } from '../components/session/CreatedSessionLinks';
 import { buildSessionLinks, type CreatedSession } from '../components/session/sessionLinks';
@@ -89,7 +89,11 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
       <h1 className="surveyPageTitle">설문 만들기</h1>
       <section className="surveyBuilderPanel">
         <header className="builderPanelHeader">
-          <div className="builderTitleArea">
+          <div className="surveyNameField">
+            <div className="builderSectionHeading">
+              <FileText size={18} />
+              <h2>설문지 이름</h2>
+            </div>
             <div className="surveyTitleInputWrap">
               <input
                 className="surveyTitleInput"
@@ -99,16 +103,21 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
                 onChange={(event) => setSessionTitle(event.target.value)}
               />
             </div>
-            <h2 className="builderTitle">질문 구성</h2>
           </div>
 
-          <div className="questionTypeActions">
-            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
-              + 객관식
-            </button>
-            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('text')}>
-              + 주관식
-            </button>
+          <div className="questionSectionRow">
+            <div className="builderSectionHeading">
+              <ListChecks size={18} />
+              <h2>질문 구성</h2>
+            </div>
+            <div className="questionTypeActions">
+              <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
+                + 객관식
+              </button>
+              <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('text')}>
+                + 주관식
+              </button>
+            </div>
           </div>
         </header>
 
