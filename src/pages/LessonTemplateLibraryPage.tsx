@@ -187,7 +187,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       <div className="library-section">
         <div className="library-section__header">
           <div>
-            <h3>내 수업 템플릿</h3>
+            <h3>내 설문지 템플릿</h3>
             <p>직접 만든 질문 흐름을 수정하고 새 운영 세션으로 연결합니다.</p>
           </div>
         </div>
@@ -257,7 +257,7 @@ export function LessonTemplateLibraryPage() {
     <TeacherGate
       compact
       description="반복해서 쓸 수업 질문 흐름을 저장하고, 필요할 때 실제 운영 세션으로 전환합니다."
-      title="수업 템플릿"
+      title="설문지 템플릿"
       actions={() => (
         <div className="hero-actions">
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>

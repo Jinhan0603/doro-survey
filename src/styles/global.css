@@ -110,6 +110,15 @@ button:disabled {
   min-height: 100vh;
 }
 
+/*
+ * 발표자 프레임 안에서는 헤더(72px, sticky)가 같은 흐름에 있으므로
+ * app-shell까지 100vh를 주면 헤더 높이만큼 넘쳐 빈 화면에도 스크롤이 생긴다.
+ * 헤더 높이를 뺀 만큼만 채워 넘침을 없앤다.
+ */
+.app-frame > .app-shell {
+  min-height: calc(100vh - 72px);
+}
+
 .route-loading {
   display: grid;
   min-height: 100vh;
@@ -478,6 +487,18 @@ button:disabled {
   border-color: rgba(187, 61, 61, 0.22);
   background: rgba(255, 244, 244, 0.92);
   color: #8f2c2c;
+}
+
+/*
+ * 진행 중인 설문이 없을 때의 안내 패널. 콘텐츠가 한 줄뿐이어도 화면이
+ * 휑하지 않도록 뷰포트에서 헤더·여백을 뺀 만큼 높이를 채우고 가운데 정렬한다.
+ * (헤더 72px + main 상하 패딩 ≈ 116px + 여유분을 빼 넘침은 없게 한다.)
+ */
+.sessions-empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  min-height: calc(100vh - 220px);
 }
 
 .feature-card h3,

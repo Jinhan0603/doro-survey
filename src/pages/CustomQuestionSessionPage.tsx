@@ -26,7 +26,6 @@ import {
   PHASE_ORDER,
   VISIBILITY_LABELS,
 } from '../data/lessonTemplatePresets';
-import { signOutUser } from '../firebase/auth';
 import {
   createCustomQuestionSession,
   type CustomSessionQuestionInput,
@@ -115,31 +114,7 @@ function createDraft(input: Partial<CustomQuestionDraft> = {}): CustomQuestionDr
 }
 
 function createInitialDrafts(): CustomQuestionDraft[] {
-  return [
-    createDraft({
-      phase: 'intro',
-      title: '오늘 주제 경험 체크',
-      prompt: '오늘 다룰 도구나 주제를 지금까지 어느 정도 사용해봤나요?',
-      inputType: 'choice',
-      choicesText: ['처음이에요', '조금 해봤어요', '혼자 할 수 있어요', '친구에게 설명할 수 있어요'].join('\n'),
-    }),
-    createDraft({
-      phase: 'wrapup',
-      title: '오늘 배운 것 한 줄 정리',
-      prompt: '오늘 가장 기억에 남는 내용이나 다음에 해보고 싶은 것을 적어보세요.',
-      inputType: 'text',
-      choicesText: '',
-      maxLength: 200,
-    }),
-  ];
-}
-
-function normalizeSessionIdInput(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, '-')
-    .slice(0, 64);
+  return [];
 }
 
 function parseChoices(choicesText: string) {
@@ -359,7 +334,7 @@ function CreatedSessionLinks({
         <div className="builder-section-head">
           <div>
             <h3>직접 질문 세션 생성 완료</h3>
-            <p>학생에게는 Student QR만 공유하고, 강사는 Admin에서 수업을 진행하세요.</p>
+            <p>학생에게는 Student QR만 공유하고, 강사는 Admin에서 설문을 진행하세요.</p>
           </div>
           <Badge tone="success">{createdSession.sessionId}</Badge>
         </div>
@@ -416,7 +391,6 @@ function CreatedSessionLinks({
 
 function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const { profile } = useUserProfile(ownerUid);
-  const [sessionId, setSessionId] = useState(createSessionIdSuggestion);
   const [sessionTitle, setSessionTitle] = useState(DEFAULT_SESSION_TITLE);
   const [startOpen, setStartOpen] = useState(true);
   const [drafts, setDrafts] = useState(createInitialDrafts);
@@ -442,7 +416,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleCreate = async () => {
-    const normalizedSessionId = normalizeSessionIdInput(sessionId);
+    const newSessionId = createSessionIdSuggestion();
 
     try {
       setBusy(true);
@@ -450,7 +424,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
       setCreatedSession(null);
 
       await createCustomQuestionSession({
-        sessionId: normalizedSessionId,
+        sessionId: newSessionId,
         title: sessionTitle,
         accepting: startOpen,
         owner: {
@@ -460,10 +434,9 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         questions: drafts.map(toQuestionInput),
       });
 
-      setSessionId(normalizedSessionId);
       setCreatedSession({
-        sessionId: normalizedSessionId,
-        links: buildSessionLinks(normalizedSessionId),
+        sessionId: newSessionId,
+        links: buildSessionLinks(newSessionId),
       });
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '직접 질문 세션 생성에 실패했습니다.');
@@ -473,7 +446,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleReset = () => {
-    setSessionId(createSessionIdSuggestion());
     setSessionTitle(DEFAULT_SESSION_TITLE);
     setStartOpen(true);
     setDrafts(createInitialDrafts());
@@ -487,19 +459,11 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         <Card className="session-new-card" tone="accent">
           <div className="builder-section-head">
             <div>
-              <h3>1. 수업 링크 만들기</h3>
-              <p>sessionId는 학생 링크에 들어가는 짧은 주소입니다. 수업마다 새 ID를 쓰면 응답이 섞이지 않습니다.</p>
+              <h3>1. 설문 링크 만들기</h3>
             </div>
           </div>
 
           <div className="session-new-grid">
-            <Input
-              hint="영문 소문자, 숫자, -, _만 사용합니다."
-              label="sessionId"
-              placeholder="예: ai-class-0421"
-              value={sessionId}
-              onChange={(event) => setSessionId(normalizeSessionIdInput(event.target.value))}
-            />
             <Input
               label="세션 제목"
               placeholder="예: AI 도구 실습 1반"
@@ -520,13 +484,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
           </div>
 
           <div className="session-new-actions">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setSessionId(createSessionIdSuggestion())}
-            >
-              ID 다시 만들기
-            </Button>
             <Button disabled={busy} onClick={() => void handleCreate()}>
               <PlayCircle size={16} />
               {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
@@ -554,9 +511,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
               <span>Display로 공개 결과 보기</span>
             </div>
           </div>
-          <p>
-            공개 가능 질문은 발표 화면에 보여줄 수 있고, 강사용 질문은 Admin에서만 집계됩니다.
-          </p>
         </Card>
       </div>
 
@@ -564,7 +518,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         <div className="builder-section-head">
           <div>
             <h3>2. 질문 구성</h3>
-            <p>수업 순서대로 질문을 배치하세요. 첫 번째 질문이 생성 직후 현재 질문이 됩니다.</p>
+            <p>설문 순서대로 질문을 배치하세요. 첫 번째 질문이 생성 직후 현재 질문이 됩니다.</p>
           </div>
           <div className="custom-question-add-row">
             <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
@@ -606,28 +560,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
 export function CustomQuestionSessionPage() {
   return (
-    <TeacherGate
-      compact
-      description="오늘 쓸 질문을 직접 입력하면 학생 QR, 강사용 Admin, 발표용 Display 링크가 한 번에 만들어집니다."
-      title="질문 만들고 바로 공유하기"
-      actions={() => (
-        <div className="hero-actions">
-          <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
-            로그아웃
-          </Button>
-        </div>
-      )}
-      loginAside={
-        <Card className="banner-card">
-          <h3>로그인 후 바로 할 수 있는 일</h3>
-          <ul className="flow-list flow-list--bullet">
-            <li>질문을 직접 입력해 세션을 만듭니다.</li>
-            <li>학생에게 QR을 공유합니다.</li>
-            <li>Admin과 Display로 실시간 응답을 봅니다.</li>
-          </ul>
-        </Card>
-      }
-    >
+    <TeacherGate compact title="질문 만들고 바로 공유하기">
       {(user) => <CustomQuestionSessionContent ownerUid={user.uid} />}
     </TeacherGate>
   );

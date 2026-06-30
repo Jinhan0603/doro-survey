@@ -97,14 +97,14 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
         <div className="builder-section-head">
           <div>
             <h3>템플릿으로 세션 열기</h3>
-            <p>저장된 수업 템플릿을 실제 운영용 세션으로 바꿉니다. 생성 후 학생 QR과 운영 링크가 만들어집니다.</p>
+            <p>저장된 설문지 템플릿을 실제 운영용 세션으로 바꿉니다. 생성 후 학생 QR과 운영 링크가 만들어집니다.</p>
           </div>
           <Badge tone="accent">{selectedTemplate ? '템플릿 선택됨' : '템플릿 필요'}</Badge>
         </div>
 
         <div className="session-new-grid">
           <label className="form-field">
-            <span className="form-label">수업 템플릿</span>
+            <span className="form-label">설문지 템플릿</span>
             <select
               className="select-sm session-new-select"
               value={selectedTemplateId}
@@ -125,7 +125,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
             onChange={(event) => setSessionId(event.target.value.trim().toLowerCase())}
           />
           <Input
-            label="세션 제목"
+            label="설문 제목"
             placeholder="예: AI 이미지 생성 실습 1반"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -234,7 +234,7 @@ export function NewLessonSessionPage() {
   return (
     <TeacherGate
       compact
-      description="저장된 수업 템플릿을 실제 운영 세션으로 바꾸고 학생 QR, Admin, Display 링크를 생성합니다."
+      description="저장된 설문지 템플릿을 실제 운영 세션으로 바꾸고 학생 QR, Admin, Display 링크를 생성합니다."
       eyebrow="DORO Session"
       title="템플릿 세션 열기"
       actions={() => (
@@ -252,8 +252,8 @@ export function NewLessonSessionPage() {
         <Card className="banner-card">
           <h3>템플릿 세션 생성</h3>
           <ol className="flow-list">
-            <li>수업 템플릿을 하나 고릅니다.</li>
-            <li>sessionId와 수업 제목을 입력합니다.</li>
+            <li>설문지 템플릿을 하나 고릅니다.</li>
+            <li>sessionId와 설문 제목을 입력합니다.</li>
             <li>생성 후 QR과 운영 링크를 사용합니다.</li>
           </ol>
         </Card>

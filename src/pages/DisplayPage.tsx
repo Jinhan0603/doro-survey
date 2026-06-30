@@ -123,9 +123,9 @@ export function DisplayPage() {
     return (
       <AppShell compact title="발표 화면">
         <Card className="banner-card">
-          <p>발표할 수업을 먼저 선택하세요.</p>
+          <p>발표할 설문을 먼저 선택하세요.</p>
           <Link to="/sessions">
-            <Button size="sm">내 수업으로 이동</Button>
+            <Button size="sm">진행 중인 설문으로 이동</Button>
           </Link>
         </Card>
       </AppShell>

@@ -972,7 +972,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       <div className="builder-toolbar">
         <div className="builder-toolbar__copy">
           <Badge tone="accent">{templateId ? '템플릿 편집' : '새 템플릿'}</Badge>
-          <h2>{templateId ? '수업 템플릿 편집' : '새 수업 템플릿'}</h2>
+          <h2>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h2>
           <p>반복해서 쓸 수업 질문 흐름을 구간별로 설계합니다.</p>
         </div>
         <div className="builder-toolbar__actions">
@@ -1253,7 +1253,7 @@ export function LessonTemplateBuilderPage() {
     <TeacherGate
       compact
       description="반복해서 쓸 수업 질문 흐름을 만들고, 필요하면 PPTX 슬라이드 기준으로 구간을 정리합니다."
-      title="수업 템플릿 빌더"
+      title="설문지 템플릿 빌더"
       actions={() => (
         <div className="hero-actions">
           <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>

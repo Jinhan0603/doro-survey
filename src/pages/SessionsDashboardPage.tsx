@@ -34,7 +34,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!window.confirm(`"${title}" 수업을 삭제할까요?\n질문과 응답이 모두 영구 삭제되며 되돌릴 수 없습니다.`)) {
+    if (!window.confirm(`"${title}" 설문을 삭제할까요?\n질문과 응답이 모두 영구 삭제되며 되돌릴 수 없습니다.`)) {
       return;
     }
     try {
@@ -42,7 +42,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
       setDeleteError(null);
       await deleteSessionCascade(id);
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : '수업 삭제에 실패했습니다.');
+      setDeleteError(err instanceof Error ? err.message : '설문 삭제에 실패했습니다.');
     } finally {
       setDeletingId(null);
     }
@@ -53,22 +53,22 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
       {deleteError ? <Card className="banner-card banner-card--error">{deleteError}</Card> : null}
 
       {loading ? (
-        <WaitingState title="수업을 불러오는 중입니다" description="잠시만 기다려주세요." />
+        <WaitingState title="설문을 불러오는 중입니다" description="잠시만 기다려주세요." />
       ) : error ? (
         <Card className="banner-card banner-card--error">{error}</Card>
       ) : sessions.length === 0 ? (
         // 진행 중인 설문이 없으면 시작 카드 없이 안내 메시지만 보여준다.
         // 새 설문은 상단 헤더의 '설문 만들기'에서 만든다.
-        <Card className="banner-card">
-          아직 만든 수업이 없습니다. 위에서 새 수업을 만들어보세요.
+        <Card className="banner-card sessions-empty">
+          아직 만든 설문이 없습니다. 위에서 새 설문을 만들어보세요.
         </Card>
       ) : (
         <>
           <Card>
             <div className="section-heading">
-              <h3>새 수업 시작</h3>
+              <h3>새 설문 시작</h3>
             </div>
-            <p>수업을 만들면 학생 참여 링크가 생성되고, 아래 목록에서 진행·결과 화면을 열 수 있습니다.</p>
+            <p>설문을 만들면 학생 참여 링크가 생성되고, 아래 목록에서 진행·결과 화면을 열 수 있습니다.</p>
             <div className="hero-actions">
               <Button size="sm" onClick={() => navigate('/custom-session')}>
                 새 질문으로 시작
@@ -88,7 +88,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               </Badge>
             </div>
             <p>
-              수업 코드 <strong>{session.id}</strong>
+              설문 코드 <strong>{session.id}</strong>
               {formatCreated(session.createdAt) ? ` · ${formatCreated(session.createdAt)} 생성` : ''}
             </p>
             <div className="hero-actions">

@@ -139,9 +139,9 @@ export function AdminPage() {
     return (
       <AppShell compact title="Admin 운영 화면">
         <Card className="banner-card">
-          <p>운영할 수업을 먼저 선택하세요.</p>
+          <p>운영할 설문을 먼저 선택하세요.</p>
           <Link to="/sessions">
-            <Button size="sm">내 수업으로 이동</Button>
+            <Button size="sm">진행 중인 설문으로 이동</Button>
           </Link>
         </Card>
       </AppShell>
@@ -195,7 +195,7 @@ export function AdminPage() {
     const confirmed =
       questions.length === 0 ||
       window.confirm(
-        `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 현재 세션에 업로드합니다.\n\n같은 ID(q01~q12)의 기존 질문은 덮어씁니다. 기존 응답은 자동 삭제되지 않으므로, 수업 전 전환이면 먼저 전체 응답 초기화를 권장합니다.\n\n계속하시겠습니까?`,
+        `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 현재 세션에 업로드합니다.\n\n같은 ID(q01~q12)의 기존 질문은 덮어씁니다. 기존 응답은 자동 삭제되지 않으므로, 설문 전 전환이면 먼저 전체 응답 초기화를 권장합니다.\n\n계속하시겠습니까?`,
       );
     if (!confirmed) return;
 
@@ -211,7 +211,7 @@ export function AdminPage() {
   const handleResetQuestion = async () => {
     if (!activeQuestion) return;
     const confirmed = window.confirm(
-      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
+      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n설문 전에 CSV를 먼저 다운로드하는 것을 권장합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
     );
     if (!confirmed) return;
     await runAdminAction(async () => {
@@ -469,8 +469,8 @@ export function AdminPage() {
               <div className="danger-zone__header">
                 <h3 className="danger-zone__title">응답 초기화</h3>
                 <p className="danger-zone__desc">
-                  테스트 응답을 삭제하고 수업을 깨끗하게 시작할 수 있습니다.<br />
-                  삭제 후에는 되돌릴 수 없습니다. 수업 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
+                  테스트 응답을 삭제하고 설문을 깨끗하게 시작할 수 있습니다.<br />
+                  삭제 후에는 되돌릴 수 없습니다. 설문 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
                 </p>
               </div>
               <div className="danger-zone__buttons">
