@@ -40,10 +40,7 @@ export function getDefaultChoices(inputType: QuestionInputType) {
     return ['개념 이해', '실습 진행', '질문 있음', '공유하고 싶음'].join('\n');
   }
 
-  if (inputType === 'choice') {
-    return ['처음이에요', '조금 해봤어요', '혼자 할 수 있어요', '친구에게 설명할 수 있어요'].join('\n');
-  }
-
+  // 객관식(choice)은 예시 없이 빈 2칸으로 시작한다(에디터가 최소 2개를 보장).
   return '';
 }
 

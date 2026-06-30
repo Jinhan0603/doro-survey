@@ -1,8 +1,8 @@
 import { type ChangeEvent } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
 import '../../styles/survey-builder.css';
-import { PHASE_LABELS, PHASE_ORDER, VISIBILITY_LABELS } from '../../data/lessonTemplatePresets';
-import type { LessonPhase, ResultVisibility } from '../../firebase/types';
+import { VISIBILITY_LABELS } from '../../data/lessonTemplatePresets';
+import type { ResultVisibility } from '../../firebase/types';
 import {
   INPUT_TYPE_HELP,
   VISIBILITY_HELP,
@@ -48,17 +48,23 @@ export function QuestionEditor({
     onPatch(draft.clientId, { inputType: isMulti ? 'choice' : 'multi' });
   };
 
-  // choicesText('\n' 구분 문자열)를 단일 소스로 두고, UI에서만 행 단위로 편집한다.
-  const options = draft.choicesText.length > 0 ? draft.choicesText.split('\n') : [];
+  // choicesText('\n' 구분 문자열)를 단일 소스로 두되, 객관식은 최소 2개를 보장한다.
+  // 빈 문자열도 한 행으로 유지하고, 2칸 미만이면 빈 칸으로 채워 표시한다.
+  const rawOptions = draft.choicesText.split('\n');
+  const options =
+    rawOptions.length >= 2 ? rawOptions : [...rawOptions, ...Array(2 - rawOptions.length).fill('')];
   const setOptions = (next: string[]) => onPatch(draft.clientId, { choicesText: next.join('\n') });
   const updateOption = (target: number, value: string) =>
     setOptions(options.map((option, idx) => (idx === target ? value : option)));
   const addOption = () => setOptions([...options, '']);
-  const removeOption = (target: number) => setOptions(options.filter((_, idx) => idx !== target));
+  const removeOption = (target: number) => {
+    // 최소 2개 유지: 2개 이하일 때는 삭제하지 않는다.
+    if (options.length <= 2) return;
+    setOptions(options.filter((_, idx) => idx !== target));
+  };
 
   const typeHint = baseType === 'text' ? INPUT_TYPE_HELP.text : isMulti ? INPUT_TYPE_HELP.multi : INPUT_TYPE_HELP.choice;
 
-  const phaseId = `phase-${draft.clientId}`;
   const typeId = `type-${draft.clientId}`;
   const visibilityId = `visibility-${draft.clientId}`;
   const maxLengthId = `maxlen-${draft.clientId}`;
@@ -108,24 +114,6 @@ export function QuestionEditor({
           </div>
 
           <div className="questionSettingsGrid">
-            <div className="formField">
-              <label className="formLabel" htmlFor={phaseId}>
-                수업 구간
-              </label>
-              <select
-                id={phaseId}
-                className="formSelect"
-                value={draft.phase}
-                onChange={(event) => onPatch(draft.clientId, { phase: event.target.value as LessonPhase })}
-              >
-                {PHASE_ORDER.map((phase) => (
-                  <option key={phase} value={phase}>
-                    {PHASE_LABELS[phase]}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="formField">
               <label className="formLabel" htmlFor={typeId}>
                 응답 방식
@@ -213,14 +201,16 @@ export function QuestionEditor({
                       value={option}
                       onChange={(event) => updateOption(optionIndex, event.target.value)}
                     />
-                    <button
-                      type="button"
-                      className="optionRemoveButton"
-                      aria-label={`선택지 ${optionIndex + 1} 삭제`}
-                      onClick={() => removeOption(optionIndex)}
-                    >
-                      <X size={14} />
-                    </button>
+                    {options.length > 2 ? (
+                      <button
+                        type="button"
+                        className="optionRemoveButton"
+                        aria-label={`선택지 ${optionIndex + 1} 삭제`}
+                        onClick={() => removeOption(optionIndex)}
+                      >
+                        <X size={14} />
+                      </button>
+                    ) : null}
                   </div>
                 ))}
               </div>
