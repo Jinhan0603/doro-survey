@@ -1,8 +1,7 @@
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { operationCards } from '../../data/homeContent';
 import { assetUrl } from '../../utils/urls';
-import { Button } from './ui/Button';
-import { Card } from './ui/Card';
 import { SectionHeader } from './ui/SectionHeader';
 
 export function OperationScreens() {
@@ -15,18 +14,18 @@ export function OperationScreens() {
       />
       <div className="dh-grid-3">
         {operationCards.map((card) => (
-          <Card key={card.title} hover className="dh-op" as="article">
+          <Link key={card.title} to={card.to} className="dh-card dh-card--hover dh-op">
             <div className="dh-op-img">
               <img src={assetUrl(card.image)} alt={card.alt} loading="lazy" />
             </div>
             <div>
               <h3 className="dh-op-title">{card.title}</h3>
               <p className="dh-op-desc">{card.description}</p>
-              <Button variant="pillBlue" size="sm" to={card.to}>
+              <span className="dh-btn dh-btn--sm dh-btn--pillBlue">
                 {card.action} <ArrowRight size={15} />
-              </Button>
+              </span>
             </div>
-          </Card>
+          </Link>
         ))}
       </div>
     </section>
