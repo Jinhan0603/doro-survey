@@ -49,6 +49,12 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="stack">
+      <div className="builder-toolbar">
+        <div className="builder-toolbar__copy">
+          <h2>진행 중인 설문</h2>
+        </div>
+      </div>
+
       {deleteError ? <Card className="banner-card banner-card--error">{deleteError}</Card> : null}
 
       {loading ? null : error ? (

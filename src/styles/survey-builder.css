@@ -10,16 +10,28 @@
   height: calc(100dvh - var(--app-header-height, 72px));
   padding: 28px 24px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.14), transparent 34%),
     radial-gradient(circle at 88% 18%, rgba(147, 197, 253, 0.1), transparent 32%),
     #f8fafc;
 }
 
+.surveyPageTitle {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto 16px;
+  color: #111827;
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
 .surveyBuilderPanel {
   width: 100%;
   max-width: 1160px;
-  height: calc(100dvh - var(--app-header-height, 72px) - 56px);
+  flex: 1 1 auto;
   max-height: 820px;
   min-height: 0;
   margin: 0 auto;
@@ -558,7 +570,6 @@
   }
 
   .surveyBuilderPanel {
-    height: calc(100dvh - var(--app-header-height, 72px) - 40px);
     border-radius: 24px;
   }
 

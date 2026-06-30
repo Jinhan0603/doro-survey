@@ -91,6 +91,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <main className="surveyCreatePage">
+      <h1 className="surveyPageTitle">설문 만들기</h1>
       <section className="surveyBuilderPanel">
         <header className="builderPanelHeader">
           <div className="builderTitleArea">

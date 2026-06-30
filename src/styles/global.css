@@ -490,7 +490,7 @@ button:disabled {
   display: grid;
   place-items: center;
   text-align: center;
-  min-height: calc(100vh - 220px);
+  min-height: calc(100vh - 280px);
 }
 
 .feature-card h3,

@@ -159,14 +159,17 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="library-page">
-      <Card className="library-hero-card" tone="accent">
-        <div className="library-hero-card__actions">
+      <div className="builder-toolbar">
+        <div className="builder-toolbar__copy">
+          <h2>설문지 템플릿</h2>
+        </div>
+        <div className="builder-toolbar__actions">
           <Link className="builder-link-button" to="/builder">
             <LayoutTemplate size={16} />
             새 템플릿 만들기
           </Link>
         </div>
-      </Card>
+      </div>
 
       {error ? <div className="inline-message inline-message--error">{error}</div> : null}
       {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
