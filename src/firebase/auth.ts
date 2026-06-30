@@ -1,6 +1,7 @@
 import {
   onAuthStateChanged,
   signInAnonymously,
+  signInWithCustomToken,
   signInWithEmailAndPassword,
   signOut,
   type AuthError,
@@ -49,6 +50,16 @@ export async function signInAdminWithEmail(email: string, password: string) {
   } catch (error) {
     throw new Error(
       formatAuthError(error, '강사 로그인에 실패했습니다. 이메일/비밀번호 계정과 인증 설정을 확인해주세요.'),
+    );
+  }
+}
+
+export async function signInWithDoroGateToken(firebaseToken: string) {
+  try {
+    return await signInWithCustomToken(requireAuth(), firebaseToken);
+  } catch (error) {
+    throw new Error(
+      formatAuthError(error, 'DoroGate 로그인 후 Firebase 인증에 실패했습니다.'),
     );
   }
 }
