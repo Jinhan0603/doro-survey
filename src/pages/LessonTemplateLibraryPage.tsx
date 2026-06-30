@@ -118,11 +118,14 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'mine' | 'shared'>('mine');
 
   const orgTemplates = useMemo(
     () => sharedTemplates.filter((template) => template.ownerUid !== ownerUid),
     [ownerUid, sharedTemplates],
   );
+
+  const activeTemplates = filter === 'mine' ? myTemplates : orgTemplates;
 
   const handleDuplicate = async (templateId: string) => {
     try {
@@ -175,60 +178,45 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
 
       <div className="library-section">
-        <div className="library-section__header">
-          <div>
-            <h3>내 설문지 템플릿</h3>
-          </div>
+        <div className="library-filter" role="radiogroup" aria-label="템플릿 종류 필터">
+          <label className={`library-filter__option ${filter === 'mine' ? 'isActive' : ''}`}>
+            <input
+              type="radio"
+              name="templateFilter"
+              checked={filter === 'mine'}
+              onChange={() => setFilter('mine')}
+            />
+            <span>내 템플릿 ({myTemplates.length})</span>
+          </label>
+          <label className={`library-filter__option ${filter === 'shared' ? 'isActive' : ''}`}>
+            <input
+              type="radio"
+              name="templateFilter"
+              checked={filter === 'shared'}
+              onChange={() => setFilter('shared')}
+            />
+            <span>공유 템플릿 ({orgTemplates.length})</span>
+          </label>
         </div>
 
         <div
-          className={`library-section__panel ${myTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
+          className={`library-section__panel ${activeTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
         >
-          {loading ? null : myTemplates.length === 0 ? (
+          {loading ? null : activeTemplates.length === 0 ? (
             <div className="library-section__empty">
-              <FolderKanban size={20} />
-              <strong>아직 만든 템플릿이 없습니다.</strong>
+              {filter === 'mine' ? <FolderKanban size={20} /> : <BookCopy size={20} />}
+              <strong>
+                {filter === 'mine' ? '아직 만든 템플릿이 없습니다.' : '아직 공유된 템플릿이 없습니다.'}
+              </strong>
             </div>
           ) : (
             <div className="library-grid">
-              {myTemplates.map((template) => (
+              {activeTemplates.map((template) => (
                 <TemplateCard
                   busy={busyTemplateId === template.id}
                   key={template.id}
-                  editable
-                  leadingLabel="내 템플릿"
-                  template={template}
-                  onDuplicate={handleDuplicate}
-                  onVisibilityChange={handleVisibilityChange}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="library-section">
-        <div className="library-section__header">
-          <div>
-            <h3>공유 템플릿</h3>
-          </div>
-        </div>
-
-        <div
-          className={`library-section__panel ${orgTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
-        >
-          {orgTemplates.length === 0 ? (
-            <div className="library-section__empty">
-              <BookCopy size={20} />
-              <strong>아직 공유된 템플릿이 없습니다.</strong>
-            </div>
-          ) : (
-            <div className="library-grid">
-              {orgTemplates.map((template) => (
-                <TemplateCard
-                  busy={busyTemplateId === template.id}
-                  key={template.id}
-                  leadingLabel="공유 템플릿"
+                  editable={filter === 'mine'}
+                  leadingLabel={filter === 'mine' ? '내 템플릿' : '공유 템플릿'}
                   template={template}
                   onDuplicate={handleDuplicate}
                   onVisibilityChange={handleVisibilityChange}

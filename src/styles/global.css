@@ -2190,6 +2190,44 @@ button:disabled {
   font-size: 1rem;
 }
 
+/* 내 템플릿 / 공유 템플릿 라디오 필터 */
+.library-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.library-filter__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.library-filter__option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.library-filter__option.isActive {
+  border-color: #93c5fd;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
 /* ── Builder Page ──────────────────────────────────────────── */
 
 .builder-page {
