@@ -117,11 +117,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
             <div className="emptyQuestionState">
               <p className="emptyQuestionTitle">아직 질문이 없습니다</p>
               <p className="emptyQuestionText">객관식, 주관식 질문을 추가해 설문을 구성하세요.</p>
-              <div className="emptyQuestionActions">
-                <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
-                  + 객관식 질문 추가
-                </button>
-              </div>
             </div>
           ) : (
             <div className="questionList">
