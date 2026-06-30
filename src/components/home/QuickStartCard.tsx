@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardList, Link2, Monitor, Plus } from 'lucide-react';
+import { BarChart3, ClipboardList, Monitor, PlayCircle, Plus } from 'lucide-react';
 import { usePresenterAuth } from '../../auth/AuthProvider';
 import { useMySessions } from '../../hooks/useMySessions';
 import { Button } from './ui/Button';
@@ -23,8 +23,8 @@ export function QuickStartCard() {
         <Button variant="greenOutline" to="/library" icon={<ClipboardList size={16} />}>
           템플릿 선택
         </Button>
-        <Button variant="purpleOutline" to="/session-new" icon={<Link2 size={16} />}>
-          참여 링크 만들기
+        <Button variant="purpleOutline" to="/session-new" icon={<PlayCircle size={16} />}>
+          수업 열기
         </Button>
       </div>
 

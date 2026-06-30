@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { operationCards } from '../../data/homeContent';
 import { assetUrl } from '../../utils/urls';
@@ -21,9 +20,6 @@ export function OperationScreens() {
             <div>
               <h3 className="dh-op-title">{card.title}</h3>
               <p className="dh-op-desc">{card.description}</p>
-              <span className="dh-btn dh-btn--sm dh-btn--pillBlue">
-                {card.action} <ArrowRight size={15} />
-              </span>
             </div>
           </Link>
         ))}

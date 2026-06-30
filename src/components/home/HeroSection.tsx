@@ -1,4 +1,4 @@
-import { FileText, PencilLine } from 'lucide-react';
+import { PencilLine } from 'lucide-react';
 import { Button } from './ui/Button';
 import { QuickStartCard } from './QuickStartCard';
 
@@ -27,9 +27,6 @@ export function HeroSection() {
         <div className="dh-cta-row">
           <Button variant="primary" size="lg" to="/custom-session" icon={<PencilLine size={18} />}>
             새 질문 만들기
-          </Button>
-          <Button variant="secondary" size="lg" to="/library" icon={<FileText size={18} />}>
-            템플릿으로 시작
           </Button>
         </div>
       </div>
