@@ -9,7 +9,7 @@ export function Header() {
       <div className="dh-header-inner">
         <Link className="dh-brand" to="/" aria-label="도로 설문 홈">
           <span className="dh-brand-logo">
-            <BrandLogo size={24} />
+            <BrandLogo size={40} />
           </span>
           <span>
             <span className="dh-brand-title">도로 설문</span>

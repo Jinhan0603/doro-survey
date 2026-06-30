@@ -137,9 +137,8 @@
 
 .dh-brand { display: flex; align-items: center; gap: 12px; }
 .dh-brand-logo {
-  width: 40px; height: 40px; border-radius: 12px;
+  width: 40px; height: 40px; border-radius: 12px; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  background: var(--c-blue-50); border: 1px solid #d7e7ff; color: var(--c-blue-500);
 }
 .dh-brand-title { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
 .dh-brand-sub { display: block; font-size: 12px; font-weight: 500; color: var(--c-text-3); margin-top: 1px; }
