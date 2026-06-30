@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { FileText, LayoutTemplate, LogOut, Menu, User } from 'lucide-react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { LogOut, Menu, User } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
 import { navItems } from '../../data/homeContent';
 import { usePresenterAuth } from '../../auth/AuthProvider';
 import { BrandLogo } from '../home/ui/BrandLogo';
@@ -11,7 +11,6 @@ import { BrandLogo } from '../home/ui/BrandLogo';
  * so the header no longer changes shape per page.
  */
 export function AppHeader() {
-  const navigate = useNavigate();
   const { logout } = usePresenterAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -78,31 +77,6 @@ export function AppHeader() {
             </button>
             {menuOpen && (
               <div className="dh-account-menu" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="dh-account-menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigate('/sessions');
-                  }}
-                >
-                  <FileText size={16} />
-                  내 설문
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="dh-account-menu-item"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigate('/library');
-                  }}
-                >
-                  <LayoutTemplate size={16} />
-                  내 템플릿
-                </button>
-                <div className="dh-account-menu-divider" role="separator" />
                 <button
                   type="button"
                   role="menuitem"
