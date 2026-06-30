@@ -2148,6 +2148,48 @@ button:disabled {
   color: var(--color-text-muted);
 }
 
+/* 템플릿 섹션 패널: 내용이 비었든 가득 찼든 높이를 고정하고, 넘치면 내부 스크롤만 생긴다. */
+.library-section__panel {
+  height: 360px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.library-section__panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.library-section__panel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.library-section__panel--empty {
+  display: grid;
+  place-items: center;
+}
+
+.library-section__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.library-section__empty strong {
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
 /* ── Builder Page ──────────────────────────────────────────── */
 
 .builder-page {

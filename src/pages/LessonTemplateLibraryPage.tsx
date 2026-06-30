@@ -181,26 +181,30 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           </div>
         </div>
 
-        {loading ? null : myTemplates.length === 0 ? (
-          <Card className="library-empty-card">
-            <FolderKanban size={20} />
-            <strong>아직 만든 템플릿이 없습니다.</strong>
-          </Card>
-        ) : (
-          <div className="library-grid">
-            {myTemplates.map((template) => (
-              <TemplateCard
-                busy={busyTemplateId === template.id}
-                key={template.id}
-                editable
-                leadingLabel="내 템플릿"
-                template={template}
-                onDuplicate={handleDuplicate}
-                onVisibilityChange={handleVisibilityChange}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className={`library-section__panel ${myTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
+        >
+          {loading ? null : myTemplates.length === 0 ? (
+            <div className="library-section__empty">
+              <FolderKanban size={20} />
+              <strong>아직 만든 템플릿이 없습니다.</strong>
+            </div>
+          ) : (
+            <div className="library-grid">
+              {myTemplates.map((template) => (
+                <TemplateCard
+                  busy={busyTemplateId === template.id}
+                  key={template.id}
+                  editable
+                  leadingLabel="내 템플릿"
+                  template={template}
+                  onDuplicate={handleDuplicate}
+                  onVisibilityChange={handleVisibilityChange}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="library-section">
@@ -210,25 +214,29 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           </div>
         </div>
 
-        {orgTemplates.length === 0 ? (
-          <Card className="library-empty-card">
-            <BookCopy size={20} />
-            <strong>아직 공유된 템플릿이 없습니다.</strong>
-          </Card>
-        ) : (
-          <div className="library-grid">
-            {orgTemplates.map((template) => (
-              <TemplateCard
-                busy={busyTemplateId === template.id}
-                key={template.id}
-                leadingLabel="공유 템플릿"
-                template={template}
-                onDuplicate={handleDuplicate}
-                onVisibilityChange={handleVisibilityChange}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className={`library-section__panel ${orgTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
+        >
+          {orgTemplates.length === 0 ? (
+            <div className="library-section__empty">
+              <BookCopy size={20} />
+              <strong>아직 공유된 템플릿이 없습니다.</strong>
+            </div>
+          ) : (
+            <div className="library-grid">
+              {orgTemplates.map((template) => (
+                <TemplateCard
+                  busy={busyTemplateId === template.id}
+                  key={template.id}
+                  leadingLabel="공유 템플릿"
+                  template={template}
+                  onDuplicate={handleDuplicate}
+                  onVisibilityChange={handleVisibilityChange}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
