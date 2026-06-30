@@ -486,7 +486,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         <div className="builder-interaction-list">
           {drafts.map((draft, index) => (
             <QuestionEditor
-              canDelete={drafts.length > 1}
+              canDelete
               draft={draft}
               index={index}
               key={draft.clientId}
@@ -498,7 +498,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         </div>
 
         <div className="session-new-actions">
-          <Button disabled={busy} onClick={() => void handleCreate()}>
+          <Button disabled={busy || drafts.length === 0} onClick={() => void handleCreate()}>
             <PlayCircle size={16} />
             {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
           </Button>
