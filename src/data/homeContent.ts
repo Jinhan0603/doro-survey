@@ -7,7 +7,7 @@ export type NavItem = { label: string; to: string };
  * '수업 열기'(/session-new)도 전역 탭에서 빼고, 템플릿 카드의 '세션 열기'로 진입한다.
  */
 export const navItems: NavItem[] = [
-  { label: '내 수업', to: '/sessions' },
-  { label: '질문 만들기', to: '/custom-session' },
-  { label: '템플릿', to: '/library' },
+  { label: '진행 중인 설문', to: '/sessions' },
+  { label: '설문 만들기', to: '/custom-session' },
+  { label: '설문지 템플릿', to: '/library' },
 ];
