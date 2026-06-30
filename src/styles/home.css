@@ -159,6 +159,7 @@
 }
 .dh-account-menu-item:hover { background: #f3f6fb; }
 .dh-account-menu-item svg { color: #6b7280; flex: none; }
+.dh-account-menu-divider { height: 1px; margin: 4px 6px; background: var(--c-border); }
 
 .dh-nav-toggle { display: none; }
 

@@ -84,11 +84,11 @@ export function AppHeader() {
                   className="dh-account-menu-item"
                   onClick={() => {
                     setMenuOpen(false);
-                    void logout();
+                    navigate('/sessions');
                   }}
                 >
-                  <LogOut size={16} />
-                  로그아웃
+                  <FileText size={16} />
+                  내 설문
                 </button>
                 <button
                   type="button"
@@ -102,17 +102,18 @@ export function AppHeader() {
                   <LayoutTemplate size={16} />
                   내 템플릿
                 </button>
+                <div className="dh-account-menu-divider" role="separator" />
                 <button
                   type="button"
                   role="menuitem"
                   className="dh-account-menu-item"
                   onClick={() => {
                     setMenuOpen(false);
-                    navigate('/sessions');
+                    void logout();
                   }}
                 >
-                  <FileText size={16} />
-                  내 설문
+                  <LogOut size={16} />
+                  로그아웃
                 </button>
               </div>
             )}
