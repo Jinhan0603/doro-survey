@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Badge } from '../common/Badge';
-import { PageHeader } from './PageHeader';
 
 type AppShellProps = {
   eyebrow?: string;
@@ -25,7 +24,6 @@ export function AppShell({
 
   return (
     <div className="app-shell">
-      <PageHeader />
       <main className="app-shell__main">
         {hasHero ? (
           <section className={compact ? 'hero-panel hero-panel--compact' : 'hero-panel'}>

@@ -3,29 +3,9 @@
    Plain CSS reproduction of the Tailwind spec design system.
    ============================================================ */
 
+/* dh-* design tokens live in global.css :root so the shared header resolves
+   them on every route. .dh-page keeps only the homepage body styling. */
 .dh-page {
-  --c-page-bg: #f6faff;
-  --c-card: #ffffff;
-  --c-text: #111827;
-  --c-text-2: #4b5563;
-  --c-text-3: #6b7280;
-  --c-text-soft: #8a96a8;
-  --c-blue-50: #eff6ff;
-  --c-blue-100: #dbeafe;
-  --c-blue-500: #2563eb;
-  --c-blue-600: #1d4ed8;
-  --c-green-50: #ecfdf5;
-  --c-green-500: #22a06b;
-  --c-green-600: #16915e;
-  --c-purple-50: #f3f0ff;
-  --c-purple-500: #6d5dfb;
-  --c-border: #dde7f3;
-  --c-border-soft: #e7eef8;
-  --sh-card: 0 12px 30px rgba(15, 61, 138, 0.07);
-  --sh-card-hover: 0 16px 36px rgba(15, 61, 138, 0.1);
-  --sh-header: 0 8px 24px rgba(15, 61, 138, 0.06);
-  --sh-btn: 0 10px 20px rgba(37, 99, 235, 0.18);
-
   min-height: 100vh;
   color: var(--c-text);
   background: linear-gradient(180deg, #f6faff 0%, #ffffff 52%, #f8fbff 100%);

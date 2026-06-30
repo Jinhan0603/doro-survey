@@ -3,6 +3,7 @@ import { HashRouter, Outlet, Route, Routes } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
 import { AuthProvider } from '../auth/AuthProvider';
 import { AuthGate } from '../components/auth/AuthGate';
+import { AppHeader } from '../components/layout/AppHeader';
 
 const StudentPage = lazy(async () => {
   const module = await import('../pages/StudentPage');
@@ -60,7 +61,10 @@ function PresenterLayout() {
   return (
     <AuthProvider>
       <AuthGate>
-        <Outlet />
+        <div className="app-frame">
+          <AppHeader />
+          <Outlet />
+        </div>
       </AuthGate>
     </AuthProvider>
   );

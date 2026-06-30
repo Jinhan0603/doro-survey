@@ -6,10 +6,10 @@ export const CLASS_CODE = 'CLASS-2026';
 /** Tone keys map to button/badge/link color variants. */
 export type Tone = 'blue' | 'green' | 'purple';
 
-export type NavItem = { label: string; to: string; active?: boolean };
+export type NavItem = { label: string; to: string };
 
 export const navItems: NavItem[] = [
-  { label: '홈', to: '/', active: true },
+  { label: '홈', to: '/' },
   { label: '내 수업', to: '/sessions' },
   { label: '질문 만들기', to: '/custom-session' },
   { label: '템플릿', to: '/library' },

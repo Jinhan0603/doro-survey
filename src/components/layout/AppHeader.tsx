@@ -1,9 +1,14 @@
 import { Menu, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { navItems } from '../../data/homeContent';
-import { BrandLogo } from './ui/BrandLogo';
+import { BrandLogo } from '../home/ui/BrandLogo';
 
-export function Header() {
+/**
+ * Single fixed header shared by every presenter route (rendered once in
+ * PresenterLayout). Active tab is derived from the current route via NavLink,
+ * so the header no longer changes shape per page.
+ */
+export function AppHeader() {
   return (
     <header className="dh-header">
       <div className="dh-header-inner">
@@ -19,14 +24,14 @@ export function Header() {
 
         <nav className="dh-nav" aria-label="주요 메뉴">
           {navItems.map((item) => (
-            <Link
+            <NavLink
               key={item.label}
               to={item.to}
-              className={item.active ? 'dh-nav--active' : ''}
-              aria-current={item.active ? 'page' : undefined}
+              end={item.to === '/'}
+              className={({ isActive }) => (isActive ? 'dh-nav--active' : undefined)}
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
 
