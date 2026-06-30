@@ -48,6 +48,16 @@
   gap: 10px;
 }
 
+/* 우측 상단 버튼: 아이콘과 텍스트가 항상 한 줄에 오도록 한다. */
+.templateBuilderActions .button,
+.templateBuilderActions .builder-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .templateBuilderWorkspace {
   flex: 1 1 auto;
   min-height: 0;
