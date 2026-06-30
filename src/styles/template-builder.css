@@ -180,6 +180,100 @@
   scrollbar-color: #cbd5e1 transparent;
 }
 
+/* 설문지 템플릿 목록(좌) / 상세(우) */
+.templateList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.templateListRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid #e5eaf2;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.templateListRow:hover {
+  border-color: #cdd7e6;
+}
+
+.templateListRow.isActive {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.templateListRow strong {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.templateListRow span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.templateDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.templateDetail__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.templateDetail__title {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.templateDetail__desc {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.templateDetail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.templateDetail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.templateDetail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.templateDetail__visibility {
+  margin-top: 4px;
+  max-width: 220px;
+}
+
 /* 모바일 탭: 데스크톱에서는 숨김 */
 .mobilePaneTabs {
   display: none;

@@ -1,15 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PlayCircle } from 'lucide-react';
+import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
-import { TeacherGate } from '../components/teacher/TeacherGate';
-import { PHASE_ORDER, PHASE_SHORT_LABELS } from '../data/lessonTemplatePresets';
+import { usePresenterAuth } from '../auth/AuthProvider';
 import { duplicateLessonTemplate, updateLessonTemplate } from '../firebase/lessonTemplates';
 import { useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
 import type { LessonTemplateDoc, TemplateVisibility } from '../firebase/types';
+import '../styles/survey-builder.css';
+import '../styles/template-builder.css';
 
 const TEMPLATE_VISIBILITY_LABELS: Record<TemplateVisibility, string> = {
   private: '개인용',
@@ -17,51 +17,50 @@ const TEMPLATE_VISIBILITY_LABELS: Record<TemplateVisibility, string> = {
   shared: '전체 공유',
 };
 
-function TemplateCard({
+// 조직 공유(org)는 제거됨. 편집 시 개인용/전체 공유만 선택할 수 있다.
+const SHAREABLE_OPTIONS: [TemplateVisibility, string][] = [
+  ['private', '개인용'],
+  ['shared', '전체 공유'],
+];
+
+function TemplateDetail({
   template,
   leadingLabel,
-  busy = false,
+  editable,
+  busy,
   onDuplicate,
   onVisibilityChange,
-  editable = false,
 }: {
   template: LessonTemplateDoc;
   leadingLabel: string;
-  busy?: boolean;
+  editable: boolean;
+  busy: boolean;
   onDuplicate: (templateId: string) => void;
   onVisibilityChange: (templateId: string, visibility: TemplateVisibility) => void;
-  editable?: boolean;
 }) {
   const visibility = template.templateVisibility ?? (template.shared ? 'org' : 'private');
 
   return (
-    <Card className="library-template-card">
-      <div className="library-template-card__header">
-        <div className="library-template-card__labels">
-          <Badge>{leadingLabel}</Badge>
-          <Badge tone={visibility === 'private' ? 'default' : 'accent'}>
-            {TEMPLATE_VISIBILITY_LABELS[visibility]}
-          </Badge>
-        </div>
-        <Link className="builder-link-button builder-link-button--ghost" to={`/custom-template/${template.id}`}>
-          편집
-        </Link>
+    <div className="templateDetail">
+      <div className="templateDetail__labels">
+        <Badge>{leadingLabel}</Badge>
+        <Badge tone={visibility === 'private' ? 'default' : 'accent'}>
+          {TEMPLATE_VISIBILITY_LABELS[visibility]}
+        </Badge>
       </div>
 
-      <div className="library-template-card__copy">
-        <h3>{template.title}</h3>
-        <p>{template.description || '설명이 아직 없습니다.'}</p>
-      </div>
+      <h3 className="templateDetail__title">{template.title}</h3>
+      <p className="templateDetail__desc">{template.description || '설명이 아직 없습니다.'}</p>
 
-      <div className="library-template-card__meta">
-        <span>{template.subject}</span>
+      <div className="templateDetail__meta">
+        {template.subject ? <span>{template.subject}</span> : null}
         {template.targetGrade ? <span>{template.targetGrade}</span> : null}
         <span>질문 {template.interactionCount ?? 0}개</span>
         <span>슬라이드 {template.slideCount ?? 0}개</span>
       </div>
 
       {template.toolTags?.length ? (
-        <div className="library-template-card__tags">
+        <div className="templateDetail__tags">
           {template.toolTags.map((tool) => (
             <span key={tool} className="library-template-tag">
               {tool}
@@ -70,19 +69,17 @@ function TemplateCard({
         </div>
       ) : null}
 
-      <div className="library-template-card__phases">
-        {PHASE_ORDER.map((phase) => (
-          <div key={phase} className="library-template-phase">
-            <span>{PHASE_SHORT_LABELS[phase]}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="library-template-card__actions">
+      <div className="templateDetail__actions">
         <Link className="builder-link-button" to={`/session-new?template=${template.id}`}>
           <PlayCircle size={16} />
           세션 열기
         </Link>
+        {editable ? (
+          <Link className="builder-link-button builder-link-button--ghost" to={`/custom-template/${template.id}`}>
+            <PencilLine size={16} />
+            편집
+          </Link>
+        ) : null}
         <Button disabled={busy} size="sm" variant="secondary" onClick={() => onDuplicate(template.id)}>
           <CopyPlus size={16} />
           {busy ? '복제 중...' : '복제하기'}
@@ -90,14 +87,14 @@ function TemplateCard({
       </div>
 
       {editable ? (
-        <label className="form-field">
+        <label className="form-field templateDetail__visibility">
           <span className="form-label">공개 범위</span>
           <select
             className="select-sm"
-            value={visibility}
+            value={visibility === 'shared' ? 'shared' : 'private'}
             onChange={(event) => onVisibilityChange(template.id, event.target.value as TemplateVisibility)}
           >
-            {(Object.entries(TEMPLATE_VISIBILITY_LABELS) as [TemplateVisibility, string][]).map(([value, label]) => (
+            {SHAREABLE_OPTIONS.map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -105,7 +102,7 @@ function TemplateCard({
           </select>
         </label>
       ) : null}
-    </Card>
+    </div>
   );
 }
 
@@ -119,6 +116,9 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'mine' | 'shared'>('mine');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 모바일(≤960px)에서 목록/정보를 탭으로 전환한다.
+  const [activePane, setActivePane] = useState<'meta' | 'questions'>('meta');
 
   const orgTemplates = useMemo(
     () => sharedTemplates.filter((template) => template.ownerUid !== ownerUid),
@@ -126,6 +126,18 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   );
 
   const activeTemplates = filter === 'mine' ? myTemplates : orgTemplates;
+  const selected = activeTemplates.find((template) => template.id === selectedId) ?? null;
+
+  // 필터/목록이 바뀌면 첫 항목을 자동 선택한다.
+  useEffect(() => {
+    if (activeTemplates.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (!activeTemplates.some((template) => template.id === selectedId)) {
+      setSelectedId(activeTemplates[0].id);
+    }
+  }, [activeTemplates, selectedId]);
 
   const handleDuplicate = async (templateId: string) => {
     try {
@@ -137,9 +149,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       });
       navigate(`/custom-template/${newTemplateId}`);
     } catch (nextError) {
-      setActionError(
-        nextError instanceof Error ? nextError.message : '템플릿 복제에 실패했습니다.',
-      );
+      setActionError(nextError instanceof Error ? nextError.message : '템플릿 복제에 실패했습니다.');
     } finally {
       setBusyTemplateId(null);
     }
@@ -160,24 +170,24 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
     }
   };
 
+  const handleSelect = (templateId: string) => {
+    setSelectedId(templateId);
+    setActivePane('questions');
+  };
+
   return (
-    <div className="library-page">
-      <div className="builder-toolbar">
-        <div className="builder-toolbar__copy">
-          <h2>설문지 템플릿</h2>
-        </div>
-        <div className="builder-toolbar__actions">
-          <Link className="builder-link-button" to="/custom-template">
-            <LayoutTemplate size={16} />
-            새 템플릿 만들기
-          </Link>
-        </div>
-      </div>
+    <main className="templateBuilderPage">
+      <div className="templateBuilderShell">
+        <header className="templateBuilderToolbar">
+          <h1>설문지 템플릿</h1>
+          <div className="templateBuilderActions">
+            <Link className="builder-link-button" to="/custom-template">
+              <LayoutTemplate size={16} />
+              새 템플릿 만들기
+            </Link>
+          </div>
+        </header>
 
-      {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-      {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
-
-      <div className="library-section">
         <div className="library-filter" role="radiogroup" aria-label="템플릿 종류 필터">
           <label className={`library-filter__option ${filter === 'mine' ? 'isActive' : ''}`}>
             <input
@@ -199,41 +209,97 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           </label>
         </div>
 
-        <div
-          className={`library-section__panel ${activeTemplates.length === 0 ? 'library-section__panel--empty' : ''}`}
-        >
-          {loading ? null : activeTemplates.length === 0 ? (
-            <div className="library-section__empty">
-              {filter === 'mine' ? <FolderKanban size={20} /> : <BookCopy size={20} />}
-              <strong>
-                {filter === 'mine' ? '아직 만든 템플릿이 없습니다.' : '아직 공유된 템플릿이 없습니다.'}
-              </strong>
+        {error ? <div className="inline-message inline-message--error">{error}</div> : null}
+        {actionError ? <div className="inline-message inline-message--error">{actionError}</div> : null}
+
+        <div className="mobilePaneTabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePane === 'meta'}
+            className={`mobilePaneTab ${activePane === 'meta' ? 'isActive' : ''}`}
+            onClick={() => setActivePane('meta')}
+          >
+            목록
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePane === 'questions'}
+            className={`mobilePaneTab ${activePane === 'questions' ? 'isActive' : ''}`}
+            onClick={() => setActivePane('questions')}
+          >
+            정보
+          </button>
+        </div>
+
+        <section className="templateBuilderWorkspace" data-active-pane={activePane}>
+          <aside className="templateMetaPanel">
+            <header className="builderPaneHeader">
+              <h2>템플릿 목록</h2>
+            </header>
+            <div className="templateMetaScroll">
+              {loading ? null : activeTemplates.length === 0 ? (
+                <div className="library-section__empty">
+                  {filter === 'mine' ? <FolderKanban size={20} /> : <BookCopy size={20} />}
+                  <strong>
+                    {filter === 'mine' ? '아직 만든 템플릿이 없습니다.' : '아직 공유된 템플릿이 없습니다.'}
+                  </strong>
+                </div>
+              ) : (
+                <div className="templateList">
+                  {activeTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      className={`templateListRow ${template.id === selectedId ? 'isActive' : ''}`}
+                      onClick={() => handleSelect(template.id)}
+                    >
+                      <strong>{template.title}</strong>
+                      <span>
+                        질문 {template.interactionCount ?? 0}개 · 슬라이드 {template.slideCount ?? 0}개
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="library-grid">
-              {activeTemplates.map((template) => (
-                <TemplateCard
-                  busy={busyTemplateId === template.id}
-                  key={template.id}
-                  editable={filter === 'mine'}
+          </aside>
+
+          <section className="questionBuilderPanel">
+            <header className="questionBuilderHeader">
+              <div className="builderPaneHeader">
+                <h2>템플릿 정보</h2>
+              </div>
+            </header>
+            <div className="questionBuilderScroll">
+              {selected ? (
+                <TemplateDetail
+                  template={selected}
                   leadingLabel={filter === 'mine' ? '내 템플릿' : '공유 템플릿'}
-                  template={template}
+                  editable={filter === 'mine'}
+                  busy={busyTemplateId === selected.id}
                   onDuplicate={handleDuplicate}
                   onVisibilityChange={handleVisibilityChange}
                 />
-              ))}
+              ) : (
+                <div className="library-section__empty">
+                  <FolderKanban size={20} />
+                  <strong>왼쪽에서 템플릿을 선택하세요.</strong>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </section>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
 export function LessonTemplateLibraryPage() {
-  return (
-    <TeacherGate compact>
-      {(user) => <LessonTemplateLibraryContent ownerUid={user.uid} />}
-    </TeacherGate>
-  );
+  const { user } = usePresenterAuth();
+  if (!user) {
+    return null;
+  }
+  return <LessonTemplateLibraryContent ownerUid={user.uid} />;
 }
