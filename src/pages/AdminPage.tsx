@@ -262,7 +262,7 @@ export function AdminPage() {
             </select>
           </label>
           <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
-            {busy ? '작업 중...' : '선택 질문 seed'}
+            선택 질문 seed
           </Button>
           <Button disabled={busy} size="sm" variant="ghost" onClick={() => void logout()}>
             로그아웃

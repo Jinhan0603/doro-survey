@@ -22,7 +22,6 @@ function formatCreated(ts: Timestamp | null | undefined): string {
 
 function SessionDetail({
   session,
-  copied,
   deleting,
   onOpenAdmin,
   onOpenDisplay,
@@ -30,7 +29,6 @@ function SessionDetail({
   onDelete,
 }: {
   session: SessionSummary;
-  copied: boolean;
   deleting: boolean;
   onOpenAdmin: () => void;
   onOpenDisplay: () => void;
@@ -62,10 +60,10 @@ function SessionDetail({
           결과 화면
         </Button>
         <Button size="sm" variant="ghost" onClick={onCopyLink}>
-          {copied ? '복사됨' : '학생 링크 복사'}
+          학생 링크 복사
         </Button>
         <Button size="sm" variant="ghost" disabled={deleting} onClick={onDelete}>
-          {deleting ? '삭제 중...' : '삭제'}
+          삭제
         </Button>
       </div>
     </div>
@@ -75,7 +73,6 @@ function SessionDetail({
 function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const navigate = useNavigate();
   const { sessions, loading, error } = useMySessions(ownerUid);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,10 +93,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   }, [sessions, selectedId]);
 
   const copyStudentLink = (id: string) => {
-    navigator.clipboard.writeText(buildAppUrl('/student', id)).then(() => {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
+    void navigator.clipboard.writeText(buildAppUrl('/student', id));
   };
 
   const handleDelete = async (id: string, title: string) => {

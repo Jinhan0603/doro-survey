@@ -55,7 +55,7 @@ function TemplateDetail({
         ) : null}
         <Button disabled={busy} size="sm" variant="secondary" onClick={() => onDuplicate(template.id)}>
           <CopyPlus size={16} />
-          {busy ? '복제 중...' : '복제하기'}
+          복제하기
         </Button>
       </div>
     </div>

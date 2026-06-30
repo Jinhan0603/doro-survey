@@ -124,7 +124,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
         <div className="session-new-actions">
           <Button disabled={busy || loading} onClick={() => void handleCreate()}>
             <PlayCircle size={16} />
-            {busy ? '세션 생성 중...' : '템플릿으로 세션 만들기'}
+            템플릿으로 세션 만들기
           </Button>
         </div>
 

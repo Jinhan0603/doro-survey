@@ -176,7 +176,7 @@ export function LiveQuestionForm({
         size="lg"
         onClick={handleSubmit}
       >
-        {isSubmitting ? '제출 중...' : hasAnswer ? '답변 다시 제출하기' : '이 답변 제출하기'}
+        {hasAnswer ? '답변 다시 제출하기' : '이 답변 제출하기'}
       </Button>
       {hasAnswer && !submitError ? (
         <p className="student-already-submitted">이미 제출한 답변이 있습니다. 내용을 바꾸고 다시 누르면 갱신됩니다.</p>

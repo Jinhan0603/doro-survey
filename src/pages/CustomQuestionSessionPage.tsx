@@ -188,7 +188,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
             onClick={() => void handleCreate()}
           >
             <QrCode size={18} />
-            {busy ? '생성 중...' : '설문 생성하기'}
+            설문 생성하기
           </button>
         </footer>
       </section>

@@ -364,7 +364,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
               onClick={() => void handleSave()}
             >
               <Save size={16} />
-              {busy ? '저장 중...' : '저장'}
+              저장
             </Button>
           </div>
         </header>
