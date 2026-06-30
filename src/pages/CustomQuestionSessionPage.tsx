@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
-import { PlayCircle, Plus } from 'lucide-react';
-import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
-import { Input } from '../components/common/Input';
-import { TeacherGate } from '../components/teacher/TeacherGate';
+import { QrCode } from 'lucide-react';
+import { usePresenterAuth } from '../auth/AuthProvider';
 import { CreatedSessionLinks } from '../components/session/CreatedSessionLinks';
 import { buildSessionLinks, type CreatedSession } from '../components/session/sessionLinks';
 import { QuestionEditor } from '../components/session/QuestionEditor';
@@ -19,6 +16,7 @@ import { PHASE_ORDER } from '../data/lessonTemplatePresets';
 import { createCustomQuestionSession } from '../firebase/sessions';
 import type { QuestionInputType } from '../firebase/types';
 import { useUserProfile } from '../hooks/useUserProfile';
+import '../styles/survey-builder.css';
 
 function createSessionIdSuggestion() {
   return `live-${nanoid(6).toLowerCase()}`;
@@ -92,72 +90,88 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   return (
-    <div className="session-new-page custom-question-page">
-      <Card className="session-new-card" tone="accent">
-        <div className="session-new-grid">
-          <Input
-            aria-label="설문지 이름"
-            placeholder="설문지 이름을 입력하세요 (예: AI 도구 실습 1반)"
-            value={sessionTitle}
-            onChange={(event) => setSessionTitle(event.target.value)}
-          />
-        </div>
-
-        <div className="builder-section-head">
-          <div>
-            <h3>질문 구성</h3>
+    <main className="surveyCreatePage">
+      <section className="surveyBuilderPanel">
+        <header className="builderPanelHeader">
+          <div className="builderTitleArea">
+            <div className="surveyTitleInputWrap">
+              <input
+                className="surveyTitleInput"
+                aria-label="설문지 이름"
+                placeholder="설문지 이름을 입력하세요"
+                value={sessionTitle}
+                onChange={(event) => setSessionTitle(event.target.value)}
+              />
+            </div>
+            <h2 className="builderTitle">질문 구성</h2>
           </div>
-          <div className="custom-question-add-row">
-            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
-              <Plus size={16} />
-              객관식
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('text')}>
-              <Plus size={16} />
-              주관식
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('status')}>
-              <Plus size={16} />
-              상태 체크
-            </Button>
+
+          <div className="questionTypeActions">
+            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
+              + 객관식
+            </button>
+            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('text')}>
+              + 주관식
+            </button>
+            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('status')}>
+              + 상태 체크
+            </button>
           </div>
+        </header>
+
+        <div className="builderPanelScrollBody">
+          {drafts.length === 0 ? (
+            <div className="emptyQuestionState">
+              <p className="emptyQuestionTitle">아직 질문이 없습니다</p>
+              <p className="emptyQuestionText">객관식, 주관식, 상태 체크 질문을 추가해 설문을 구성하세요.</p>
+              <div className="emptyQuestionActions">
+                <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
+                  + 객관식 질문 추가
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="questionList">
+              {drafts.map((draft, index) => (
+                <QuestionEditor
+                  canDelete
+                  draft={draft}
+                  index={index}
+                  key={draft.clientId}
+                  onDelete={(clientId) => setDrafts((current) => current.filter((item) => item.clientId !== clientId))}
+                  onMove={(clientId, direction) => setDrafts((current) => swapDrafts(current, clientId, direction))}
+                  onPatch={handlePatch}
+                />
+              ))}
+            </div>
+          )}
+
+          {createdSession ? (
+            <CreatedSessionLinks createdSession={createdSession} onReset={handleReset} />
+          ) : null}
         </div>
 
-        <div className="builder-interaction-list">
-          {drafts.map((draft, index) => (
-            <QuestionEditor
-              canDelete
-              draft={draft}
-              index={index}
-              key={draft.clientId}
-              onDelete={(clientId) => setDrafts((current) => current.filter((item) => item.clientId !== clientId))}
-              onMove={(clientId, direction) => setDrafts((current) => swapDrafts(current, clientId, direction))}
-              onPatch={handlePatch}
-            />
-          ))}
-        </div>
-
-        <div className="session-new-actions">
-          <Button disabled={busy || drafts.length === 0} onClick={() => void handleCreate()}>
-            <PlayCircle size={16} />
+        <footer className="builderPanelFooter">
+          {error ? <span className="builderPanelFooterError">{error}</span> : null}
+          <button
+            type="button"
+            className="primaryQrButton"
+            disabled={busy || drafts.length === 0}
+            onClick={() => void handleCreate()}
+          >
+            <QrCode size={18} />
             {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
-          </Button>
-        </div>
-
-        {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-      </Card>
-
-      {createdSession ? (
-        <CreatedSessionLinks createdSession={createdSession} onReset={handleReset} />
-      ) : null}
-    </div>
+          </button>
+        </footer>
+      </section>
+    </main>
   );
 }
 
 export function CustomQuestionSessionPage() {
-  return (
-    <TeacherGate compact>
-      {(user) => <CustomQuestionSessionContent ownerUid={user.uid} />}
-    </TeacherGate>
-  );
+  const { user } = usePresenterAuth();
+  if (!user) {
+    return null;
+  }
+  return <CustomQuestionSessionContent ownerUid={user.uid} />;
 }

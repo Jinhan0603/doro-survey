@@ -1,7 +1,5 @@
 import { type ChangeEvent } from 'react';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
-import { Button } from '../common/Button';
-import { Input } from '../common/Input';
+import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
 import {
   INPUT_TYPE_LABELS,
   PHASE_LABELS,
@@ -50,131 +48,185 @@ export function QuestionEditor({
     });
   };
 
+  // choicesText('\n' 구분 문자열)를 단일 소스로 두고, UI에서만 행 단위로 편집한다.
+  const showOptions = hasChoiceOptions(draft.inputType);
+  const options = draft.choicesText.length > 0 ? draft.choicesText.split('\n') : [];
+  const setOptions = (next: string[]) => onPatch(draft.clientId, { choicesText: next.join('\n') });
+  const updateOption = (target: number, value: string) =>
+    setOptions(options.map((option, idx) => (idx === target ? value : option)));
+  const addOption = () => setOptions([...options, '']);
+  const removeOption = (target: number) => setOptions(options.filter((_, idx) => idx !== target));
+
+  const phaseId = `phase-${draft.clientId}`;
+  const typeId = `type-${draft.clientId}`;
+  const visibilityId = `visibility-${draft.clientId}`;
+  const maxLengthId = `maxlen-${draft.clientId}`;
+  const promptId = `prompt-${draft.clientId}`;
+
   return (
-    <div className="builder-interaction-card custom-question-card">
-      <div className="builder-interaction-card__header">
-        <div className="builder-interaction-card__title-row">
-          <span className="builder-interaction-card__index">Q{String(index + 1).padStart(2, '0')}</span>
-          <Input
-            aria-label={`Q${index + 1} 제목`}
-            placeholder="질문 제목"
-            value={draft.title}
-            onChange={(event) => onPatch(draft.clientId, { title: event.target.value })}
-          />
-        </div>
-        <div className="builder-interaction-card__actions">
-          <Button
-            aria-label="질문 위로 이동"
-            size="sm"
-            variant="ghost"
-            onClick={() => onMove(draft.clientId, -1)}
-          >
-            <ArrowUp size={16} />
-          </Button>
-          <Button
-            aria-label="질문 아래로 이동"
-            size="sm"
-            variant="ghost"
-            onClick={() => onMove(draft.clientId, 1)}
-          >
-            <ArrowDown size={16} />
-          </Button>
-          <Button
-            aria-label="질문 삭제"
-            disabled={!canDelete}
-            size="sm"
-            variant="ghost"
-            onClick={() => onDelete(draft.clientId)}
-          >
-            <Trash2 size={16} />
-          </Button>
+    <div className="questionCard">
+      <div className="questionCardInner">
+        <span className="questionNumberBadge">Q{String(index + 1).padStart(2, '0')}</span>
+
+        <div className="questionMain">
+          <div className="questionTopRow">
+            <input
+              className="questionTitleInput"
+              aria-label={`Q${index + 1} 제목`}
+              placeholder="질문 제목"
+              value={draft.title}
+              onChange={(event) => onPatch(draft.clientId, { title: event.target.value })}
+            />
+            <div className="questionCardActions">
+              <button
+                type="button"
+                className="iconButton"
+                aria-label="질문 위로 이동"
+                onClick={() => onMove(draft.clientId, -1)}
+              >
+                <ArrowUp size={18} />
+              </button>
+              <button
+                type="button"
+                className="iconButton"
+                aria-label="질문 아래로 이동"
+                onClick={() => onMove(draft.clientId, 1)}
+              >
+                <ArrowDown size={18} />
+              </button>
+              <button
+                type="button"
+                className="iconButton danger"
+                aria-label="질문 삭제"
+                disabled={!canDelete}
+                onClick={() => onDelete(draft.clientId)}
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+
+          <div className="questionSettingsGrid">
+            <div className="formField">
+              <label className="formLabel" htmlFor={phaseId}>
+                수업 구간
+              </label>
+              <select
+                id={phaseId}
+                className="formSelect"
+                value={draft.phase}
+                onChange={(event) => onPatch(draft.clientId, { phase: event.target.value as LessonPhase })}
+              >
+                {PHASE_ORDER.map((phase) => (
+                  <option key={phase} value={phase}>
+                    {PHASE_LABELS[phase]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="formField">
+              <label className="formLabel" htmlFor={typeId}>
+                응답 방식
+              </label>
+              <select id={typeId} className="formSelect" value={draft.inputType} onChange={handleInputTypeChange}>
+                {(Object.entries(INPUT_TYPE_LABELS) as [QuestionInputType, string][]).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <p className="formHint">{INPUT_TYPE_HELP[draft.inputType]}</p>
+            </div>
+
+            <div className="formField">
+              <label className="formLabel" htmlFor={visibilityId}>
+                결과 공개 범위
+              </label>
+              <select
+                id={visibilityId}
+                className="formSelect"
+                value={draft.visibility}
+                onChange={(event) => onPatch(draft.clientId, { visibility: event.target.value as ResultVisibility })}
+              >
+                {(Object.entries(VISIBILITY_LABELS) as [ResultVisibility, string][]).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <p className="formHint">{VISIBILITY_HELP[draft.visibility]}</p>
+            </div>
+          </div>
+
+          {draft.inputType === 'text' ? (
+            <div className="questionBodyField">
+              <label className="formLabel" htmlFor={maxLengthId}>
+                최대 글자 수
+              </label>
+              <input
+                id={maxLengthId}
+                className="formInput"
+                type="number"
+                min={50}
+                max={300}
+                step={10}
+                value={draft.maxLength}
+                onChange={(event) =>
+                  onPatch(draft.clientId, {
+                    maxLength: Math.max(50, Math.min(300, Number(event.target.value) || 300)),
+                  })
+                }
+              />
+            </div>
+          ) : null}
+
+          <div className="questionBodyField">
+            <label className="formLabel" htmlFor={promptId}>
+              질문 문장
+            </label>
+            <textarea
+              id={promptId}
+              className="questionTextarea"
+              placeholder="학생에게 보일 질문을 입력하세요."
+              value={draft.prompt}
+              onChange={(event) => onPatch(draft.clientId, { prompt: event.target.value })}
+            />
+          </div>
+
+          {showOptions ? (
+            <div className="optionEditor">
+              <span className="formLabel">선택지</span>
+              <div className="optionList">
+                {options.map((option, optionIndex) => (
+                  <div className="optionRow" key={optionIndex}>
+                    <span className="optionDragHandle" aria-hidden="true">
+                      <GripVertical size={16} />
+                    </span>
+                    <input
+                      className="optionInput"
+                      aria-label={`선택지 ${optionIndex + 1}`}
+                      value={option}
+                      onChange={(event) => updateOption(optionIndex, event.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="optionRemoveButton"
+                      aria-label={`선택지 ${optionIndex + 1} 삭제`}
+                      onClick={() => removeOption(optionIndex)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="addOptionButton" onClick={addOption}>
+                + 선택지 추가
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
-
-      <div className="builder-interaction-card__grid">
-        <label className="form-field">
-          <span className="form-label">수업 구간</span>
-          <select
-            className="select-sm"
-            value={draft.phase}
-            onChange={(event) => onPatch(draft.clientId, { phase: event.target.value as LessonPhase })}
-          >
-            {PHASE_ORDER.map((phase) => (
-              <option key={phase} value={phase}>
-                {PHASE_LABELS[phase]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="form-field">
-          <span className="form-label">응답 방식</span>
-          <select className="select-sm" value={draft.inputType} onChange={handleInputTypeChange}>
-            {(Object.entries(INPUT_TYPE_LABELS) as [QuestionInputType, string][]).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <span className="form-hint">{INPUT_TYPE_HELP[draft.inputType]}</span>
-        </label>
-
-        <label className="form-field">
-          <span className="form-label">결과 공개 범위</span>
-          <select
-            className="select-sm"
-            value={draft.visibility}
-            onChange={(event) => onPatch(draft.clientId, { visibility: event.target.value as ResultVisibility })}
-          >
-            {(Object.entries(VISIBILITY_LABELS) as [ResultVisibility, string][]).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <span className="form-hint">{VISIBILITY_HELP[draft.visibility]}</span>
-        </label>
-
-        {draft.inputType === 'text' ? (
-          <Input
-            label="최대 글자 수"
-            max={300}
-            min={50}
-            step={10}
-            type="number"
-            value={draft.maxLength}
-            onChange={(event) =>
-              onPatch(draft.clientId, {
-                maxLength: Math.max(50, Math.min(300, Number(event.target.value) || 300)),
-              })
-            }
-          />
-        ) : null}
-      </div>
-
-      <label className="form-field">
-        <span className="form-label">질문 문장</span>
-        <textarea
-          className="textarea"
-          placeholder="학생 화면에 그대로 보일 질문을 입력하세요."
-          rows={3}
-          value={draft.prompt}
-          onChange={(event) => onPatch(draft.clientId, { prompt: event.target.value })}
-        />
-      </label>
-
-      {hasChoiceOptions(draft.inputType) ? (
-        <label className="form-field">
-          <span className="form-label">선택지</span>
-          <textarea
-            className="textarea"
-            placeholder="학생이 고를 항목을 한 줄에 하나씩 입력하세요."
-            rows={4}
-            value={draft.choicesText}
-            onChange={(event) => onPatch(draft.clientId, { choicesText: event.target.value })}
-          />
-        </label>
-      ) : null}
     </div>
   );
 }
