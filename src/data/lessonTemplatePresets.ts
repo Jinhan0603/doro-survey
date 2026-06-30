@@ -67,9 +67,10 @@ export const PURPOSE_LABELS: Record<InteractionPurpose, string> = {
   reflection: '회고',
 };
 
+// 결과 공개 범위는 공개/비공개 2종으로 통합. 레거시 'teacher-only'는 '비공개'로 표시한다.
 export const VISIBILITY_LABELS: Record<ResultVisibility, string> = {
-  public: '학생 공개',
-  'teacher-only': '강사용',
+  public: '공개',
+  'teacher-only': '비공개',
   hidden: '비공개',
 };
 

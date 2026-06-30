@@ -1,7 +1,6 @@
 import { type ChangeEvent } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
 import '../../styles/survey-builder.css';
-import { VISIBILITY_LABELS } from '../../data/lessonTemplatePresets';
 import type { ResultVisibility } from '../../firebase/types';
 import {
   INPUT_TYPE_HELP,
@@ -132,16 +131,15 @@ export function QuestionEditor({
               <select
                 id={visibilityId}
                 className="formSelect"
-                value={draft.visibility}
+                value={draft.visibility === 'public' ? 'public' : 'hidden'}
                 onChange={(event) => onPatch(draft.clientId, { visibility: event.target.value as ResultVisibility })}
               >
-                {(Object.entries(VISIBILITY_LABELS) as [ResultVisibility, string][]).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+                <option value="public">공개</option>
+                <option value="hidden">비공개</option>
               </select>
-              <p className="formHint">{VISIBILITY_HELP[draft.visibility]}</p>
+              <p className="formHint">
+                {draft.visibility === 'public' ? VISIBILITY_HELP.public : VISIBILITY_HELP.hidden}
+              </p>
             </div>
           </div>
 

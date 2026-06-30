@@ -22,9 +22,9 @@ export const INPUT_TYPE_HELP: Record<QuestionInputType, string> = {
 };
 
 export const VISIBILITY_HELP: Record<ResultVisibility, string> = {
-  public: 'Display에 공개할 수 있습니다.',
-  'teacher-only': 'Admin에서만 집계합니다.',
-  hidden: '결과 화면에 표시하지 않습니다.',
+  public: '학생 화면(Display)에 결과를 공개합니다.',
+  'teacher-only': '학생 화면에 공개하지 않습니다.',
+  hidden: '학생 화면에 공개하지 않습니다.',
 };
 
 export function getDefaultChoices(inputType: QuestionInputType) {
