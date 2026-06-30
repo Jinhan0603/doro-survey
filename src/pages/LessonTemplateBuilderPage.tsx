@@ -486,7 +486,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
                 <div className="emptyQuestionState">
                   <p className="emptyQuestionTitle">아직 질문이 없습니다</p>
                   <p className="emptyQuestionText">
-                    '+ 객관식' 또는 '+ 주관식'으로 추가하거나 상단 'PPTX에서 추출하기'로 불러오세요.
+                    객관식, 주관식 질문을 추가해 설문을 구성하세요.
                   </p>
                 </div>
               ) : (
