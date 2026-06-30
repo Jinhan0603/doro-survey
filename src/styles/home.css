@@ -123,15 +123,18 @@
 .dh-brand-title { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
 .dh-brand-sub { display: block; font-size: 12px; font-weight: 500; color: var(--c-text-3); margin-top: 1px; }
 
-.dh-nav { display: flex; align-items: center; gap: 28px; }
+.dh-nav { display: flex; align-items: center; gap: 8px; }
+/* Every item reserves the same box (height/padding/radius) so toggling active
+   only changes background/color — no width change, no pushing neighbors. */
 .dh-nav a {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 16px;
+  border-radius: 999px;
   font-size: 15px; font-weight: 650; color: #1f2937; text-decoration: none;
-  transition: color 150ms ease; white-space: nowrap;
+  transition: background-color 150ms ease, color 150ms ease; white-space: nowrap;
 }
 .dh-nav a:hover { color: var(--c-blue-500); }
 .dh-nav a.dh-nav--active {
-  display: inline-flex; align-items: center; height: 40px; padding: 0 18px;
-  border-radius: 999px; background: var(--c-blue-50); color: var(--c-blue-500); font-weight: 700;
+  background: var(--c-blue-50); color: var(--c-blue-500);
 }
 
 .dh-account {
