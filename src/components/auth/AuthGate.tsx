@@ -79,12 +79,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
-  // loading | anonymous(redirecting)
-  return (
-    <CenteredCard title="DORO Live Survey">
-      <p style={{ margin: 0, color: '#5f6b7a' }}>로그인 화면으로 이동 중입니다…</p>
-    </CenteredCard>
-  );
+  // loading | anonymous(redirecting): no interstitial — redirect happens immediately
+  return null;
 }
 
 const primaryBtn: React.CSSProperties = {
