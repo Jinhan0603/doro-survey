@@ -392,7 +392,6 @@ function CreatedSessionLinks({
 function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const { profile } = useUserProfile(ownerUid);
   const [sessionTitle, setSessionTitle] = useState(DEFAULT_SESSION_TITLE);
-  const [startOpen, setStartOpen] = useState(true);
   const [drafts, setDrafts] = useState(createInitialDrafts);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -426,7 +425,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
       await createCustomQuestionSession({
         sessionId: newSessionId,
         title: sessionTitle,
-        accepting: startOpen,
+        accepting: true,
         owner: {
           uid: ownerUid,
           organizationId: profile?.organizationId ?? 'dorossaem',
@@ -447,7 +446,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   const handleReset = () => {
     setSessionTitle(DEFAULT_SESSION_TITLE);
-    setStartOpen(true);
     setDrafts(createInitialDrafts());
     setError(null);
     setCreatedSession(null);
@@ -497,17 +495,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
               onPatch={handlePatch}
             />
           ))}
-        </div>
-
-        <div className="custom-session-options">
-          <label className="builder-checkbox">
-            <input
-              checked={startOpen}
-              type="checkbox"
-              onChange={(event) => setStartOpen(event.target.checked)}
-            />
-            <span>생성 직후 첫 질문 응답 수집 열기</span>
-          </label>
         </div>
 
         <div className="session-new-actions">
