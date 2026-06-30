@@ -455,7 +455,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="session-new-page custom-question-page">
-      <div className="custom-session-hero-grid">
         <Card className="session-new-card" tone="accent">
           <div className="builder-section-head">
             <div>
@@ -493,32 +492,10 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
           {error ? <div className="inline-message inline-message--error">{error}</div> : null}
         </Card>
 
-        <Card className="custom-session-guide-card">
-          <div>
-            <h3>생성 후 운영</h3>
-          </div>
-          <div className="custom-guide-steps">
-            <div>
-              <strong>1</strong>
-              <span>Student QR 공유</span>
-            </div>
-            <div>
-              <strong>2</strong>
-              <span>Admin에서 질문 전환</span>
-            </div>
-            <div>
-              <strong>3</strong>
-              <span>Display로 공개 결과 보기</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       <Card className="builder-preset-card custom-question-list-card">
         <div className="builder-section-head">
           <div>
             <h3>2. 질문 구성</h3>
-            <p>설문 순서대로 질문을 배치하세요. 첫 번째 질문이 생성 직후 현재 질문이 됩니다.</p>
           </div>
           <div className="custom-question-add-row">
             <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
@@ -560,7 +537,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
 export function CustomQuestionSessionPage() {
   return (
-    <TeacherGate compact title="질문 만들고 바로 공유하기">
+    <TeacherGate compact>
       {(user) => <CustomQuestionSessionContent ownerUid={user.uid} />}
     </TeacherGate>
   );
