@@ -426,39 +426,34 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
                 </label>
               ) : null}
 
-              <details className="builder-optional-meta">
-                <summary>추가 정보 (선택)</summary>
+              <label className="field">
+                <span className="field__label">설명 (선택)</span>
+                <textarea
+                  className="textarea templateMetaDescription"
+                  placeholder="수업 목표와 진행 포인트를 적어주세요."
+                  value={form.description}
+                  onChange={(event) => handleFormPatch({ description: event.target.value })}
+                />
+              </label>
 
-                <Input
-                  label="과목 유형"
-                  placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
-                  value={form.subject}
-                  onChange={(event) => handleFormPatch({ subject: event.target.value })}
-                />
-                <Input
-                  label="대상 학년"
-                  placeholder="예: 초5-중1"
-                  value={form.targetGrade}
-                  onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
-                />
-                <Input
-                  label="사용 툴"
-                  placeholder="예: Canva, Scratch, ChatGPT"
-                  value={form.toolInput}
-                  onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
-                />
-
-                <label className="form-field">
-                  <span className="form-label">설명</span>
-                  <textarea
-                    className="textarea"
-                    rows={2}
-                    placeholder="수업 목표와 진행 포인트를 적어주세요."
-                    value={form.description}
-                    onChange={(event) => handleFormPatch({ description: event.target.value })}
-                  />
-                </label>
-              </details>
+              <Input
+                label="과목 유형 (선택)"
+                placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
+                value={form.subject}
+                onChange={(event) => handleFormPatch({ subject: event.target.value })}
+              />
+              <Input
+                label="대상 학년 (선택)"
+                placeholder="예: 초5-중1"
+                value={form.targetGrade}
+                onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
+              />
+              <Input
+                label="사용 툴 (선택)"
+                placeholder="예: Canva, Scratch, ChatGPT"
+                value={form.toolInput}
+                onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
+              />
 
               {saveMessage ? <div className="inline-message">{saveMessage}</div> : null}
               {saveError ? <div className="inline-message inline-message--error">{saveError}</div> : null}

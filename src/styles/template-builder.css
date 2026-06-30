@@ -114,17 +114,9 @@
   gap: 10px;
 }
 
-.templateMetaScroll .builder-optional-meta > summary {
-  margin-bottom: 10px;
-}
-
-.builder-optional-meta > * + * {
-  margin-top: 10px;
-}
-
-/* 템플릿 정보 패널은 컴팩트하게 — 설명 textarea 기본 높이를 낮춘다. */
+/* 설명은 과목 유형 위에 두고, 늘어난 공간을 설명에 할애한다. */
 .templateMetaScroll .textarea {
-  min-height: 64px;
+  min-height: 160px;
 }
 
 .questionBuilderHeader {
@@ -151,6 +143,14 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+/* 빈 상태 안내는 패널 높이를 채워 세로 중앙에 둔다. */
+.templateMetaScroll > .library-section__empty,
+.questionBuilderScroll > .library-section__empty {
+  flex: 1 1 auto;
+  min-height: 100%;
+  justify-content: center;
 }
 
 .templateMetaScroll::-webkit-scrollbar,
@@ -246,6 +246,7 @@
   margin: 0;
   color: var(--color-text-muted);
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .templateDetail__meta {
