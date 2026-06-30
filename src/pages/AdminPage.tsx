@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AdminControls } from '../components/admin/AdminControls';
+import { AdminPreview } from '../components/admin/AdminPreview';
+import { AnswerResetZone } from '../components/admin/AnswerResetZone';
 import { AnswerTable } from '../components/admin/AnswerTable';
 import { QrPanel } from '../components/admin/QrPanel';
 import { QuestionList } from '../components/admin/QuestionList';
+import { StatusInsightCard } from '../components/admin/StatusInsightCard';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
-import { StatusSummary } from '../components/common/StatusSummary';
 import { AppShell } from '../components/layout/AppShell';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
-import { defaultSessionId, firebaseConfigStatus } from '../firebase/client';
+import { firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
 import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
 import { Link } from 'react-router-dom';
@@ -18,7 +20,6 @@ import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
-import { previewAnswerRows, previewQuestions } from '../data/previewQuestions';
 import {
   defaultSeedQuestionSetId,
   getSeedQuestionSet,
@@ -34,89 +35,6 @@ import {
   isModeratedQuestion,
 } from '../utils/questionRuntime';
 import { buildAppUrl } from '../utils/urls';
-
-function AdminPreview() {
-  const [activeQuestionId, setLocalActiveQuestion] = useState(previewQuestions[1].id);
-  const [accepting, setAccepting] = useState(true);
-  const [showResults, setShowResults] = useState(false);
-
-  const activeQuestion = previewQuestions.find((q) => q.id === activeQuestionId) ?? previewQuestions[0];
-  const studentUrl = useMemo(() => buildAppUrl('/student', defaultSessionId), []);
-
-  return (
-    <AppShell
-      compact
-      actions={
-        <div className="hero-actions">
-          <Badge>미리보기 모드</Badge>
-        </div>
-      }
-      title="Admin 운영 화면"
-    >
-      <div className="page-grid page-grid--admin">
-        <QuestionList
-          activeQuestionId={activeQuestionId}
-          questions={previewQuestions}
-          onSelect={setLocalActiveQuestion}
-        />
-
-        <div className="stack">
-          <Card className="status-strip">
-            <div className="status-tile">
-              <span>현재 응답 수</span>
-              <strong>20</strong>
-            </div>
-            <div className="status-tile">
-              <span>수집 상태</span>
-              <strong>{accepting ? 'Open' : 'Closed'}</strong>
-            </div>
-            <div className="status-tile">
-              <span>결과 공개</span>
-              <strong>{showResults ? 'Visible' : 'Hidden'}</strong>
-            </div>
-          </Card>
-
-          <AdminControls
-            accepting={accepting}
-            note="응답 수집 시작과 결과 공개 상태를 조작해보세요."
-            showResults={showResults}
-            onToggleAccepting={() => setAccepting((v) => !v)}
-            onToggleResults={() => setShowResults((v) => !v)}
-          />
-
-          <Card className="admin-current">
-            <div className="section-heading">
-              <h3>현재 진행 질문</h3>
-              <Badge tone="accent">Q{String(activeQuestion.order).padStart(2, '0')}</Badge>
-            </div>
-            <strong>{activeQuestion.title}</strong>
-            <p>{activeQuestion.prompt}</p>
-          </Card>
-
-          <AnswerTable rows={previewAnswerRows} title="실시간 응답 미리보기" />
-        </div>
-
-        <div className="stack">
-          <QrPanel url={studentUrl} />
-          <Card className="metric-panel">
-            <div className="metric-panel__row">
-              <span>학생 접속 링크</span>
-              <strong>QR ready</strong>
-            </div>
-            <div className="metric-panel__row">
-              <span>현재 질문</span>
-              <strong>{activeQuestion.id.toUpperCase()}</strong>
-            </div>
-            <div className="metric-panel__row">
-              <span>모드</span>
-              <strong>미리보기</strong>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </AppShell>
-  );
-}
 
 export function AdminPage() {
   const sessionId = useSessionId();
@@ -439,60 +357,25 @@ export function AdminPage() {
           </Card>
 
           {activeQuestion && activeInputType === 'status' ? (
-            <Card className="metric-panel">
-              <div className="section-heading">
-                <h3>
-                  {activeQuestion.interactionType === 'readiness-check'
-                    ? '실습 준비 상태'
-                    : activeQuestion.interactionType === 'progress-check'
-                      ? '실습 진행 상태'
-                      : '상태 집계'}
-                </h3>
-                <Badge tone="accent">{answers.length} responses</Badge>
-              </div>
-              <StatusSummary items={statusResults.map((item) => ({ label: item.name, value: item.value }))} />
-              <div className="inline-message">
-                {activeQuestion.interactionType === 'readiness-check'
-                  ? `ready/done ${completedCount}명, need_help ${needHelpCount}명으로 실습 시작 가능 상태를 빠르게 확인할 수 있습니다.`
-                  : activeQuestion.interactionType === 'progress-check'
-                    ? `done/ready ${completedCount}명, need_help ${needHelpCount}명으로 중간 점검 상태를 빠르게 해석할 수 있습니다.`
-                    : `현재 상태 응답 ${answers.length}개를 Admin에서만 실시간 집계 중입니다.`}
-              </div>
-            </Card>
+            <StatusInsightCard
+              answersCount={answers.length}
+              completedCount={completedCount}
+              needHelpCount={needHelpCount}
+              question={activeQuestion}
+              statusResults={statusResults}
+            />
           ) : null}
 
           {activeQuestion ? <AnswerTable rows={answerRows} title="실시간 응답" /> : null}
 
           {canManageAnswerDocs ? (
-            <div className="danger-zone">
-              <div className="danger-zone__header">
-                <h3 className="danger-zone__title">응답 초기화</h3>
-                <p className="danger-zone__desc">
-                  테스트 응답을 삭제하고 설문을 깨끗하게 시작할 수 있습니다.<br />
-                  삭제 후에는 되돌릴 수 없습니다. 설문 전에 CSV를 먼저 다운로드하는 것을 권장합니다.
-                </p>
-              </div>
-              <div className="danger-zone__buttons">
-                <Button
-                  className="button--danger"
-                  disabled={busy || !activeQuestion}
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => { void handleResetQuestion(); }}
-                >
-                  현재 질문 응답 초기화
-                </Button>
-                <Button
-                  className="button--danger button--danger-strong"
-                  disabled={busy || displayQuestions.length === 0}
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => { void handleResetSession(); }}
-                >
-                  전체 응답 초기화
-                </Button>
-              </div>
-            </div>
+            <AnswerResetZone
+              busy={busy}
+              hasActiveQuestion={Boolean(activeQuestion)}
+              hasQuestions={displayQuestions.length > 0}
+              onResetQuestion={() => { void handleResetQuestion(); }}
+              onResetSession={() => { void handleResetSession(); }}
+            />
           ) : (
             <div className="inline-message">
               teacher role은 자기 세션 응답을 읽고 집계할 수 있지만, 응답 숨김/삭제 같은 전역 moderation 작업은 admin allowlist 계정에서만 수행합니다.
