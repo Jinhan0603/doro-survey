@@ -1,6 +1,8 @@
 import { Suspense, lazy } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Outlet, Route, Routes } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
+import { AuthProvider } from '../auth/AuthProvider';
+import { AuthGate } from '../components/auth/AuthGate';
 
 const StudentPage = lazy(async () => {
   const module = await import('../pages/StudentPage');
@@ -47,22 +49,36 @@ const NotFoundPage = lazy(async () => {
   return { default: module.NotFoundPage };
 });
 
+// Wraps every presenter route in the DoroGate auth gate. /student stays outside
+// this layout so students keep their anonymous-auth participation flow.
+function PresenterLayout() {
+  return (
+    <AuthProvider>
+      <AuthGate>
+        <Outlet />
+      </AuthGate>
+    </AuthProvider>
+  );
+}
+
 export function AppRouter() {
   return (
     <HashRouter>
       <Suspense fallback={<div className="route-loading">Loading DORO Live Survey...</div>}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/planner" element={<PlannerPage />} />
-          <Route path="/library" element={<LessonTemplateLibraryPage />} />
-          <Route path="/builder" element={<LessonTemplateBuilderPage />} />
-          <Route path="/builder/:templateId" element={<LessonTemplateBuilderPage />} />
-          <Route path="/session-new" element={<NewLessonSessionPage />} />
-          <Route path="/custom-session" element={<CustomQuestionSessionPage />} />
           <Route path="/student" element={<StudentPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/display" element={<DisplayPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route element={<PresenterLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/planner" element={<PlannerPage />} />
+            <Route path="/library" element={<LessonTemplateLibraryPage />} />
+            <Route path="/builder" element={<LessonTemplateBuilderPage />} />
+            <Route path="/builder/:templateId" element={<LessonTemplateBuilderPage />} />
+            <Route path="/session-new" element={<NewLessonSessionPage />} />
+            <Route path="/custom-session" element={<CustomQuestionSessionPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/display" element={<DisplayPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
         </Routes>
       </Suspense>
     </HashRouter>
