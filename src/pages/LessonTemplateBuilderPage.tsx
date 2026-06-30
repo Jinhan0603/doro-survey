@@ -399,6 +399,25 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           onChange={(event) => handleFormPatch({ title: event.target.value })}
         />
 
+        {canShareTemplate ? (
+          <label className="form-field">
+            <span className="form-label">공개 범위</span>
+            <select
+              className="select-sm"
+              value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
+              onChange={(event) =>
+                handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
+              }
+            >
+              {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
         <details className="builder-optional-meta">
           <summary>추가 정보 (선택)</summary>
 
@@ -433,25 +452,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
               onChange={(event) => handleFormPatch({ description: event.target.value })}
             />
           </label>
-
-          {canShareTemplate ? (
-            <label className="form-field">
-              <span className="form-label">공개 범위</span>
-              <select
-                className="select-sm"
-                value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
-                onChange={(event) =>
-                  handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
-                }
-              >
-                {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
         </details>
       </Card>
 
