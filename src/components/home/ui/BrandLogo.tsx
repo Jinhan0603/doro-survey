@@ -6,7 +6,7 @@ type Props = { size?: number };
 export function BrandLogo({ size = 40 }: Props) {
   return (
     <img
-      src={assetUrl('logo.png?v=20260630')}
+      src={assetUrl('logo.png?v=20260630b')}
       width={size}
       height={size}
       alt=""
