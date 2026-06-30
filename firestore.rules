@@ -2,13 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function adminEmails() {
-      return [
-        'awe2478223@gmail.com',
-        'dorocoltd@doroedu.co.kr'
-      ];
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -18,15 +11,20 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
 
-    function isEmailUser() {
-      return isSignedIn()
-        && request.auth.token.email != null
-        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    // Presenter identity comes from the DoroGate(Keycloak) -> Firebase custom
+    // token, which carries a `role` claim. Students never get this token.
+    function presenterRole() {
+      return isSignedIn() ? request.auth.token.get('role', '') : '';
+    }
+
+    function isPresenter() {
+      return presenterRole() == 'teacher'
+        || presenterRole() == 'manager'
+        || presenterRole() == 'admin';
     }
 
     function isAdmin() {
-      return isEmailUser()
-        && request.auth.token.email in adminEmails();
+      return presenterRole() == 'admin';
     }
 
     function hasCurrentUserProfile() {
@@ -55,11 +53,11 @@ service cloud.firestore {
 
     function canReadTemplateData(data) {
       return isAdmin()
-        || (isEmailUser() && data.ownerUid == request.auth.uid)
-        || (isEmailUser() && data.templateVisibility == 'shared')
-        || (isEmailUser() && data.templateVisibility == 'org' && currentUserOrgMatches(data.organizationId))
+        || (isPresenter() && data.ownerUid == request.auth.uid)
+        || (isPresenter() && data.templateVisibility == 'shared')
+        || (isPresenter() && data.templateVisibility == 'org' && currentUserOrgMatches(data.organizationId))
         || (
-          isEmailUser()
+          isPresenter()
           && data.shared == true
           && (!data.keys().hasAny(['templateVisibility']) || data.templateVisibility == null)
         );
@@ -71,7 +69,7 @@ service cloud.firestore {
     }
 
     function canCreateOwnTemplate() {
-      return isEmailUser()
+      return isPresenter()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.subject is string
@@ -91,7 +89,7 @@ service cloud.firestore {
     }
 
     function canUpdateOwnTemplate() {
-      return isEmailUser()
+      return isPresenter()
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.ownerUid == request.auth.uid
@@ -114,7 +112,7 @@ service cloud.firestore {
     }
 
     function isSessionOwner(sessionId) {
-      return isEmailUser()
+      return isPresenter()
         && exists(/databases/$(database)/documents/sessions/$(sessionId))
         && sessionDoc(sessionId).data.ownerUid == request.auth.uid;
     }
@@ -122,11 +120,11 @@ service cloud.firestore {
     function canReadSessionData(data) {
       return isAdmin()
         || isAnonymousUser()
-        || (isEmailUser() && data.ownerUid == request.auth.uid);
+        || (isPresenter() && data.ownerUid == request.auth.uid);
     }
 
     function canCreateOwnSession() {
-      return isEmailUser()
+      return isPresenter()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.title is string
         && (!request.resource.data.keys().hasAny(['organizationId'])
@@ -138,37 +136,10 @@ service cloud.firestore {
     }
 
     function canUpdateOwnSession() {
-      return isEmailUser()
+      return isPresenter()
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.ownerUid == request.auth.uid;
-    }
-
-    function validOwnUserProfile(uid) {
-      return isEmailUser()
-        && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly([
-          'uid',
-          'email',
-          'displayName',
-          'role',
-          'organizationId',
-          'schemaVersion',
-          'createdAt',
-          'updatedAt'
-        ])
-        && request.resource.data.uid == uid
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() > 0
-        && request.resource.data.displayName.size() <= 80
-        && request.resource.data.organizationId is string
-        && request.resource.data.organizationId.size() > 0
-        && request.resource.data.schemaVersion == 2
-        && (
-          (isAdmin() && request.resource.data.role == 'admin')
-          || (!isAdmin() && request.resource.data.role == 'teacher')
-        );
     }
 
     function validNickname() {
@@ -261,21 +232,22 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if isAdmin() || (isEmailUser() && request.auth.uid == uid);
-      allow create, update: if isAdmin() || validOwnUserProfile(uid);
-      allow delete: if isAdmin();
+      allow read: if isAdmin() || (isPresenter() && request.auth.uid == uid);
+      // User profiles are provisioned server-side by the exchangeToken function
+      // (Firebase Admin SDK bypasses these rules); clients never write them.
+      allow write: if isAdmin();
     }
 
     match /lessonTemplates/{templateId} {
       allow read: if canReadTemplateData(resource.data);
       allow create: if isAdmin() || canCreateOwnTemplate();
       allow update: if isAdmin() || canUpdateOwnTemplate();
-      allow delete: if isAdmin() || (isEmailUser() && resource.data.ownerUid == request.auth.uid);
+      allow delete: if isAdmin() || (isPresenter() && resource.data.ownerUid == request.auth.uid);
 
       match /slides/{slideId} {
         allow read: if canReadTemplate(templateId);
         allow create, update, delete: if isAdmin() || (
-          isEmailUser()
+          isPresenter()
           && lessonTemplateDoc(templateId).data.ownerUid == request.auth.uid
         );
       }
@@ -283,7 +255,7 @@ service cloud.firestore {
       match /interactions/{interactionId} {
         allow read: if canReadTemplate(templateId);
         allow create, update, delete: if isAdmin() || (
-          isEmailUser()
+          isPresenter()
           && lessonTemplateDoc(templateId).data.ownerUid == request.auth.uid
         );
       }
@@ -293,7 +265,7 @@ service cloud.firestore {
       allow read: if canReadSessionData(resource.data);
       allow create: if isAdmin() || canCreateOwnSession();
       allow update: if isAdmin() || canUpdateOwnSession();
-      allow delete: if isAdmin() || (isEmailUser() && resource.data.ownerUid == request.auth.uid);
+      allow delete: if isAdmin() || (isPresenter() && resource.data.ownerUid == request.auth.uid);
 
       match /questions/{questionId} {
         allow read: if isAdmin() || isAnonymousUser() || isSessionOwner(sessionId);
