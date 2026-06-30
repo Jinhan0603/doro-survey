@@ -2,7 +2,6 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signInWithCustomToken,
-  signInWithEmailAndPassword,
   signOut,
   type AuthError,
   type Unsubscribe,
@@ -40,16 +39,6 @@ export async function signInStudentAnonymously() {
   } catch (error) {
     throw new Error(
       formatAuthError(error, '학생 익명 로그인에 실패했습니다. Firebase Anonymous Auth 설정을 확인해주세요.'),
-    );
-  }
-}
-
-export async function signInAdminWithEmail(email: string, password: string) {
-  try {
-    return await signInWithEmailAndPassword(requireAuth(), email.trim(), password);
-  } catch (error) {
-    throw new Error(
-      formatAuthError(error, '강사 로그인에 실패했습니다. 이메일/비밀번호 계정과 인증 설정을 확인해주세요.'),
     );
   }
 }

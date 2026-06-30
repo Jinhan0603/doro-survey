@@ -9,9 +9,9 @@ import { DisplayStage } from '../components/display/DisplayStage';
 import { ResultChart } from '../components/display/ResultChart';
 import { WaitingState } from '../components/survey/WaitingState';
 import { firebaseConfigStatus } from '../firebase/client';
+import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
-import { useAuth } from '../hooks/useAuth';
 import { useSessionId } from '../hooks/useSessionId';
 import {
   previewChartData,
@@ -106,35 +106,16 @@ function DisplayPreview() {
 
 export function DisplayPage() {
   const sessionId = useSessionId();
-  const { user, loading: authLoading } = useAuth();
-  const hasTeacherAuth = Boolean(user?.email);
+  // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
+  const { user } = usePresenterAuth();
+  const hasTeacherAuth = Boolean(user);
   const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, {
-    enabled: !authLoading && hasTeacherAuth,
+    enabled: hasTeacherAuth,
   });
   const { answers, error: answersError } = useAnswers(sessionId, hasTeacherAuth ? activeQuestion?.id : undefined);
 
   if (!firebaseConfigStatus.isConfigured) {
     return <DisplayPreview />;
-  }
-
-  if (authLoading) {
-    return (
-      <AppShell compact title="발표 화면">
-        <WaitingState description="잠시만 기다려주세요." title="접근 권한을 확인하는 중입니다" />
-      </AppShell>
-    );
-  }
-
-  if (!hasTeacherAuth) {
-    return (
-      <AppShell compact title="발표 화면">
-        <Card className="banner-card banner-card--error">
-          {user && !user.email
-            ? '학생 익명 로그인 상태입니다. 먼저 Admin 화면에서 강사 계정으로 로그인한 뒤 이 화면을 다시 열어주세요.'
-            : '먼저 Admin 화면에서 로그인한 뒤 이 화면을 다시 열어주세요.'}
-        </Card>
-      </AppShell>
-    );
   }
 
   let content: ReactNode = null;

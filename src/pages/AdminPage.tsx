@@ -6,19 +6,15 @@ import { QuestionList } from '../components/admin/QuestionList';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
-import { Input } from '../components/common/Input';
 import { StatusSummary } from '../components/common/StatusSummary';
 import { AppShell } from '../components/layout/AppShell';
-import { WaitingState } from '../components/survey/WaitingState';
-import { signInAdminWithEmail, signOutUser } from '../firebase/auth';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
-import { appName, defaultSessionId, firebaseConfigStatus } from '../firebase/client';
+import { defaultSessionId, firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
-import { inferRoleFromEmail } from '../firebase/users';
 import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
+import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
-import { useAuth } from '../hooks/useAuth';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
 import { previewAnswerRows, previewQuestions } from '../data/previewQuestions';
@@ -123,16 +119,12 @@ function AdminPreview() {
 
 export function AdminPage() {
   const sessionId = useSessionId();
-  const { user, loading: authLoading } = useAuth();
-  const hasTeacherAuth = Boolean(user?.email);
+  // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
+  const { user, role, logout } = usePresenterAuth();
   const { profile } = useUserProfile(user?.uid);
-  // Wait for auth before subscribing — Firestore rules require isSignedIn()
-  const firestoreEnabled = !authLoading && hasTeacherAuth;
+  const firestoreEnabled = Boolean(user);
   const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
   const { answers, error: answersError } = useAnswers(sessionId, activeQuestion?.id);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authError, setAuthError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [seedQuestionSetId, setSeedQuestionSetId] = useState<SeedQuestionSetId>(defaultSeedQuestionSetId);
@@ -166,7 +158,7 @@ export function AdminPage() {
         ? '이 질문 결과는 Display에 표시되지 않습니다.'
         : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.'
     : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.';
-  const canManageAnswerDocs = (profile?.role ?? inferRoleFromEmail(user?.email)) === 'admin';
+  const canManageAnswerDocs = (role ?? profile?.role) === 'admin';
 
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
     value ? onLabel : offLabel;
@@ -180,18 +172,6 @@ export function AdminPage() {
       if (successMessage) setActionMessage(successMessage);
     } catch (nextError) {
       setActionError(nextError instanceof Error ? nextError.message : '운영 작업 실행에 실패했습니다.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      setBusy(true);
-      setAuthError(null);
-      await signInAdminWithEmail(email, password);
-    } catch (nextError) {
-      setAuthError(nextError instanceof Error ? nextError.message : '강사 로그인에 실패했습니다.');
     } finally {
       setBusy(false);
     }
@@ -328,72 +308,6 @@ export function AdminPage() {
       }))
     : [];
 
-  if (authLoading) {
-    return (
-      <AppShell compact title="Admin 운영 화면">
-        <WaitingState description="잠시만 기다려주세요." title="인증 상태를 확인하는 중입니다" />
-      </AppShell>
-    );
-  }
-
-  if (!hasTeacherAuth) {
-    return (
-      <AppShell compact title={`${appName} 강사 로그인`}>
-        <div className="auth-layout">
-          <Card className="auth-card">
-            <div className="section-heading">
-              <h3>강사 로그인</h3>
-              <Badge tone="accent">{sessionId}</Badge>
-            </div>
-            <div className="stack">
-              {user && !user.email ? (
-                <div className="inline-message inline-message--error">
-                  학생 익명 로그인 상태입니다. 강사 계정으로 다시 로그인해주세요.
-                </div>
-              ) : null}
-              <Input
-                autoComplete="email"
-                label="이메일"
-                name="admin-email"
-                placeholder="admin@example.com"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-              <Input
-                autoComplete="current-password"
-                label="비밀번호"
-                name="admin-password"
-                placeholder="비밀번호"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-              {authError ? (
-                <div className="inline-message inline-message--error">{authError}</div>
-              ) : null}
-              <Button disabled={!email.trim() || !password || busy} size="lg" onClick={handleLogin}>
-                {busy ? '로그인 중...' : '로그인'}
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="banner-card">
-            <h3>수업 당일 사용 순서</h3>
-            <ol className="flow-list">
-              <li>Admin 화면에서 로그인합니다.</li>
-              <li>기본 질문 seed 버튼을 누릅니다.</li>
-              <li>학생용 QR 또는 링크를 공유합니다.</li>
-              <li>질문을 선택하고 응답 수집을 엽니다.</li>
-              <li>응답이 모이면 마감 후 결과 공개를 누릅니다.</li>
-              <li>Display 화면을 보며 함께 토론합니다.</li>
-            </ol>
-          </Card>
-        </div>
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell
       compact
@@ -418,7 +332,7 @@ export function AdminPage() {
           <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
             {busy ? '작업 중...' : '선택 질문 seed'}
           </Button>
-          <Button disabled={busy} size="sm" variant="ghost" onClick={() => signOutUser()}>
+          <Button disabled={busy} size="sm" variant="ghost" onClick={() => void logout()}>
             로그아웃
           </Button>
         </div>
