@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
-import { ArrowDown, ArrowUp, CopyPlus, FileUp, Save, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, FileUp, Save, Sparkles, Trash2 } from 'lucide-react';
 import { TeacherGate } from '../components/teacher/TeacherGate';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import {
-  DORO_INTERACTION_PRESETS,
   INPUT_TYPE_LABELS,
   INTERACTION_LABELS,
-  PHASE_LABELS,
-  PHASE_ORDER,
   PURPOSE_LABELS,
   VISIBILITY_LABELS,
   createEmptyInteractionSeed,
@@ -153,42 +150,31 @@ function createEditableSlide(input: {
   };
 }
 
+// 단계(phase) 그룹핑 없이 전역 순서(sortOrder)대로 평면 정렬한다.
 function sortInteractions(items: EditableInteraction[]) {
-  return [...items].sort((left, right) => {
-    const phaseGap = PHASE_ORDER.indexOf(left.phase) - PHASE_ORDER.indexOf(right.phase);
-    if (phaseGap !== 0) return phaseGap;
-    return left.sortOrder - right.sortOrder;
-  });
+  return [...items].sort((left, right) => left.sortOrder - right.sortOrder);
 }
 
 function sortSlides(items: EditableSlide[]) {
   return [...items].sort((left, right) => left.slideNumber - right.slideNumber);
 }
 
-function getNextSortOrder(items: EditableInteraction[], phase: LessonPhase) {
-  const maxOrder = items
-    .filter((item) => item.phase === phase)
-    .reduce((max, item) => Math.max(max, item.sortOrder), 0);
-
-  return maxOrder + 1;
+function getNextSortOrder(items: EditableInteraction[]) {
+  return items.reduce((max, item) => Math.max(max, item.sortOrder), 0) + 1;
 }
 
+// 전역 평면 목록에서 인접한 질문과 순서를 맞바꾼다(phase 무관).
 function swapInteractionOrder(items: EditableInteraction[], clientId: string, direction: -1 | 1) {
-  const target = items.find((item) => item.clientId === clientId);
-  if (!target) return items;
-
-  const siblings = items
-    .filter((item) => item.phase === target.phase)
-    .sort((left, right) => left.sortOrder - right.sortOrder);
-  const index = siblings.findIndex((item) => item.clientId === clientId);
+  const sorted = [...items].sort((left, right) => left.sortOrder - right.sortOrder);
+  const index = sorted.findIndex((item) => item.clientId === clientId);
   const nextIndex = index + direction;
 
-  if (index < 0 || nextIndex < 0 || nextIndex >= siblings.length) {
+  if (index < 0 || nextIndex < 0 || nextIndex >= sorted.length) {
     return items;
   }
 
-  const current = siblings[index];
-  const adjacent = siblings[nextIndex];
+  const current = sorted[index];
+  const adjacent = sorted[nextIndex];
 
   return items.map((item) => {
     if (item.clientId === current.clientId) {
@@ -203,97 +189,30 @@ function swapInteractionOrder(items: EditableInteraction[], clientId: string, di
   });
 }
 
-type PhaseSectionProps = {
-  phase: LessonPhase;
-  slides: EditableSlide[];
-  interactions: EditableInteraction[];
-  onSlidePhaseChange: (clientId: string, phase: LessonPhase) => void;
-  onInteractionAdd: (phase: LessonPhase) => void;
+type InteractionEditorCardProps = {
+  interaction: EditableInteraction;
+  index: number;
+  onInteractionPatch: (clientId: string, patch: Partial<EditableInteraction>) => void;
   onInteractionDelete: (clientId: string) => void;
   onInteractionMove: (clientId: string, direction: -1 | 1) => void;
-  onInteractionPatch: (clientId: string, patch: Partial<EditableInteraction>) => void;
 };
 
-function PhaseSection({
-  phase,
-  slides,
-  interactions,
-  onSlidePhaseChange,
-  onInteractionAdd,
+function InteractionEditorCard({
+  interaction,
+  index,
+  onInteractionPatch,
   onInteractionDelete,
   onInteractionMove,
-  onInteractionPatch,
-}: PhaseSectionProps) {
-  const orderedInteractions = [...interactions].sort((left, right) => left.sortOrder - right.sortOrder);
-
+}: InteractionEditorCardProps) {
   return (
-    <Card className="builder-phase-card">
-      <div className="builder-phase-card__content">
-        <div className="builder-phase-card__column">
-          <div className="builder-phase-card__column-head">
-            <strong>슬라이드</strong>
-            <span>{slides.length === 0 ? '배정된 슬라이드 없음' : 'PPTX 기반 분류 결과'}</span>
-          </div>
-          <div className="builder-slide-list">
-            {slides.length === 0 ? (
-              <div className="builder-empty-state">
-                <p>이 phase에 배정된 슬라이드가 없습니다.</p>
-              </div>
-            ) : (
-              slides.map((slide) => (
-                <div key={slide.clientId} className="builder-slide-card">
-                  <div className="builder-slide-card__header">
-                    <strong>{slide.title || `슬라이드 ${slide.slideNumber}`}</strong>
-                    <Badge tone={slide.phase === slide.detectedPhase ? 'success' : 'accent'}>
-                      AI {slide.detectedPhase === slide.phase ? '확정' : '제안'}
-                    </Badge>
-                  </div>
-                  <p className="builder-slide-card__text">
-                    {slide.content || slide.rawTexts.join(' ').slice(0, 180) || '텍스트가 거의 없는 슬라이드입니다.'}
-                  </p>
-                  <div className="builder-slide-card__footer">
-                    <span>#{slide.slideNumber} · 신뢰도 {Math.round(slide.phaseConfidence * 100)}%</span>
-                    <select
-                      className="select-sm"
-                      value={slide.phase}
-                      onChange={(event) => onSlidePhaseChange(slide.clientId, event.target.value as LessonPhase)}
-                    >
-                      {PHASE_ORDER.map((optionPhase) => (
-                        <option key={optionPhase} value={optionPhase}>
-                          {PHASE_LABELS[optionPhase]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="builder-phase-card__column">
-          <div className="builder-phase-card__column-head">
-            <strong>질문 블록</strong>
-            <Button size="sm" variant="secondary" onClick={() => onInteractionAdd(phase)}>
-              + 질문
-            </Button>
-          </div>
-
-          <div className="builder-interaction-list">
-            {orderedInteractions.length === 0 ? (
-              <div className="builder-empty-state">
-                <p>아직 질문 블록이 없습니다. 기본 블록 버튼이나 + 질문으로 추가하세요.</p>
-              </div>
-            ) : (
-              orderedInteractions.map((interaction, index) => (
-                <div key={interaction.clientId} className="builder-interaction-card">
+    <div className="builder-interaction-card">
                   <div className="builder-interaction-card__header">
                     <div className="builder-interaction-card__title-row">
                       <span className="builder-interaction-card__index">
                         Q{index + 1}
                       </span>
                       <Input
-                        aria-label={`${PHASE_LABELS[phase]} interaction title`}
+                        aria-label="질문 제목"
                         value={interaction.title}
                         placeholder="질문 제목"
                         onChange={(event) => onInteractionPatch(interaction.clientId, { title: event.target.value })}
@@ -328,23 +247,6 @@ function PhaseSection({
                   </div>
 
                   <div className="builder-interaction-card__grid">
-                    <label className="form-field">
-                      <span className="form-label">수업 구간</span>
-                      <select
-                        className="select-sm"
-                        value={interaction.phase}
-                        onChange={(event) =>
-                          onInteractionPatch(interaction.clientId, { phase: event.target.value as LessonPhase })
-                        }
-                      >
-                        {PHASE_ORDER.map((optionPhase) => (
-                          <option key={optionPhase} value={optionPhase}>
-                            {PHASE_LABELS[optionPhase]}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
                     <label className="form-field">
                       <span className="form-label">질문 역할</span>
                       <select
@@ -500,89 +402,176 @@ function PhaseSection({
                     </label>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </Card>
   );
 }
 
-function GeneratedDraftPreview({
-  drafts,
-  onApply,
-  onClear,
-}: {
+type PptxExtractModalProps = {
+  open: boolean;
+  onClose: () => void;
+  uploadingPptx: boolean;
+  sourceFileName: string | null;
+  slideCount: number;
+  pptxError: string | null;
+  onUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  generatorOptions: GeneratorOptionsState;
+  onOptionPatch: (patch: Partial<GeneratorOptionsState>) => void;
+  onGenerate: () => void;
   drafts: GeneratedInteractionDraft[];
+  generatorError: string | null;
+  generatorMessage: string | null;
   onApply: () => void;
-  onClear: () => void;
-}) {
-  const groupedDrafts = PHASE_ORDER.map((phase) => ({
-    phase,
-    items: drafts.filter((draft) => draft.phase === phase),
-  })).filter((group) => group.items.length > 0);
+};
 
-  if (drafts.length === 0) {
+// PPTX 추출 워크플로우를 한곳에 모은 모달: 업로드 → 옵션 → 생성 → 미리보기 → 적용.
+function PptxExtractModal({
+  open,
+  onClose,
+  uploadingPptx,
+  sourceFileName,
+  slideCount,
+  pptxError,
+  onUpload,
+  generatorOptions,
+  onOptionPatch,
+  onGenerate,
+  drafts,
+  generatorError,
+  generatorMessage,
+  onApply,
+}: PptxExtractModalProps) {
+  if (!open) {
     return null;
   }
 
   return (
-    <Card className="builder-generator-card">
-      <div className="builder-section-head">
-        <div>
-          <h3>interaction 초안 미리보기</h3>
-          <p>이 초안은 아직 Firestore에 저장되지 않았습니다. 반영 후 아래 편집 화면에서 자유롭게 수정할 수 있습니다.</p>
-        </div>
-        <div className="builder-toolbar__actions">
-          <Button size="sm" variant="ghost" onClick={onClear}>
-            초안 지우기
-          </Button>
-          <Button size="sm" onClick={onApply}>
-            초안 전체 반영
-          </Button>
-        </div>
-      </div>
-
-      <div className="builder-draft-phase-list">
-        {groupedDrafts.map((group) => (
-          <div key={group.phase} className="builder-draft-phase-card">
-            <div className="builder-draft-list">
-              {group.items.map((draft, index) => (
-                <div key={`${group.phase}-${draft.interactionType}-${index}`} className="builder-draft-card">
-                  <div className="builder-draft-card__top">
-                    <div>
-                      <strong>{draft.title}</strong>
-                      <p>{draft.prompt}</p>
-                    </div>
-                    <div className="builder-draft-card__badges">
-                      <Badge>{INTERACTION_LABELS[draft.interactionType]}</Badge>
-                      <Badge>{INPUT_TYPE_LABELS[draft.inputType]}</Badge>
-                      <Badge>{VISIBILITY_LABELS[draft.visibility]}</Badge>
-                    </div>
-                  </div>
-
-                  <div className="builder-draft-card__meta">
-                    <span>slides #{draft.sourceSlideNumbers.join(', ')}</span>
-                    <span>{draft.generatorReason}</span>
-                  </div>
-
-                  {draft.choices.length > 0 ? (
-                    <div className="builder-draft-card__choices">
-                      {draft.choices.map((choice) => (
-                        <span key={choice} className="library-template-tag">
-                          {choice}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+    <div className="builder-modal-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="builder-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="builder-section-head">
+          <div>
+            <h3>PPTX에서 질문 추출</h3>
+            <p>원본 PPTX는 브라우저에서만 읽고 저장하지 않습니다. 추출된 텍스트로 질문 초안을 만듭니다.</p>
           </div>
-        ))}
+          <Button size="sm" variant="ghost" onClick={onClose}>
+            닫기
+          </Button>
+        </div>
+
+        <label className="builder-upload-dropzone">
+          <input
+            accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            className="builder-upload-dropzone__input"
+            type="file"
+            onChange={onUpload}
+          />
+          <FileUp size={20} />
+          <strong>
+            {uploadingPptx
+              ? 'PPTX 분석 중...'
+              : sourceFileName
+                ? `${sourceFileName} · 슬라이드 ${slideCount}개`
+                : 'PPTX 업로드'}
+          </strong>
+          <span>슬라이드 텍스트를 읽어 질문 초안을 만듭니다.</span>
+        </label>
+
+        {pptxError ? <div className="inline-message inline-message--error">{pptxError}</div> : null}
+
+        <div className="builder-generator-grid">
+          <label className="form-field">
+            <span className="form-label">수업 분야</span>
+            <select
+              className="select-sm"
+              value={generatorOptions.subjectType}
+              onChange={(event) =>
+                onOptionPatch({ subjectType: event.target.value as InteractionGeneratorSubjectType })
+              }
+            >
+              {(Object.entries(SUBJECT_TYPE_LABELS) as [InteractionGeneratorSubjectType, string][]).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form-field">
+            <span className="form-label">대상 수준</span>
+            <select
+              className="select-sm"
+              value={generatorOptions.audienceLevel}
+              onChange={(event) =>
+                onOptionPatch({ audienceLevel: event.target.value as InteractionGeneratorAudienceLevel })
+              }
+            >
+              {(Object.entries(AUDIENCE_LEVEL_LABELS) as [InteractionGeneratorAudienceLevel, string][]).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form-field">
+            <span className="form-label">질문 밀도</span>
+            <select
+              className="select-sm"
+              value={generatorOptions.density}
+              onChange={(event) =>
+                onOptionPatch({ density: event.target.value as InteractionGeneratorDensity })
+              }
+            >
+              {(Object.entries(DENSITY_LABELS) as [InteractionGeneratorDensity, string][]).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="builder-toolbar__actions">
+          <Button size="sm" variant="secondary" disabled={slideCount === 0} onClick={onGenerate}>
+            <Sparkles size={16} />
+            질문 생성
+          </Button>
+          <Button size="sm" disabled={drafts.length === 0} onClick={onApply}>
+            적용하기{drafts.length > 0 ? ` (${drafts.length})` : ''}
+          </Button>
+        </div>
+
+        {generatorMessage ? <div className="inline-message">{generatorMessage}</div> : null}
+        {generatorError ? <div className="inline-message inline-message--error">{generatorError}</div> : null}
+
+        {drafts.length > 0 ? (
+          <div className="builder-draft-list">
+            {drafts.map((draft, index) => (
+              <div key={`${draft.interactionType}-${index}`} className="builder-draft-card">
+                <div className="builder-draft-card__top">
+                  <div>
+                    <strong>{draft.title}</strong>
+                    <p>{draft.prompt}</p>
+                  </div>
+                  <div className="builder-draft-card__badges">
+                    <Badge>{INTERACTION_LABELS[draft.interactionType]}</Badge>
+                    <Badge>{INPUT_TYPE_LABELS[draft.inputType]}</Badge>
+                    <Badge>{VISIBILITY_LABELS[draft.visibility]}</Badge>
+                  </div>
+                </div>
+                {draft.choices.length > 0 ? (
+                  <div className="builder-draft-card__choices">
+                    {draft.choices.map((choice) => (
+                      <span key={choice} className="library-template-tag">
+                        {choice}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -608,6 +597,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedInteractionDraft[]>([]);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [generatorMessage, setGeneratorMessage] = useState<string | null>(null);
+  const [pptxModalOpen, setPptxModalOpen] = useState(false);
 
   useEffect(() => {
     if (!templateId) {
@@ -685,47 +675,24 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     setForm((current) => ({ ...current, ...patch }));
   };
 
-  const addInteraction = (phase: LessonPhase, seed?: InteractionSeed) => {
+  // 평면 질문 목록에 빈 질문을 추가한다. phase는 데이터 호환용 기본값('intro').
+  const handleAddQuestion = () => {
     setInteractions((current) => [
       ...current,
-      createEditableInteraction(seed ?? createEmptyInteractionSeed(phase), getNextSortOrder(current, phase)),
+      createEditableInteraction(createEmptyInteractionSeed('intro'), getNextSortOrder(current)),
     ]);
-  };
-
-  const handlePresetAdd = (presetId: string) => {
-    const preset = DORO_INTERACTION_PRESETS.find((item) => item.id === presetId);
-    if (!preset) return;
-    addInteraction(preset.seed.phase, preset.seed);
   };
 
   const handleInteractionPatch = (clientId: string, patch: Partial<EditableInteraction>) => {
     setInteractions((current) =>
-      current.map((interaction) => {
-        if (interaction.clientId !== clientId) return interaction;
-
-        if (patch.phase && patch.phase !== interaction.phase) {
-          const { clientId: _clientId, sortOrder: _sortOrder, ...restPatch } = patch;
-          return {
-            ...interaction,
-            ...restPatch,
-            phase: patch.phase,
-            sortOrder: getNextSortOrder(current, patch.phase),
-          };
-        }
-
-        return { ...interaction, ...patch };
-      }),
+      current.map((interaction) =>
+        interaction.clientId === clientId ? { ...interaction, ...patch } : interaction,
+      ),
     );
   };
 
   const handleInteractionDelete = (clientId: string) => {
     setInteractions((current) => current.filter((interaction) => interaction.clientId !== clientId));
-  };
-
-  const handleSlidePhaseChange = (clientId: string, phase: LessonPhase) => {
-    setSlides((current) =>
-      current.map((slide) => (slide.clientId === clientId ? { ...slide, phase } : slide)),
-    );
   };
 
   const handleGeneratorOptionPatch = (patch: Partial<GeneratorOptionsState>) => {
@@ -773,16 +740,17 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       generatedDrafts.forEach((draft) => {
         next = [
           ...next,
-          createEditableInteraction(draft, getNextSortOrder(next, draft.phase)),
+          createEditableInteraction(draft, getNextSortOrder(next)),
         ];
       });
 
       return next;
     });
 
-    setGeneratorMessage('초안을 interaction 목록에 반영했습니다. 저장 전에 각 질문을 수정해주세요.');
+    setGeneratorMessage('초안을 질문 목록에 반영했습니다. 저장 전에 각 질문을 수정해주세요.');
     setGeneratorError(null);
     setGeneratedDrafts([]);
+    setPptxModalOpen(false);
   };
 
   const handlePptxUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -913,16 +881,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     }
   };
 
-  const overallSummary = useMemo(
-    () =>
-      PHASE_ORDER.map((phase) => ({
-        phase,
-        slideCount: sortedSlides.filter((slide) => slide.phase === phase).length,
-        interactionCount: sortedInteractions.filter((interaction) => interaction.phase === phase).length,
-      })),
-    [sortedInteractions, sortedSlides],
-  );
-
   if (templateId && loading) {
     return null;
   }
@@ -1018,192 +976,65 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         </label>
       </Card>
 
-      <Card className="builder-upload-card">
+      <Card className="builder-meta-card">
         <div className="builder-section-head">
           <div>
-            <h3>PPTX 슬라이드 가져오기</h3>
-            <p>원본 PPTX는 브라우저에서만 읽고 저장하지 않습니다. 추출된 슬라이드 텍스트만 템플릿 구성에 사용합니다.</p>
+            <h3>질문 목록</h3>
           </div>
-          <Badge tone={sourceFileName ? 'success' : 'default'}>
-            {sourceFileName ?? 'PPTX 없음'}
-          </Badge>
-        </div>
-
-        <div className="builder-upload-card__body">
-          <label className="builder-upload-dropzone">
-            <input
-              accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-              className="builder-upload-dropzone__input"
-              type="file"
-              onChange={(event) => {
-                void handlePptxUpload(event);
-              }}
-            />
-            <FileUp size={20} />
-            <strong>{uploadingPptx ? 'PPTX 분석 중...' : 'PPTX 업로드'}</strong>
-            <span>슬라이드 텍스트를 읽어 구간을 자동 제안합니다.</span>
-          </label>
-
-          <div className="builder-summary-grid">
-            {overallSummary.map((summary) => (
-              <div key={summary.phase} className="builder-summary-tile">
-                <strong>슬라이드 {summary.slideCount}개</strong>
-                <span>질문 {summary.interactionCount}개</span>
-              </div>
-            ))}
+          <div className="builder-toolbar__actions">
+            <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
+              <FileUp size={16} />
+              PPTX에서 추출하기
+            </Button>
+            <Button size="sm" onClick={handleAddQuestion}>
+              + 질문 추가
+            </Button>
           </div>
         </div>
 
-        {pptxError ? <div className="inline-message inline-message--error">{pptxError}</div> : null}
-
-        {sortedSlides.length > 0 ? (
-          <div className="builder-slide-overview">
-            {sortedSlides.map((slide) => (
-              <div key={slide.clientId} className="builder-slide-overview__item">
-                <div>
-                  <strong>#{slide.slideNumber}</strong>
-                  <p>{slide.title || '제목 없음'}</p>
-                </div>
-                <div className="builder-slide-overview__meta">
-                  <span>{Math.round(slide.phaseConfidence * 100)}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </Card>
-
-      <Card className="builder-preset-card">
-        <div className="builder-section-head">
-          <div>
-            <h3>질문 초안 만들기</h3>
-            <p>슬라이드 구간과 수업 정보를 바탕으로 질문 초안을 제안합니다.</p>
-          </div>
-          <Button size="sm" variant="secondary" onClick={handleGenerateDrafts}>
-            <Sparkles size={16} />
-            질문 초안 만들기
-          </Button>
-        </div>
-
-        <div className="builder-generator-grid">
-          <label className="form-field">
-            <span className="form-label">수업 분야</span>
-            <select
-              className="select-sm"
-              value={generatorOptions.subjectType}
-              onChange={(event) =>
-                handleGeneratorOptionPatch({
-                  subjectType: event.target.value as InteractionGeneratorSubjectType,
-                })
-              }
-            >
-              {(Object.entries(SUBJECT_TYPE_LABELS) as [InteractionGeneratorSubjectType, string][]).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="form-field">
-            <span className="form-label">대상 수준</span>
-            <select
-              className="select-sm"
-              value={generatorOptions.audienceLevel}
-              onChange={(event) =>
-                handleGeneratorOptionPatch({
-                  audienceLevel: event.target.value as InteractionGeneratorAudienceLevel,
-                })
-              }
-            >
-              {(Object.entries(AUDIENCE_LEVEL_LABELS) as [InteractionGeneratorAudienceLevel, string][]).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="form-field">
-            <span className="form-label">질문 밀도</span>
-            <select
-              className="select-sm"
-              value={generatorOptions.density}
-              onChange={(event) =>
-                handleGeneratorOptionPatch({
-                  density: event.target.value as InteractionGeneratorDensity,
-                })
-              }
-            >
-              {(Object.entries(DENSITY_LABELS) as [InteractionGeneratorDensity, string][]).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {generatorMessage ? <div className="inline-message">{generatorMessage}</div> : null}
-        {generatorError ? <div className="inline-message inline-message--error">{generatorError}</div> : null}
-      </Card>
-
-      <GeneratedDraftPreview
-        drafts={generatedDrafts}
-        onApply={handleApplyGeneratedDrafts}
-        onClear={() => {
-          setGeneratedDrafts([]);
-          setGeneratorError(null);
-          setGeneratorMessage(null);
-        }}
-      />
-
-      <Card className="builder-preset-card">
-        <div className="builder-section-head">
-          <div>
-            <h3>DORO 기본 질문 블록</h3>
-            <p>자주 쓰는 수업 질문을 구간별로 빠르게 추가합니다.</p>
-          </div>
-          <Sparkles size={18} />
-        </div>
-        <div className="builder-preset-grid">
-          {DORO_INTERACTION_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              className="builder-preset-button"
-              type="button"
-              onClick={() => handlePresetAdd(preset.id)}
-            >
-              <div className="builder-preset-button__head">
-                <CopyPlus size={16} />
-                <strong>{preset.label}</strong>
-              </div>
-              <span>{preset.description}</span>
-            </button>
-          ))}
+        <div className="builder-interaction-list">
+          {sortedInteractions.length === 0 ? (
+            <div className="builder-empty-state">
+              <p>아직 질문이 없습니다. '+ 질문 추가'로 직접 만들거나 'PPTX에서 추출하기'로 불러오세요.</p>
+            </div>
+          ) : (
+            sortedInteractions.map((interaction, index) => (
+              <InteractionEditorCard
+                key={interaction.clientId}
+                index={index}
+                interaction={interaction}
+                onInteractionPatch={handleInteractionPatch}
+                onInteractionDelete={handleInteractionDelete}
+                onInteractionMove={(clientId, direction) =>
+                  setInteractions((current) => swapInteractionOrder(current, clientId, direction))
+                }
+              />
+            ))
+          )}
         </div>
       </Card>
-
-      <div className="builder-phase-stack">
-        {PHASE_ORDER.map((phase) => (
-          <PhaseSection
-            key={phase}
-            interactions={sortedInteractions.filter((interaction) => interaction.phase === phase)}
-            phase={phase}
-            slides={sortedSlides.filter((slide) => slide.phase === phase)}
-            onInteractionAdd={addInteraction}
-            onInteractionDelete={handleInteractionDelete}
-            onInteractionMove={(clientId, direction) =>
-              setInteractions((current) => swapInteractionOrder(current, clientId, direction))
-            }
-            onInteractionPatch={handleInteractionPatch}
-            onSlidePhaseChange={handleSlidePhaseChange}
-          />
-        ))}
-      </div>
 
       {saveMessage ? <div className="inline-message">{saveMessage}</div> : null}
       {saveError ? <div className="inline-message inline-message--error">{saveError}</div> : null}
+
+      <PptxExtractModal
+        open={pptxModalOpen}
+        onClose={() => setPptxModalOpen(false)}
+        uploadingPptx={uploadingPptx}
+        sourceFileName={sourceFileName}
+        slideCount={sortedSlides.length}
+        pptxError={pptxError}
+        onUpload={(event) => {
+          void handlePptxUpload(event);
+        }}
+        generatorOptions={generatorOptions}
+        onOptionPatch={handleGeneratorOptionPatch}
+        onGenerate={handleGenerateDrafts}
+        drafts={generatedDrafts}
+        generatorError={generatorError}
+        generatorMessage={generatorMessage}
+        onApply={handleApplyGeneratedDrafts}
+      />
     </div>
   );
 }

@@ -2806,3 +2806,28 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+/* PPTX 추출 모달 (설문지 템플릿 빌더) */
+.builder-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.builder-modal {
+  width: min(680px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--color-surface-strong, #ffffff);
+  box-shadow: var(--shadow-stage);
+}
