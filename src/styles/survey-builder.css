@@ -376,6 +376,36 @@
   margin-top: 18px;
 }
 
+.optionEditorHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.optionEditorLabel {
+  margin-bottom: 0;
+}
+
+.multiToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.multiToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0b7ff3;
+  cursor: pointer;
+}
+
 .optionList {
   display: flex;
   flex-direction: column;

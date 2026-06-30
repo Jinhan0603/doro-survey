@@ -42,7 +42,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
       createDraft({
         phase: PHASE_ORDER[Math.min(current.length, PHASE_ORDER.length - 1)],
         inputType,
-        visibility: inputType === 'status' ? 'teacher-only' : 'public',
+        visibility: 'public',
       }),
     ]);
   };
@@ -113,9 +113,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
             <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('text')}>
               + 주관식
             </button>
-            <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('status')}>
-              + 상태 체크
-            </button>
           </div>
         </header>
 
@@ -123,7 +120,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
           {drafts.length === 0 ? (
             <div className="emptyQuestionState">
               <p className="emptyQuestionTitle">아직 질문이 없습니다</p>
-              <p className="emptyQuestionText">객관식, 주관식, 상태 체크 질문을 추가해 설문을 구성하세요.</p>
+              <p className="emptyQuestionText">객관식, 주관식 질문을 추가해 설문을 구성하세요.</p>
               <div className="emptyQuestionActions">
                 <button type="button" className="secondaryPillButton" onClick={() => handleAddQuestion('choice')}>
                   + 객관식 질문 추가

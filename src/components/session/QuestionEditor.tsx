@@ -1,17 +1,11 @@
 import { type ChangeEvent } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
-import {
-  INPUT_TYPE_LABELS,
-  PHASE_LABELS,
-  PHASE_ORDER,
-  VISIBILITY_LABELS,
-} from '../../data/lessonTemplatePresets';
-import type { LessonPhase, QuestionInputType, ResultVisibility } from '../../firebase/types';
+import { PHASE_LABELS, PHASE_ORDER, VISIBILITY_LABELS } from '../../data/lessonTemplatePresets';
+import type { LessonPhase, ResultVisibility } from '../../firebase/types';
 import {
   INPUT_TYPE_HELP,
   VISIBILITY_HELP,
   getDefaultChoices,
-  hasChoiceOptions,
   type CustomQuestionDraft,
 } from './customQuestionDraft';
 
@@ -32,30 +26,36 @@ export function QuestionEditor({
   onDelete,
   onMove,
 }: QuestionEditorProps) {
-  const handleInputTypeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const inputType = event.target.value as QuestionInputType;
-    const previousDefaultChoices = getDefaultChoices(draft.inputType);
-    const shouldReplaceChoices = !draft.choicesText.trim() || draft.choicesText === previousDefaultChoices;
+  // UI 유형은 객관식/주관식 2종. 복수 선택은 객관식의 토글로 inputType을 choice↔multi로 매핑한다.
+  const baseType: 'choice' | 'text' = draft.inputType === 'text' ? 'text' : 'choice';
+  const isMulti = draft.inputType === 'multi';
 
+  const handleTypeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const target = event.target.value as 'choice' | 'text';
+    if (target === 'text') {
+      onPatch(draft.clientId, { inputType: 'text', choicesText: '' });
+      return;
+    }
     onPatch(draft.clientId, {
-      inputType,
-      choicesText: hasChoiceOptions(inputType)
-        ? shouldReplaceChoices
-          ? getDefaultChoices(inputType)
-          : draft.choicesText
-        : '',
-      maxLength: inputType === 'text' ? draft.maxLength : 300,
+      inputType: 'choice',
+      choicesText: draft.choicesText.trim() ? draft.choicesText : getDefaultChoices('choice'),
+      maxLength: 300,
     });
   };
 
+  const toggleMulti = () => {
+    onPatch(draft.clientId, { inputType: isMulti ? 'choice' : 'multi' });
+  };
+
   // choicesText('\n' 구분 문자열)를 단일 소스로 두고, UI에서만 행 단위로 편집한다.
-  const showOptions = hasChoiceOptions(draft.inputType);
   const options = draft.choicesText.length > 0 ? draft.choicesText.split('\n') : [];
   const setOptions = (next: string[]) => onPatch(draft.clientId, { choicesText: next.join('\n') });
   const updateOption = (target: number, value: string) =>
     setOptions(options.map((option, idx) => (idx === target ? value : option)));
   const addOption = () => setOptions([...options, '']);
   const removeOption = (target: number) => setOptions(options.filter((_, idx) => idx !== target));
+
+  const typeHint = baseType === 'text' ? INPUT_TYPE_HELP.text : isMulti ? INPUT_TYPE_HELP.multi : INPUT_TYPE_HELP.choice;
 
   const phaseId = `phase-${draft.clientId}`;
   const typeId = `type-${draft.clientId}`;
@@ -129,14 +129,11 @@ export function QuestionEditor({
               <label className="formLabel" htmlFor={typeId}>
                 응답 방식
               </label>
-              <select id={typeId} className="formSelect" value={draft.inputType} onChange={handleInputTypeChange}>
-                {(Object.entries(INPUT_TYPE_LABELS) as [QuestionInputType, string][]).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+              <select id={typeId} className="formSelect" value={baseType} onChange={handleTypeChange}>
+                <option value="choice">객관식</option>
+                <option value="text">주관식</option>
               </select>
-              <p className="formHint">{INPUT_TYPE_HELP[draft.inputType]}</p>
+              <p className="formHint">{typeHint}</p>
             </div>
 
             <div className="formField">
@@ -159,7 +156,7 @@ export function QuestionEditor({
             </div>
           </div>
 
-          {draft.inputType === 'text' ? (
+          {baseType === 'text' ? (
             <div className="questionBodyField">
               <label className="formLabel" htmlFor={maxLengthId}>
                 최대 글자 수
@@ -194,9 +191,15 @@ export function QuestionEditor({
             />
           </div>
 
-          {showOptions ? (
+          {baseType === 'choice' ? (
             <div className="optionEditor">
-              <span className="formLabel">선택지</span>
+              <div className="optionEditorHead">
+                <span className="formLabel optionEditorLabel">선택지</span>
+                <label className="multiToggle">
+                  <input type="checkbox" checked={isMulti} onChange={toggleMulti} />
+                  복수 선택 허용
+                </label>
+              </div>
               <div className="optionList">
                 {options.map((option, optionIndex) => (
                   <div className="optionRow" key={optionIndex}>
