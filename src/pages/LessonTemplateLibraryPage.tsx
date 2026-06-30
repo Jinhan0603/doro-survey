@@ -1,54 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
-import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { usePresenterAuth } from '../auth/AuthProvider';
-import { duplicateLessonTemplate, updateLessonTemplate } from '../firebase/lessonTemplates';
+import { duplicateLessonTemplate } from '../firebase/lessonTemplates';
 import { useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
-import type { LessonTemplateDoc, TemplateVisibility } from '../firebase/types';
+import type { LessonTemplateDoc } from '../firebase/types';
 import '../styles/survey-builder.css';
 import '../styles/template-builder.css';
 
-const TEMPLATE_VISIBILITY_LABELS: Record<TemplateVisibility, string> = {
-  private: '개인용',
-  org: '조직 공유',
-  shared: '전체 공유',
-};
-
-// 조직 공유(org)는 제거됨. 편집 시 개인용/전체 공유만 선택할 수 있다.
-const SHAREABLE_OPTIONS: [TemplateVisibility, string][] = [
-  ['private', '개인용'],
-  ['shared', '전체 공유'],
-];
-
 function TemplateDetail({
   template,
-  leadingLabel,
   editable,
   busy,
   onDuplicate,
-  onVisibilityChange,
 }: {
   template: LessonTemplateDoc;
-  leadingLabel: string;
   editable: boolean;
   busy: boolean;
   onDuplicate: (templateId: string) => void;
-  onVisibilityChange: (templateId: string, visibility: TemplateVisibility) => void;
 }) {
-  const visibility = template.templateVisibility ?? (template.shared ? 'org' : 'private');
-
   return (
     <div className="templateDetail">
-      <div className="templateDetail__labels">
-        <Badge>{leadingLabel}</Badge>
-        <Badge tone={visibility === 'private' ? 'default' : 'accent'}>
-          {TEMPLATE_VISIBILITY_LABELS[visibility]}
-        </Badge>
-      </div>
-
       <h3 className="templateDetail__title">{template.title}</h3>
       <p className="templateDetail__desc">{template.description || '설명이 아직 없습니다.'}</p>
 
@@ -56,7 +30,6 @@ function TemplateDetail({
         {template.subject ? <span>{template.subject}</span> : null}
         {template.targetGrade ? <span>{template.targetGrade}</span> : null}
         <span>질문 {template.interactionCount ?? 0}개</span>
-        <span>슬라이드 {template.slideCount ?? 0}개</span>
       </div>
 
       {template.toolTags?.length ? (
@@ -85,23 +58,6 @@ function TemplateDetail({
           {busy ? '복제 중...' : '복제하기'}
         </Button>
       </div>
-
-      {editable ? (
-        <label className="form-field templateDetail__visibility">
-          <span className="form-label">공개 범위</span>
-          <select
-            className="select-sm"
-            value={visibility === 'shared' ? 'shared' : 'private'}
-            onChange={(event) => onVisibilityChange(template.id, event.target.value as TemplateVisibility)}
-          >
-            {SHAREABLE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
     </div>
   );
 }
@@ -150,21 +106,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
       navigate(`/custom-template/${newTemplateId}`);
     } catch (nextError) {
       setActionError(nextError instanceof Error ? nextError.message : '템플릿 복제에 실패했습니다.');
-    } finally {
-      setBusyTemplateId(null);
-    }
-  };
-
-  const handleVisibilityChange = async (templateId: string, visibility: TemplateVisibility) => {
-    try {
-      setBusyTemplateId(templateId);
-      setActionError(null);
-      await updateLessonTemplate(templateId, {
-        templateVisibility: visibility,
-        organizationId: profile?.organizationId ?? 'dorossaem',
-      });
-    } catch (nextError) {
-      setActionError(nextError instanceof Error ? nextError.message : 'visibility 변경에 실패했습니다.');
     } finally {
       setBusyTemplateId(null);
     }
@@ -256,9 +197,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
                       onClick={() => handleSelect(template.id)}
                     >
                       <strong>{template.title}</strong>
-                      <span>
-                        질문 {template.interactionCount ?? 0}개 · 슬라이드 {template.slideCount ?? 0}개
-                      </span>
+                      <span>질문 {template.interactionCount ?? 0}개</span>
                     </button>
                   ))}
                 </div>
@@ -276,11 +215,9 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
               {selected ? (
                 <TemplateDetail
                   template={selected}
-                  leadingLabel={filter === 'mine' ? '내 템플릿' : '공유 템플릿'}
                   editable={filter === 'mine'}
                   busy={busyTemplateId === selected.id}
                   onDuplicate={handleDuplicate}
-                  onVisibilityChange={handleVisibilityChange}
                 />
               ) : (
                 <div className="library-section__empty">
