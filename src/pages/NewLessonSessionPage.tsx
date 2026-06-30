@@ -198,7 +198,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
                 <Link2 size={16} />
                 Admin 열기
               </Link>
-              <Link className="builder-link-button builder-link-button--ghost" to="/template">
+              <Link className="builder-link-button builder-link-button--ghost" to="/templates">
                 <QrCode size={16} />
                 설문지 템플릿으로 돌아가기
               </Link>

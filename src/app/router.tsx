@@ -86,11 +86,12 @@ export function AppRouter() {
             <Route path="/" element={<Navigate to="/sessions" replace />} />
             <Route path="/sessions" element={<SessionsDashboardPage />} />
             <Route path="/planner" element={<PlannerPage />} />
-            <Route path="/template" element={<LessonTemplateLibraryPage />} />
+            <Route path="/templates" element={<LessonTemplateLibraryPage />} />
             <Route path="/custom-template" element={<LessonTemplateBuilderPage />} />
             <Route path="/custom-template/:templateId" element={<LessonTemplateBuilderPage />} />
             {/* 구 경로 호환 리다이렉트 */}
-            <Route path="/library" element={<Navigate to="/template" replace />} />
+            <Route path="/template" element={<Navigate to="/templates" replace />} />
+            <Route path="/library" element={<Navigate to="/templates" replace />} />
             <Route path="/builder" element={<Navigate to="/custom-template" replace />} />
             <Route path="/builder/:templateId" element={<RedirectBuilderToCustomTemplate />} />
             <Route path="/session-new" element={<NewLessonSessionPage />} />
