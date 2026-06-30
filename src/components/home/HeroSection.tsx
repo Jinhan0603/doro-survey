@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Link2, Monitor, PencilLine } from 'lucide-react';
+import { FileText, PencilLine } from 'lucide-react';
 import { Button } from './ui/Button';
 import { QuickStartCard } from './QuickStartCard';
 
@@ -31,18 +31,6 @@ export function HeroSection() {
           <Button variant="secondary" size="lg" to="/library" icon={<FileText size={18} />}>
             템플릿으로 시작
           </Button>
-        </div>
-
-        <div className="dh-chips">
-          <span className="dh-chip dh-chip--green">
-            <Link2 size={16} /> 링크·QR 공유
-          </span>
-          <span className="dh-chip dh-chip--blue">
-            <BarChart3 size={16} /> 응답 실시간 확인
-          </span>
-          <span className="dh-chip dh-chip--purple">
-            <Monitor size={16} /> 결과 화면 제공
-          </span>
         </div>
       </div>
 

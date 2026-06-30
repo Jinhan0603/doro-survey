@@ -12,7 +12,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { WaitingState } from '../components/survey/WaitingState';
 import { signInAdminWithEmail, signOutUser } from '../firebase/auth';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
-import { appName, firebaseConfigStatus } from '../firebase/client';
+import { appName, defaultSessionId, firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
 import { inferRoleFromEmail } from '../firebase/users';
 import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
@@ -44,7 +44,7 @@ function AdminPreview() {
   const [showResults, setShowResults] = useState(false);
 
   const activeQuestion = previewQuestions.find((q) => q.id === activeQuestionId) ?? previewQuestions[0];
-  const studentUrl = useMemo(() => buildAppUrl('/student', 'doro-tech-class-2026'), []);
+  const studentUrl = useMemo(() => buildAppUrl('/student', defaultSessionId), []);
 
   return (
     <AppShell

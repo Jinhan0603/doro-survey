@@ -9,7 +9,7 @@ import { Card } from './ui/Card';
 export function ParticipantLinkCard() {
   const [copied, setCopied] = useState(false);
   const studentUrl = buildAppUrl('/student', previewSessionId);
-  const displayUrl = `survey.doroedu.io.kr/join/${CLASS_CODE}`;
+  const displayUrl = `survey.doroedu.co.kr/join/${CLASS_CODE}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(studentUrl).then(() => {
