@@ -161,10 +161,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   return (
     <div className="library-page">
       <Card className="library-hero-card" tone="accent">
-        <div className="library-hero-card__copy">
-          <h2>반복해서 쓸 수업 흐름을 관리합니다.</h2>
-          <p>자주 쓰는 질문 묶음은 템플릿으로 저장하고, 오늘만 쓸 질문은 직접 질문 만들기로 바로 시작하세요.</p>
-        </div>
         <div className="library-hero-card__actions">
           <Link className="builder-link-button" to="/builder">
             <LayoutTemplate size={16} />
@@ -188,7 +184,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
         <div className="library-section__header">
           <div>
             <h3>내 설문지 템플릿</h3>
-            <p>직접 만든 질문 흐름을 수정하고 새 운영 세션으로 연결합니다.</p>
           </div>
         </div>
 
@@ -196,7 +191,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           <Card className="library-empty-card">
             <FolderKanban size={20} />
             <strong>아직 만든 템플릿이 없습니다.</strong>
-            <p>반복해서 쓸 수업은 템플릿으로, 오늘만 쓸 질문은 직접 질문 만들기로 시작하세요.</p>
           </Card>
         ) : (
           <div className="library-grid">
@@ -219,7 +213,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
         <div className="library-section__header">
           <div>
             <h3>공유 템플릿</h3>
-            <p>같은 조직 또는 전체 공유 템플릿을 복제해 내 수업에 맞게 수정합니다.</p>
           </div>
         </div>
 
@@ -227,7 +220,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           <Card className="library-empty-card">
             <BookCopy size={20} />
             <strong>아직 공유된 템플릿이 없습니다.</strong>
-            <p>내 템플릿의 공개 범위를 조직 공유나 전체 공유로 바꾸면 이 섹션에 나타납니다.</p>
           </Card>
         ) : (
           <div className="library-grid">
@@ -252,7 +244,6 @@ export function LessonTemplateLibraryPage() {
   return (
     <TeacherGate
       compact
-      description="반복해서 쓸 수업 질문 흐름을 저장하고, 필요할 때 실제 운영 세션으로 전환합니다."
       title="설문지 템플릿"
       actions={() => (
         <div className="hero-actions">
