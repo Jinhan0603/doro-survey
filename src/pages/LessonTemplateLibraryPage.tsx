@@ -165,10 +165,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
             <LayoutTemplate size={16} />
             새 템플릿 만들기
           </Link>
-          <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
-            <PlayCircle size={16} />
-            템플릿 세션 열기
-          </Link>
         </div>
       </Card>
 
