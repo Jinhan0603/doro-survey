@@ -11,8 +11,6 @@ import {
   DORO_INTERACTION_PRESETS,
   INPUT_TYPE_LABELS,
   INTERACTION_LABELS,
-  PHASE_COLORS,
-  PHASE_DESCRIPTIONS,
   PHASE_LABELS,
   PHASE_ORDER,
   PURPOSE_LABELS,
@@ -205,17 +203,6 @@ function swapInteractionOrder(items: EditableInteraction[], clientId: string, di
   });
 }
 
-function PhaseTag({ phase }: { phase: LessonPhase }) {
-  return (
-    <span
-      className="phase-tag"
-      style={{ '--phase-color': PHASE_COLORS[phase] } as React.CSSProperties}
-    >
-      {PHASE_LABELS[phase]}
-    </span>
-  );
-}
-
 type PhaseSectionProps = {
   phase: LessonPhase;
   slides: EditableSlide[];
@@ -241,16 +228,6 @@ function PhaseSection({
 
   return (
     <Card className="builder-phase-card">
-      <div className="builder-phase-card__header">
-        <div className="builder-phase-card__heading">
-          <PhaseTag phase={phase} />
-          <div>
-            <h3>{PHASE_LABELS[phase]}</h3>
-            <p>{PHASE_DESCRIPTIONS[phase]}</p>
-          </div>
-        </div>
-      </div>
-
       <div className="builder-phase-card__content">
         <div className="builder-phase-card__column">
           <div className="builder-phase-card__column-head">
@@ -275,7 +252,7 @@ function PhaseSection({
                     {slide.content || slide.rawTexts.join(' ').slice(0, 180) || '텍스트가 거의 없는 슬라이드입니다.'}
                   </p>
                   <div className="builder-slide-card__footer">
-                    <span>#{slide.slideNumber} · AI 분류 {PHASE_LABELS[slide.detectedPhase]} · 신뢰도 {Math.round(slide.phaseConfidence * 100)}%</span>
+                    <span>#{slide.slideNumber} · 신뢰도 {Math.round(slide.phaseConfidence * 100)}%</span>
                     <select
                       className="select-sm"
                       value={slide.phase}
@@ -313,7 +290,7 @@ function PhaseSection({
                   <div className="builder-interaction-card__header">
                     <div className="builder-interaction-card__title-row">
                       <span className="builder-interaction-card__index">
-                        {PHASE_LABELS[phase]} {index + 1}
+                        Q{index + 1}
                       </span>
                       <Input
                         aria-label={`${PHASE_LABELS[phase]} interaction title`}
@@ -570,13 +547,6 @@ function GeneratedDraftPreview({
       <div className="builder-draft-phase-list">
         {groupedDrafts.map((group) => (
           <div key={group.phase} className="builder-draft-phase-card">
-            <div className="builder-draft-phase-card__header">
-              <div className="builder-phase-card__heading">
-                <PhaseTag phase={group.phase} />
-                <strong>{PHASE_LABELS[group.phase]}</strong>
-              </div>
-            </div>
-
             <div className="builder-draft-list">
               {group.items.map((draft, index) => (
                 <div key={`${group.phase}-${draft.interactionType}-${index}`} className="builder-draft-card">
@@ -1072,13 +1042,12 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             />
             <FileUp size={20} />
             <strong>{uploadingPptx ? 'PPTX 분석 중...' : 'PPTX 업로드'}</strong>
-            <span>슬라이드 텍스트를 읽어 도입/이론/실습/윤리/마무리 phase를 자동 제안합니다.</span>
+            <span>슬라이드 텍스트를 읽어 구간을 자동 제안합니다.</span>
           </label>
 
           <div className="builder-summary-grid">
             {overallSummary.map((summary) => (
               <div key={summary.phase} className="builder-summary-tile">
-                <PhaseTag phase={summary.phase} />
                 <strong>슬라이드 {summary.slideCount}개</strong>
                 <span>질문 {summary.interactionCount}개</span>
               </div>
@@ -1097,7 +1066,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
                   <p>{slide.title || '제목 없음'}</p>
                 </div>
                 <div className="builder-slide-overview__meta">
-                  <PhaseTag phase={slide.phase} />
                   <span>{Math.round(slide.phaseConfidence * 100)}%</span>
                 </div>
               </div>
@@ -1212,7 +1180,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
                 <strong>{preset.label}</strong>
               </div>
               <span>{preset.description}</span>
-              <PhaseTag phase={preset.seed.phase} />
             </button>
           ))}
         </div>
