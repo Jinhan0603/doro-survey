@@ -162,7 +162,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
     <div className="library-page">
       <Card className="library-hero-card" tone="accent">
         <div className="library-hero-card__copy">
-          <Badge tone="accent">Template Library</Badge>
           <h2>반복해서 쓸 수업 흐름을 관리합니다.</h2>
           <p>자주 쓰는 질문 묶음은 템플릿으로 저장하고, 오늘만 쓸 질문은 직접 질문 만들기로 바로 시작하세요.</p>
         </div>
@@ -191,7 +190,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
             <h3>내 수업 템플릿</h3>
             <p>직접 만든 질문 흐름을 수정하고 새 운영 세션으로 연결합니다.</p>
           </div>
-          <Badge tone="success">{myTemplates.length}개</Badge>
         </div>
 
         {loading ? (
@@ -227,7 +225,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
             <h3>공유 템플릿</h3>
             <p>같은 조직 또는 전체 공유 템플릿을 복제해 내 수업에 맞게 수정합니다.</p>
           </div>
-          <Badge>{orgTemplates.length}개</Badge>
         </div>
 
         {orgTemplates.length === 0 ? (
@@ -260,7 +257,6 @@ export function LessonTemplateLibraryPage() {
     <TeacherGate
       compact
       description="반복해서 쓸 수업 질문 흐름을 저장하고, 필요할 때 실제 운영 세션으로 전환합니다."
-      eyebrow="DORO Library"
       title="수업 템플릿"
       actions={() => (
         <div className="hero-actions">

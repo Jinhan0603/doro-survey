@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import {
@@ -424,16 +424,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const [error, setError] = useState<string | null>(null);
   const [createdSession, setCreatedSession] = useState<CreatedSession | null>(null);
 
-  const questionSummary = useMemo(() => {
-    const publicCount = drafts.filter((draft) => draft.visibility === 'public').length;
-    const textCount = drafts.filter((draft) => draft.inputType === 'text').length;
-    return {
-      publicCount,
-      textCount,
-      choiceCount: drafts.length - textCount,
-    };
-  }, [drafts]);
-
   const handlePatch = (clientId: string, patch: Partial<CustomQuestionDraft>) => {
     setDrafts((current) =>
       current.map((draft) => (draft.clientId === clientId ? { ...draft, ...patch } : draft)),
@@ -500,7 +490,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
               <h3>1. 수업 링크 만들기</h3>
               <p>sessionId는 학생 링크에 들어가는 짧은 주소입니다. 수업마다 새 ID를 쓰면 응답이 섞이지 않습니다.</p>
             </div>
-            <Badge tone="accent">{drafts.length}개 질문</Badge>
           </div>
 
           <div className="session-new-grid">
@@ -528,11 +517,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
               />
               <span>생성 직후 첫 질문 응답 수집 열기</span>
             </label>
-            <div className="custom-session-stats">
-              <Badge>{questionSummary.choiceCount} 선택형</Badge>
-              <Badge>{questionSummary.textCount} 서술형</Badge>
-              <Badge tone="success">{questionSummary.publicCount} 공개 가능</Badge>
-            </div>
           </div>
 
           <div className="session-new-actions">
@@ -554,7 +538,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
         <Card className="custom-session-guide-card">
           <div>
-            <Badge tone="success">수업 운영</Badge>
             <h3>생성 후 운영</h3>
           </div>
           <div className="custom-guide-steps">
@@ -626,7 +609,6 @@ export function CustomQuestionSessionPage() {
     <TeacherGate
       compact
       description="오늘 쓸 질문을 직접 입력하면 학생 QR, 강사용 Admin, 발표용 Display 링크가 한 번에 만들어집니다."
-      eyebrow="DORO V2"
       title="질문 만들고 바로 공유하기"
       actions={() => (
         <div className="hero-actions">

@@ -250,10 +250,6 @@ function PhaseSection({
             <p>{PHASE_DESCRIPTIONS[phase]}</p>
           </div>
         </div>
-        <div className="builder-phase-card__meta">
-          <Badge>슬라이드 {slides.length}개</Badge>
-          <Badge>질문 {orderedInteractions.length}개</Badge>
-        </div>
       </div>
 
       <div className="builder-phase-card__content">
@@ -580,7 +576,6 @@ function GeneratedDraftPreview({
                 <PhaseTag phase={group.phase} />
                 <strong>{PHASE_LABELS[group.phase]}</strong>
               </div>
-              <Badge>{group.items.length} drafts</Badge>
             </div>
 
             <div className="builder-draft-list">
@@ -1002,7 +997,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             <h3>수업 기본 정보</h3>
             <p>저장한 템플릿은 라이브러리와 템플릿 세션 열기 화면에서 바로 사용할 수 있습니다.</p>
           </div>
-          <Badge>질문 {sortedInteractions.length}개</Badge>
         </div>
 
         <div className="builder-meta-grid">
@@ -1259,7 +1253,6 @@ export function LessonTemplateBuilderPage() {
     <TeacherGate
       compact
       description="반복해서 쓸 수업 질문 흐름을 만들고, 필요하면 PPTX 슬라이드 기준으로 구간을 정리합니다."
-      eyebrow="DORO Builder"
       title="수업 템플릿 빌더"
       actions={() => (
         <div className="hero-actions">

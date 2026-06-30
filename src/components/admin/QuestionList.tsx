@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { Badge } from '../common/Badge';
 import { Card } from '../common/Card';
 import type { QuestionDoc } from '../../firebase/types';
 import { getQuestionTypeLabel } from '../../utils/questionRuntime';
@@ -15,7 +14,6 @@ export function QuestionList({ questions, activeQuestionId, onSelect }: Question
     <Card className="question-list-card">
       <div className="section-heading">
         <h3>질문 목록</h3>
-        <Badge>{questions.length} questions</Badge>
       </div>
       <div className="question-list">
         {questions.map((question) => (

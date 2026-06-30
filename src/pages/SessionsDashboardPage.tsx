@@ -116,7 +116,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
 
 export function SessionsDashboardPage() {
   return (
-    <TeacherGate title="내 수업" eyebrow="DORO Live Survey" description="내가 만든 수업을 관리합니다.">
+    <TeacherGate title="내 수업" description="내가 만든 수업을 관리합니다.">
       {(user) => <SessionsDashboardContent ownerUid={user.uid} />}
     </TeacherGate>
   );
