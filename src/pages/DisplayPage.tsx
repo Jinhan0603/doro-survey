@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
@@ -108,14 +109,27 @@ export function DisplayPage() {
   const sessionId = useSessionId();
   // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
   const { user } = usePresenterAuth();
-  const hasTeacherAuth = Boolean(user);
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, {
+  const hasTeacherAuth = Boolean(user) && Boolean(sessionId);
+  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', {
     enabled: hasTeacherAuth,
   });
-  const { answers, error: answersError } = useAnswers(sessionId, hasTeacherAuth ? activeQuestion?.id : undefined);
+  const { answers, error: answersError } = useAnswers(sessionId ?? '', hasTeacherAuth ? activeQuestion?.id : undefined);
 
   if (!firebaseConfigStatus.isConfigured) {
     return <DisplayPreview />;
+  }
+
+  if (!sessionId) {
+    return (
+      <AppShell compact title="발표 화면">
+        <Card className="banner-card">
+          <p>발표할 수업을 먼저 선택하세요.</p>
+          <Link to="/sessions">
+            <Button size="sm">내 수업으로 이동</Button>
+          </Link>
+        </Card>
+      </AppShell>
+    );
   }
 
   let content: ReactNode = null;

@@ -487,9 +487,9 @@ export function StudentPage() {
   const liveEnabled = firebaseConfigStatus.isConfigured;
   const { user, loading: authLoading } = useAuth();
   // Wait for auth before subscribing to Firestore — Firestore rules require isSignedIn()
-  const firestoreEnabled = !authLoading && !!user;
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
-  const { answer: existingAnswer, error: ownAnswerError } = useOwnAnswer(sessionId, activeQuestion?.id, user?.uid);
+  const firestoreEnabled = !authLoading && !!user && Boolean(sessionId);
+  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
+  const { answer: existingAnswer, error: ownAnswerError } = useOwnAnswer(sessionId ?? '', activeQuestion?.id, user?.uid);
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -513,6 +513,16 @@ export function StudentPage() {
 
   if (!liveEnabled) {
     return <StudentPreview />;
+  }
+
+  if (!sessionId) {
+    return (
+      <StudentShell>
+        <Card className="banner-card banner-card--error">
+          유효하지 않은 참여 링크입니다. 강사님이 공유한 링크로 다시 접속해주세요.
+        </Card>
+      </StudentShell>
+    );
   }
 
   const handleConfirmNickname = (name: string) => {

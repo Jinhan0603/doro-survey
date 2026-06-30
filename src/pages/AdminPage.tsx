@@ -12,6 +12,7 @@ import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModerati
 import { defaultSessionId, firebaseConfigStatus } from '../firebase/client';
 import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
 import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
+import { Link } from 'react-router-dom';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
@@ -122,9 +123,9 @@ export function AdminPage() {
   // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
   const { user, role, logout } = usePresenterAuth();
   const { profile } = useUserProfile(user?.uid);
-  const firestoreEnabled = Boolean(user);
-  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId, { enabled: firestoreEnabled });
-  const { answers, error: answersError } = useAnswers(sessionId, activeQuestion?.id);
+  const firestoreEnabled = Boolean(user) && Boolean(sessionId);
+  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
+  const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [seedQuestionSetId, setSeedQuestionSetId] = useState<SeedQuestionSetId>(defaultSeedQuestionSetId);
@@ -132,6 +133,19 @@ export function AdminPage() {
 
   if (!firebaseConfigStatus.isConfigured) {
     return <AdminPreview />;
+  }
+
+  if (!sessionId) {
+    return (
+      <AppShell compact title="Admin 운영 화면">
+        <Card className="banner-card">
+          <p>운영할 수업을 먼저 선택하세요.</p>
+          <Link to="/sessions">
+            <Button size="sm">내 수업으로 이동</Button>
+          </Link>
+        </Card>
+      </AppShell>
+    );
   }
 
   const studentUrl = buildAppUrl('/student', sessionId);
