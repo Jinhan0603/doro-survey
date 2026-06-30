@@ -54,7 +54,6 @@ type CreatedSession = {
   };
 };
 
-const DEFAULT_SESSION_TITLE = 'DORO 직접 질문 세션';
 
 const INPUT_TYPE_HELP: Record<QuestionInputType, string> = {
   choice: '하나만 고르는 투표형 질문입니다.',
@@ -391,7 +390,7 @@ function CreatedSessionLinks({
 
 function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const { profile } = useUserProfile(ownerUid);
-  const [sessionTitle, setSessionTitle] = useState(DEFAULT_SESSION_TITLE);
+  const [sessionTitle, setSessionTitle] = useState('');
   const [drafts, setDrafts] = useState(createInitialDrafts);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -415,6 +414,11 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleCreate = async () => {
+    if (!sessionTitle.trim()) {
+      setError('설문지 이름을 입력하세요.');
+      return;
+    }
+
     const newSessionId = createSessionIdSuggestion();
 
     try {
@@ -424,7 +428,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
       await createCustomQuestionSession({
         sessionId: newSessionId,
-        title: sessionTitle,
+        title: sessionTitle.trim(),
         accepting: true,
         owner: {
           uid: ownerUid,
@@ -445,7 +449,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleReset = () => {
-    setSessionTitle(DEFAULT_SESSION_TITLE);
+    setSessionTitle('');
     setDrafts(createInitialDrafts());
     setError(null);
     setCreatedSession(null);
@@ -456,8 +460,8 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
       <Card className="session-new-card" tone="accent">
         <div className="session-new-grid">
           <Input
-            aria-label="세션 제목"
-            placeholder="세션 제목 (예: AI 도구 실습 1반)"
+            aria-label="설문지 이름"
+            placeholder="설문지 이름을 입력하세요 (예: AI 도구 실습 1반)"
             value={sessionTitle}
             onChange={(event) => setSessionTitle(event.target.value)}
           />
