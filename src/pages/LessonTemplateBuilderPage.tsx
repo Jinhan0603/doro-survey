@@ -940,7 +940,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     <div className="builder-page">
       <div className="builder-toolbar">
         <div className="builder-toolbar__copy">
-          <Badge tone="accent">{templateId ? '템플릿 편집' : '새 템플릿'}</Badge>
           <h2>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h2>
         </div>
         <div className="builder-toolbar__actions">
