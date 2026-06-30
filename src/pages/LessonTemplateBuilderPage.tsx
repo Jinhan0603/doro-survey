@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FileUp, Save } from 'lucide-react';
-import { TeacherGate } from '../components/teacher/TeacherGate';
+import { FileText, FileUp, ListChecks, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { PptxExtractModal } from '../components/builder/PptxExtractModal';
+import '../styles/survey-builder.css';
+import '../styles/template-builder.css';
 // 질문 편집 카드는 설문 만들기 화면과 동일한 소스를 공유한다(한 곳만 고치면 양쪽 반영).
 import { QuestionEditor } from '../components/session/QuestionEditor';
 import {
@@ -69,6 +70,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [generatorMessage, setGeneratorMessage] = useState<string | null>(null);
   const [pptxModalOpen, setPptxModalOpen] = useState(false);
+  // 모바일(≤960px)에서 좌/우 패널을 탭으로 전환한다.
+  const [activePane, setActivePane] = useState<'meta' | 'questions'>('questions');
 
   useEffect(() => {
     if (!templateId) {
@@ -344,144 +347,178 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   if (templateId && error) {
     return (
-      <Card className="banner-card banner-card--error">
-        <h3>템플릿을 열 수 없습니다.</h3>
-        <p>{error}</p>
-      </Card>
+      <main className="templateBuilderPage">
+        <Card className="banner-card banner-card--error">
+          <h3>템플릿을 열 수 없습니다.</h3>
+          <p>{error}</p>
+        </Card>
+      </main>
     );
   }
 
   return (
-    <div className="builder-page">
-      <div className="builder-toolbar">
-        <div className="builder-toolbar__copy">
-          <h2>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h2>
-        </div>
-        <div className="builder-toolbar__actions">
-          {templateId ? (
-            <Link className="builder-link-button" to={`/session-new?template=${templateId}`}>
-              세션 열기
-            </Link>
-          ) : null}
-          <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
-            <FileUp size={16} />
-            PPTX에서 추출하기
-          </Button>
-          <Button disabled={busy || questions.length === 0} size="sm" onClick={() => void handleSave()}>
-            <Save size={16} />
-            {busy ? '저장 중...' : '저장'}
-          </Button>
-        </div>
-      </div>
-
-      <Card className="builder-meta-card">
-        <div className="builder-section-head">
-          <div>
-            <h3>기본 정보</h3>
-          </div>
-        </div>
-
-        <Input
-          label="템플릿 제목"
-          placeholder="예: AI 이미지 생성 실습"
-          value={form.title}
-          onChange={(event) => handleFormPatch({ title: event.target.value })}
-        />
-
-        {canShareTemplate ? (
-          <label className="form-field">
-            <span className="form-label">공개 범위</span>
-            <select
-              className="select-sm"
-              value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
-              onChange={(event) =>
-                handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
-              }
-            >
-              {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        <details className="builder-optional-meta">
-          <summary>추가 정보 (선택)</summary>
-
-          <div className="builder-meta-grid">
-            <Input
-              label="과목 유형"
-              placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
-              value={form.subject}
-              onChange={(event) => handleFormPatch({ subject: event.target.value })}
-            />
-            <Input
-              label="대상 학년"
-              placeholder="예: 초5-중1"
-              value={form.targetGrade}
-              onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
-            />
-            <Input
-              label="사용 툴"
-              placeholder="예: Canva, Scratch, ChatGPT"
-              value={form.toolInput}
-              onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
-            />
-          </div>
-
-          <label className="form-field">
-            <span className="form-label">설명</span>
-            <textarea
-              className="textarea"
-              rows={3}
-              placeholder="수업 목표와 진행 포인트를 적어주세요."
-              value={form.description}
-              onChange={(event) => handleFormPatch({ description: event.target.value })}
-            />
-          </label>
-        </details>
-      </Card>
-
-      <Card className="builder-meta-card">
-        <div className="builder-section-head">
-          <div>
-            <h3>질문 목록</h3>
-          </div>
-          <div className="custom-question-add-row">
-            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
-              + 객관식
+    <main className="templateBuilderPage">
+      <div className="templateBuilderShell">
+        <header className="templateBuilderToolbar">
+          <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
+          <div className="templateBuilderActions">
+            {templateId ? (
+              <Link className="builder-link-button" to={`/session-new?template=${templateId}`}>
+                세션 열기
+              </Link>
+            ) : null}
+            <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
+              <FileUp size={16} />
+              PPTX에서 추출하기
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('text')}>
-              + 주관식
+            <Button disabled={busy || questions.length === 0} size="sm" onClick={() => void handleSave()}>
+              <Save size={16} />
+              {busy ? '저장 중...' : '저장'}
             </Button>
           </div>
+        </header>
+
+        <div className="mobilePaneTabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePane === 'meta'}
+            className={`mobilePaneTab ${activePane === 'meta' ? 'isActive' : ''}`}
+            onClick={() => setActivePane('meta')}
+          >
+            <FileText size={15} />
+            템플릿 정보
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePane === 'questions'}
+            className={`mobilePaneTab ${activePane === 'questions' ? 'isActive' : ''}`}
+            onClick={() => setActivePane('questions')}
+          >
+            <ListChecks size={15} />
+            질문 목록
+          </button>
         </div>
 
-        {questions.length === 0 ? (
-          <div className="builder-empty-state">
-            <p>아직 질문이 없습니다. '+ 객관식' 또는 '+ 주관식'으로 추가하거나 상단 'PPTX에서 추출하기'로 불러오세요.</p>
-          </div>
-        ) : (
-          <div className="questionList">
-            {questions.map((question, index) => (
-              <QuestionEditor
-                key={question.clientId}
-                canDelete
-                draft={question}
-                index={index}
-                onDelete={handleQuestionDelete}
-                onMove={(clientId, direction) => setQuestions((current) => swapDrafts(current, clientId, direction))}
-                onPatch={handleQuestionPatch}
+        <section className="templateBuilderWorkspace" data-active-pane={activePane}>
+          <aside className="templateMetaPanel">
+            <header className="builderPaneHeader">
+              <FileText size={18} />
+              <h2>템플릿 정보</h2>
+            </header>
+
+            <div className="templateMetaScroll">
+              <Input
+                label="템플릿 제목"
+                placeholder="예: AI 이미지 생성 실습"
+                value={form.title}
+                onChange={(event) => handleFormPatch({ title: event.target.value })}
               />
-            ))}
-          </div>
-        )}
-      </Card>
 
-      {saveMessage ? <div className="inline-message">{saveMessage}</div> : null}
-      {saveError ? <div className="inline-message inline-message--error">{saveError}</div> : null}
+              {canShareTemplate ? (
+                <label className="form-field">
+                  <span className="form-label">공개 범위</span>
+                  <select
+                    className="select-sm"
+                    value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
+                    onChange={(event) =>
+                      handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
+                    }
+                  >
+                    {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+
+              <details className="builder-optional-meta">
+                <summary>추가 정보 (선택)</summary>
+
+                <Input
+                  label="과목 유형"
+                  placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
+                  value={form.subject}
+                  onChange={(event) => handleFormPatch({ subject: event.target.value })}
+                />
+                <Input
+                  label="대상 학년"
+                  placeholder="예: 초5-중1"
+                  value={form.targetGrade}
+                  onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
+                />
+                <Input
+                  label="사용 툴"
+                  placeholder="예: Canva, Scratch, ChatGPT"
+                  value={form.toolInput}
+                  onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
+                />
+
+                <label className="form-field">
+                  <span className="form-label">설명</span>
+                  <textarea
+                    className="textarea"
+                    rows={3}
+                    placeholder="수업 목표와 진행 포인트를 적어주세요."
+                    value={form.description}
+                    onChange={(event) => handleFormPatch({ description: event.target.value })}
+                  />
+                </label>
+              </details>
+
+              {saveMessage ? <div className="inline-message">{saveMessage}</div> : null}
+              {saveError ? <div className="inline-message inline-message--error">{saveError}</div> : null}
+            </div>
+          </aside>
+
+          <section className="questionBuilderPanel">
+            <header className="questionBuilderHeader">
+              <div className="builderPaneHeader">
+                <ListChecks size={18} />
+                <h2>질문 목록</h2>
+              </div>
+              <div className="questionAddActions">
+                <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('choice')}>
+                  + 객관식
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => handleAddQuestion('text')}>
+                  + 주관식
+                </Button>
+              </div>
+            </header>
+
+            <div className="questionBuilderScroll">
+              {questions.length === 0 ? (
+                <div className="emptyQuestionState">
+                  <p className="emptyQuestionTitle">아직 질문이 없습니다</p>
+                  <p className="emptyQuestionText">
+                    '+ 객관식' 또는 '+ 주관식'으로 추가하거나 상단 'PPTX에서 추출하기'로 불러오세요.
+                  </p>
+                </div>
+              ) : (
+                <div className="questionList">
+                  {questions.map((question, index) => (
+                    <QuestionEditor
+                      key={question.clientId}
+                      canDelete
+                      draft={question}
+                      index={index}
+                      onDelete={handleQuestionDelete}
+                      onMove={(clientId, direction) =>
+                        setQuestions((current) => swapDrafts(current, clientId, direction))
+                      }
+                      onPatch={handleQuestionPatch}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </section>
+      </div>
 
       <PptxExtractModal
         open={pptxModalOpen}
@@ -501,26 +538,14 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         generatorMessage={generatorMessage}
         onApply={handleApplyGeneratedDrafts}
       />
-    </div>
+    </main>
   );
 }
 
 export function LessonTemplateBuilderPage() {
-  return (
-    <TeacherGate
-      compact
-      loginAside={
-        <Card className="banner-card">
-          <h3>템플릿을 만드는 경우</h3>
-          <ul className="flow-list flow-list--bullet">
-            <li>객관식·주관식 질문을 순서대로 배치합니다.</li>
-            <li>PPTX 슬라이드 텍스트를 읽어 질문 초안을 제안받을 수 있습니다.</li>
-            <li>저장한 템플릿으로 새 운영 세션을 만듭니다.</li>
-          </ul>
-        </Card>
-      }
-    >
-      {(user) => <LessonTemplateBuilderContent ownerUid={user.uid} />}
-    </TeacherGate>
-  );
+  const { user } = usePresenterAuth();
+  if (!user) {
+    return null;
+  }
+  return <LessonTemplateBuilderContent ownerUid={user.uid} />;
 }

@@ -1,0 +1,214 @@
+/* ============================================================
+   설문지 템플릿 빌더(/builder) 좌우 분할형 작업 화면
+   - 페이지는 고정 뷰포트 높이, 바디 스크롤 없음
+   - 좌(템플릿 정보)·우(질문 목록) 패널이 각자 내부 스크롤을 소유
+   ============================================================ */
+.templateBuilderPage {
+  height: calc(100dvh - var(--app-header-height, 72px));
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.14), transparent 34%),
+    radial-gradient(circle at 90% 16%, rgba(147, 197, 253, 0.12), transparent 30%),
+    #f8fafc;
+}
+
+.templateBuilderShell {
+  width: 100%;
+  max-width: 1180px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.templateBuilderToolbar {
+  flex: 0 0 auto;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.templateBuilderToolbar h1 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.6rem, 2.4vw, 1.9rem);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.templateBuilderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.templateBuilderWorkspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 16px;
+  overflow: hidden;
+}
+
+.templateMetaPanel,
+.questionBuilderPanel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.builderPaneHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0b7ff3;
+}
+
+.builderPaneHeader h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.templateMetaPanel > .builderPaneHeader {
+  flex: 0 0 auto;
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.templateMetaScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.builder-optional-meta > * + * {
+  margin-top: 14px;
+}
+
+.questionBuilderHeader {
+  flex: 0 0 auto;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.questionAddActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.questionBuilderScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 18px 22px 22px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.templateMetaScroll::-webkit-scrollbar,
+.questionBuilderScroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.templateMetaScroll::-webkit-scrollbar-track,
+.questionBuilderScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.templateMetaScroll::-webkit-scrollbar-thumb,
+.questionBuilderScroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.templateMetaScroll::-webkit-scrollbar-thumb:hover,
+.questionBuilderScroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.templateMetaScroll,
+.questionBuilderScroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* 모바일 탭: 데스크톱에서는 숨김 */
+.mobilePaneTabs {
+  display: none;
+}
+
+.mobilePaneTab {
+  flex: 1 1 0;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #d4dbe8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mobilePaneTab.isActive {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0b7ff3;
+}
+
+@media (max-width: 960px) {
+  .templateBuilderWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .mobilePaneTabs {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  .templateMetaPanel,
+  .questionBuilderPanel {
+    display: none;
+  }
+
+  .templateBuilderWorkspace[data-active-pane='meta'] .templateMetaPanel {
+    display: flex;
+  }
+
+  .templateBuilderWorkspace[data-active-pane='questions'] .questionBuilderPanel {
+    display: flex;
+  }
+}
