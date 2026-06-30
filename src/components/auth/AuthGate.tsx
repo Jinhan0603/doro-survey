@@ -20,7 +20,7 @@ function CenteredCard({ title, children }: { title: string; children?: ReactNode
         alignItems: 'center',
         justifyContent: 'center',
         padding: 24,
-        background: '#f6f9fe',
+        background: '#f6faff',
       }}
     >
       <div
@@ -35,7 +35,7 @@ function CenteredCard({ title, children }: { title: string; children?: ReactNode
           boxShadow: '0 16px 40px rgba(15, 61, 138, 0.1)',
         }}
       >
-        <h1 style={{ margin: '0 0 12px', fontSize: 22, fontWeight: 800, color: '#1f2937' }}>{title}</h1>
+        <h1 style={{ margin: '0 0 12px', fontSize: 22, fontWeight: 800, color: '#111827' }}>{title}</h1>
         {children}
       </div>
     </div>
@@ -89,7 +89,7 @@ const primaryBtn: React.CSSProperties = {
   width: '100%',
   border: 'none',
   borderRadius: 14,
-  background: '#2f6bff',
+  background: '#2563eb',
   color: '#fff',
   fontSize: 15,
   fontWeight: 700,
