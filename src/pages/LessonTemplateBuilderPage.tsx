@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { ArrowDown, ArrowUp, FileUp, Save, Sparkles, Trash2 } from 'lucide-react';
 import { TeacherGate } from '../components/teacher/TeacherGate';
+import { usePresenterAuth } from '../auth/AuthProvider';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
@@ -74,17 +75,17 @@ type GeneratorOptionsState = {
 const EMPTY_TEMPLATE: TemplateFormState = {
   title: '',
   description: '',
-  subject: '기술 수업',
+  subject: '',
   targetGrade: '',
   toolInput: '',
   templateVisibility: 'private',
 };
 
-const TEMPLATE_VISIBILITY_LABELS: Record<TemplateVisibility, string> = {
-  private: '개인용',
-  org: '조직 공유',
-  shared: '전체 공유',
-};
+// 조직 공유(org)는 제거. 강사는 개인용 고정, 매니저·관리자만 전체 공유를 선택할 수 있다.
+const SHAREABLE_VISIBILITY_LABELS: [TemplateVisibility, string][] = [
+  ['private', '개인용'],
+  ['shared', '전체 공유'],
+];
 
 const DEFAULT_GENERATOR_OPTIONS: GeneratorOptionsState = {
   subjectType: 'mixed',
@@ -578,7 +579,10 @@ function PptxExtractModal({
 function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   const navigate = useNavigate();
   const { templateId } = useParams();
+  const { role } = usePresenterAuth();
   const { profile } = useUserProfile(ownerUid);
+  // 매니저·관리자만 템플릿을 '전체 공유'로 둘 수 있다. 강사는 항상 개인용.
+  const canShareTemplate = role === 'admin' || role === 'manager' || profile?.role === 'admin';
   const { template, slides: loadedSlides, interactions: loadedInteractions, loading, error } = useLessonTemplateDetail(
     templateId,
   );
@@ -807,6 +811,9 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       setSaveMessage(null);
 
       const toolTags = parseToolTags(form.toolInput);
+      // org 제거 + 강사는 개인용 강제. 공유 권한이 있고 전체 공유를 고른 경우만 shared.
+      const resolvedVisibility: TemplateVisibility =
+        canShareTemplate && form.templateVisibility === 'shared' ? 'shared' : 'private';
       let currentTemplateId = templateId;
 
       if (!currentTemplateId) {
@@ -816,7 +823,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           title,
           subject,
           description: form.description,
-          templateVisibility: form.templateVisibility,
+          templateVisibility: resolvedVisibility,
           targetGrade: form.targetGrade,
           toolTags,
           slideCount: sortedSlides.length,
@@ -827,7 +834,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           title,
           subject,
           description: form.description,
-          templateVisibility: form.templateVisibility,
+          templateVisibility: resolvedVisibility,
           targetGrade: form.targetGrade,
           organizationId: profile?.organizationId ?? 'dorossaem',
           toolTags,
@@ -958,22 +965,24 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           />
         </label>
 
-        <label className="form-field">
-          <span className="form-label">공개 범위</span>
-          <select
-            className="select-sm"
-            value={form.templateVisibility}
-            onChange={(event) =>
-              handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
-            }
-          >
-            {(Object.entries(TEMPLATE_VISIBILITY_LABELS) as [TemplateVisibility, string][]).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {canShareTemplate ? (
+          <label className="form-field">
+            <span className="form-label">공개 범위</span>
+            <select
+              className="select-sm"
+              value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
+              onChange={(event) =>
+                handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
+              }
+            >
+              {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </Card>
 
       <Card className="builder-meta-card">
