@@ -48,11 +48,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   };
 
   const handleCreate = async () => {
-    if (!sessionTitle.trim()) {
-      setError('설문지 이름을 입력하세요.');
-      return;
-    }
-
     const newSessionId = createSessionIdSuggestion();
 
     try {
@@ -154,11 +149,11 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
           <button
             type="button"
             className="primaryQrButton"
-            disabled={busy || drafts.length === 0}
+            disabled={busy || !sessionTitle.trim() || drafts.length === 0}
             onClick={() => void handleCreate()}
           >
             <QrCode size={18} />
-            {busy ? '세션 생성 중...' : '학생 QR 생성하기'}
+            {busy ? '생성 중...' : '설문 생성하기'}
           </button>
         </footer>
       </section>
