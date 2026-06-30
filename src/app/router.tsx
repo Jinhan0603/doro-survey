@@ -1,6 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { HashRouter, Outlet, Route, Routes } from 'react-router-dom';
-import { HomePage } from '../pages/HomePage';
+import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthProvider';
 import { AuthGate } from '../components/auth/AuthGate';
 import { AppHeader } from '../components/layout/AppHeader';
@@ -77,7 +76,8 @@ export function AppRouter() {
         <Routes>
           <Route path="/student" element={<StudentPage />} />
           <Route element={<PresenterLayout />}>
-            <Route path="/" element={<HomePage />} />
+            {/* 홈은 별도 마케팅 랜딩 없이 '내 수업' 대시보드로 진입한다. */}
+            <Route path="/" element={<Navigate to="/sessions" replace />} />
             <Route path="/sessions" element={<SessionsDashboardPage />} />
             <Route path="/planner" element={<PlannerPage />} />
             <Route path="/library" element={<LessonTemplateLibraryPage />} />
