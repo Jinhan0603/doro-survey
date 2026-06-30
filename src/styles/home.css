@@ -134,7 +134,7 @@
 }
 .dh-nav a:hover { color: var(--c-blue-500); }
 .dh-nav a.dh-nav--active {
-  background: var(--c-blue-50); color: var(--c-blue-500);
+  color: var(--c-blue-500);
 }
 
 .dh-account {
