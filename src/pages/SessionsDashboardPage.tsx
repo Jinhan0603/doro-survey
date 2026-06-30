@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import type { Timestamp } from 'firebase/firestore';
 import { TeacherGate } from '../components/teacher/TeacherGate';
 import { Card } from '../components/common/Card';
@@ -52,6 +53,12 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
       <div className="builder-toolbar">
         <div className="builder-toolbar__copy">
           <h2>진행 중인 설문</h2>
+        </div>
+        <div className="builder-toolbar__actions">
+          <Link className="builder-link-button" to="/custom-session">
+            <Plus size={16} />
+            새 설문 만들기
+          </Link>
         </div>
       </div>
 
