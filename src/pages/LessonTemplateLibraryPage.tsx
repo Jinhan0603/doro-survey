@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -71,6 +71,9 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyTemplateId, setBusyTemplateId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const requestedId = searchParams.get('selected');
+  const appliedRequestedRef = useRef(false);
   const [filter, setFilter] = useState<'mine' | 'shared'>('mine');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // 모바일(≤960px)에서 목록/정보를 탭으로 전환한다.
@@ -85,15 +88,26 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
   const selected = activeTemplates.find((template) => template.id === selectedId) ?? null;
 
   // 필터/목록이 바뀌면 첫 항목을 자동 선택한다.
+  // 저장 직후 ?selected= 로 진입하면 해당 템플릿을 우선 선택한다(최초 1회).
   useEffect(() => {
     if (activeTemplates.length === 0) {
       setSelectedId(null);
       return;
     }
+    if (
+      requestedId &&
+      !appliedRequestedRef.current &&
+      activeTemplates.some((template) => template.id === requestedId)
+    ) {
+      appliedRequestedRef.current = true;
+      setSelectedId(requestedId);
+      setActivePane('questions');
+      return;
+    }
     if (!activeTemplates.some((template) => template.id === selectedId)) {
       setSelectedId(activeTemplates[0].id);
     }
-  }, [activeTemplates, selectedId]);
+  }, [activeTemplates, selectedId, requestedId]);
 
   const handleDuplicate = async (templateId: string) => {
     try {

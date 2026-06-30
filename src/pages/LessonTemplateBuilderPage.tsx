@@ -325,7 +325,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       ]);
 
       setSaveMessage('템플릿을 저장했습니다.');
-      navigate('/templates');
+      // 저장 후 설문지 템플릿으로 이동하고 방금 저장한 템플릿을 선택한다.
+      navigate(`/templates?selected=${currentTemplateId}`);
     } catch (saveErr) {
       setSaveError(saveErr instanceof Error ? saveErr.message : '템플릿 저장에 실패했습니다.');
     } finally {

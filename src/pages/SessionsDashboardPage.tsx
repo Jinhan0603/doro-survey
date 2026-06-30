@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ClipboardList, Plus } from 'lucide-react';
 import type { Timestamp } from 'firebase/firestore';
 import { Badge } from '../components/common/Badge';
@@ -72,6 +72,9 @@ function SessionDetail({
 
 function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedId = searchParams.get('selected');
+  const appliedRequestedRef = useRef(false);
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -82,15 +85,26 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const selected = sessions.find((session) => session.id === selectedId) ?? null;
 
   // 목록이 바뀌면 첫 항목을 자동 선택한다(삭제 후 선택 유지 포함).
+  // 생성 직후 ?selected= 로 진입하면 해당 설문을 우선 선택한다(최초 1회).
   useEffect(() => {
     if (sessions.length === 0) {
       setSelectedId(null);
       return;
     }
+    if (
+      requestedId &&
+      !appliedRequestedRef.current &&
+      sessions.some((session) => session.id === requestedId)
+    ) {
+      appliedRequestedRef.current = true;
+      setSelectedId(requestedId);
+      setActivePane('questions');
+      return;
+    }
     if (!sessions.some((session) => session.id === selectedId)) {
       setSelectedId(sessions[0].id);
     }
-  }, [sessions, selectedId]);
+  }, [sessions, selectedId, requestedId]);
 
   const copyStudentLink = (id: string) => {
     void navigator.clipboard.writeText(buildAppUrl('/student', id));

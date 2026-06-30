@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { FileText, ListChecks, QrCode } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
-import { CreatedSessionLinks } from '../components/session/CreatedSessionLinks';
-import { buildSessionLinks, type CreatedSession } from '../components/session/sessionLinks';
 import { QuestionEditor } from '../components/session/QuestionEditor';
 import {
   createDraft,
@@ -25,6 +23,7 @@ function createSessionIdSuggestion() {
 }
 
 function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
+  const navigate = useNavigate();
   const { profile } = useUserProfile(ownerUid);
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get('template')?.trim() || undefined;
@@ -35,7 +34,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const [drafts, setDrafts] = useState(createInitialDrafts);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdSession, setCreatedSession] = useState<CreatedSession | null>(null);
 
   // '템플릿으로 설문 제작'으로 진입(?template=)하면 템플릿 내용을 질문 목록에 채운다.
   useEffect(() => {
@@ -84,7 +82,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
     try {
       setBusy(true);
       setError(null);
-      setCreatedSession(null);
 
       await createCustomQuestionSession({
         sessionId: newSessionId,
@@ -97,22 +94,12 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
         questions: drafts.map(toQuestionInput),
       });
 
-      setCreatedSession({
-        sessionId: newSessionId,
-        links: buildSessionLinks(newSessionId),
-      });
+      // 생성 후 진행 중인 설문으로 이동하고 방금 만든 설문을 선택한다.
+      navigate(`/sessions?selected=${newSessionId}`);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : '직접 질문 세션 생성에 실패했습니다.');
-    } finally {
       setBusy(false);
     }
-  };
-
-  const handleReset = () => {
-    setSessionTitle('');
-    setDrafts(createInitialDrafts());
-    setError(null);
-    setCreatedSession(null);
   };
 
   return (
@@ -173,10 +160,6 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
               ))}
             </div>
           )}
-
-          {createdSession ? (
-            <CreatedSessionLinks createdSession={createdSession} onReset={handleReset} />
-          ) : null}
         </div>
 
         <footer className="builderPanelFooter">
