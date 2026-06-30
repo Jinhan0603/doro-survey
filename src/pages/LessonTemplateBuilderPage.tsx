@@ -26,7 +26,6 @@ import {
   saveLessonSlides,
   updateLessonTemplate,
 } from '../firebase/lessonTemplates';
-import { signOutUser } from '../firebase/auth';
 import type {
   InteractionPurpose,
   InteractionType,
@@ -973,12 +972,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         <div className="builder-toolbar__copy">
           <Badge tone="accent">{templateId ? '템플릿 편집' : '새 템플릿'}</Badge>
           <h2>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h2>
-          <p>반복해서 쓸 수업 질문 흐름을 구간별로 설계합니다.</p>
         </div>
         <div className="builder-toolbar__actions">
-          <Button size="sm" variant="ghost" onClick={() => navigate('/library')}>
-            라이브러리
-          </Button>
           {templateId ? (
             <Link className="builder-link-button" to={`/session-new?template=${templateId}`}>
               세션 열기
@@ -994,8 +989,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       <Card className="builder-meta-card">
         <div className="builder-section-head">
           <div>
-            <h3>수업 기본 정보</h3>
-            <p>저장한 템플릿은 라이브러리와 템플릿 세션 열기 화면에서 바로 사용할 수 있습니다.</p>
+            <h3>기본 정보</h3>
           </div>
         </div>
 
@@ -1252,15 +1246,6 @@ export function LessonTemplateBuilderPage() {
   return (
     <TeacherGate
       compact
-      description="반복해서 쓸 수업 질문 흐름을 만들고, 필요하면 PPTX 슬라이드 기준으로 구간을 정리합니다."
-      title="설문지 템플릿 빌더"
-      actions={() => (
-        <div className="hero-actions">
-          <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
-            로그아웃
-          </Button>
-        </div>
-      )}
       loginAside={
         <Card className="banner-card">
           <h3>템플릿을 만드는 경우</h3>
