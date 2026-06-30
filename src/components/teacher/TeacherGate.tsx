@@ -16,7 +16,7 @@ import { AppShell } from '../layout/AppShell';
 import { WaitingState } from '../survey/WaitingState';
 
 type TeacherGateProps = {
-  title: string;
+  title?: string;
   eyebrow?: string;
   description?: string;
   compact?: boolean;

@@ -50,21 +50,6 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <div className="stack">
-      <Card>
-        <div className="section-heading">
-          <h3>새 수업 시작</h3>
-        </div>
-        <p>수업을 만들면 학생 참여 링크가 생성되고, 아래 목록에서 진행·결과 화면을 열 수 있습니다.</p>
-        <div className="hero-actions">
-          <Button size="sm" onClick={() => navigate('/custom-session')}>
-            새 질문으로 시작
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => navigate('/session-new')}>
-            템플릿으로 시작
-          </Button>
-        </div>
-      </Card>
-
       {deleteError ? <Card className="banner-card banner-card--error">{deleteError}</Card> : null}
 
       {loading ? (
@@ -72,11 +57,29 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
       ) : error ? (
         <Card className="banner-card banner-card--error">{error}</Card>
       ) : sessions.length === 0 ? (
+        // 진행 중인 설문이 없으면 시작 카드 없이 안내 메시지만 보여준다.
+        // 새 설문은 상단 헤더의 '설문 만들기'에서 만든다.
         <Card className="banner-card">
           아직 만든 수업이 없습니다. 위에서 새 수업을 만들어보세요.
         </Card>
       ) : (
-        sessions.map((session) => (
+        <>
+          <Card>
+            <div className="section-heading">
+              <h3>새 수업 시작</h3>
+            </div>
+            <p>수업을 만들면 학생 참여 링크가 생성되고, 아래 목록에서 진행·결과 화면을 열 수 있습니다.</p>
+            <div className="hero-actions">
+              <Button size="sm" onClick={() => navigate('/custom-session')}>
+                새 질문으로 시작
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => navigate('/session-new')}>
+                템플릿으로 시작
+              </Button>
+            </div>
+          </Card>
+
+          {sessions.map((session) => (
           <Card key={session.id}>
             <div className="section-heading">
               <h3>{session.title}</h3>
@@ -108,7 +111,8 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               </Button>
             </div>
           </Card>
-        ))
+          ))}
+        </>
       )}
     </div>
   );
@@ -116,7 +120,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
 
 export function SessionsDashboardPage() {
   return (
-    <TeacherGate title="내 수업" description="내가 만든 수업을 관리합니다.">
+    <TeacherGate>
       {(user) => <SessionsDashboardContent ownerUid={user.uid} />}
     </TeacherGate>
   );
