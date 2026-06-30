@@ -1,11 +1,16 @@
 import {
+  collection,
   doc,
   getDoc,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
+  type Timestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { seedQuestions } from '../data/seedQuestions';
@@ -21,6 +26,49 @@ import type {
 } from './types';
 
 export const DEFAULT_SESSION_TITLE = 'DORO 기술 실습 수업';
+
+/** A session document plus its document id, for list/dashboard views. */
+export type SessionSummary = {
+  id: string;
+  title: string;
+  accepting: boolean;
+  showResults: boolean;
+  activeQuestionId: string | null;
+  createdAt?: Timestamp | null;
+};
+
+/** Live list of the sessions owned by a given presenter (newest first). */
+export function subscribeMySessions(
+  ownerUid: string,
+  callback: (sessions: SessionSummary[]) => void,
+  onError?: (error: Error) => void,
+): Unsubscribe {
+  const sessionsQuery = query(
+    collection(requireDb(), 'sessions'),
+    where('ownerUid', '==', ownerUid),
+    orderBy('createdAt', 'desc'),
+  );
+
+  return onSnapshot(
+    sessionsQuery,
+    (snapshot) => {
+      callback(
+        snapshot.docs.map((docSnap) => {
+          const data = docSnap.data() as SessionDoc;
+          return {
+            id: docSnap.id,
+            title: data.title,
+            accepting: data.accepting,
+            showResults: data.showResults,
+            activeQuestionId: data.activeQuestionId,
+            createdAt: data.createdAt ?? null,
+          };
+        }),
+      );
+    },
+    (error) => onError?.(error),
+  );
+}
 
 function getSessionRef(sessionId: string) {
   return doc(requireDb(), 'sessions', sessionId);
