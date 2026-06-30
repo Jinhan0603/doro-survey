@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { FileText, ListChecks, QrCode } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -15,6 +16,7 @@ import {
 import { PHASE_ORDER } from '../data/lessonTemplatePresets';
 import { createCustomQuestionSession } from '../firebase/sessions';
 import type { QuestionInputType } from '../firebase/types';
+import { useLessonTemplateDetail } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
 import '../styles/survey-builder.css';
 
@@ -24,11 +26,40 @@ function createSessionIdSuggestion() {
 
 function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
   const { profile } = useUserProfile(ownerUid);
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get('template')?.trim() || undefined;
+  const { template, interactions: templateInteractions } = useLessonTemplateDetail(templateId);
+  const hydratedTemplateRef = useRef<string | null>(null);
+
   const [sessionTitle, setSessionTitle] = useState('');
   const [drafts, setDrafts] = useState(createInitialDrafts);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdSession, setCreatedSession] = useState<CreatedSession | null>(null);
+
+  // '템플릿으로 설문 제작'으로 진입(?template=)하면 템플릿 내용을 질문 목록에 채운다.
+  useEffect(() => {
+    if (!templateId || !template || hydratedTemplateRef.current === templateId) {
+      return;
+    }
+    hydratedTemplateRef.current = templateId;
+    setSessionTitle(template.title ?? '');
+    setDrafts(
+      [...templateInteractions]
+        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+        .map((interaction) =>
+          createDraft({
+            phase: interaction.phase,
+            title: interaction.title,
+            prompt: interaction.prompt,
+            inputType: interaction.inputType,
+            visibility: interaction.visibility,
+            choicesText: (interaction.choices ?? []).join('\n'),
+            maxLength: interaction.maxLength ?? 300,
+          }),
+        ),
+    );
+  }, [templateId, template, templateInteractions]);
 
   const handlePatch = (clientId: string, patch: Partial<CustomQuestionDraft>) => {
     setDrafts((current) =>

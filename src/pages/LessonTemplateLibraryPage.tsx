@@ -43,9 +43,9 @@ function TemplateDetail({
       ) : null}
 
       <div className="templateDetail__actions">
-        <Link className="builder-link-button" to={`/session-new?template=${template.id}`}>
+        <Link className="builder-link-button" to={`/custom-session?template=${template.id}`}>
           <PlayCircle size={16} />
-          세션 열기
+          템플릿으로 설문 제작
         </Link>
         {editable ? (
           <Link className="builder-link-button builder-link-button--ghost" to={`/custom-template/${template.id}`}>
