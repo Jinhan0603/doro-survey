@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, FileUp, ListChecks, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { Button } from '../components/common/Button';
@@ -325,10 +325,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
       ]);
 
       setSaveMessage('템플릿을 저장했습니다.');
-
-      if (!templateId) {
-        navigate(`/custom-template/${currentTemplateId}`, { replace: true });
-      }
+      navigate('/templates');
     } catch (saveErr) {
       setSaveError(saveErr instanceof Error ? saveErr.message : '템플릿 저장에 실패했습니다.');
     } finally {
@@ -357,11 +354,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         <header className="templateBuilderToolbar">
           <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
           <div className="templateBuilderActions">
-            {templateId ? (
-              <Link className="builder-link-button" to={`/session-new?template=${templateId}`}>
-                세션 열기
-              </Link>
-            ) : null}
             <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
               <FileUp size={16} />
               PPTX에서 추출하기
