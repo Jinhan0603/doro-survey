@@ -95,17 +95,26 @@
 .templateMetaScroll {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 18px 22px 22px;
+  padding: 14px 20px 18px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+}
+
+.templateMetaScroll .builder-optional-meta > summary {
+  margin-bottom: 10px;
 }
 
 .builder-optional-meta > * + * {
-  margin-top: 14px;
+  margin-top: 10px;
+}
+
+/* 템플릿 정보 패널은 컴팩트하게 — 설명 textarea 기본 높이를 낮춘다. */
+.templateMetaScroll .textarea {
+  min-height: 64px;
 }
 
 .questionBuilderHeader {

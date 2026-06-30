@@ -461,7 +461,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
                   <span className="form-label">설명</span>
                   <textarea
                     className="textarea"
-                    rows={3}
+                    rows={2}
                     placeholder="수업 목표와 진행 포인트를 적어주세요."
                     value={form.description}
                     onChange={(event) => handleFormPatch({ description: event.target.value })}
