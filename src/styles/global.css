@@ -2209,6 +2209,26 @@ button:disabled {
   font-weight: 500;
 }
 
+/* 템플릿 카탈로그용 선택 정보: 기본은 접힌 상태로 둔다. */
+.builder-optional-meta {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.builder-optional-meta > summary {
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 0.94rem;
+  font-weight: 600;
+  list-style: revert;
+}
+
+.builder-optional-meta[open] > summary {
+  margin-bottom: 4px;
+}
+
 .builder-upload-card__body {
   display: grid;
   grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);

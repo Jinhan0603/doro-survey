@@ -260,8 +260,8 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     const title = form.title.trim();
     const subject = form.subject.trim();
 
-    if (!title || !subject) {
-      setSaveError('템플릿 제목과 과목 유형을 입력해주세요.');
+    if (!title) {
+      setSaveError('템플릿 제목을 입력해주세요.');
       return;
     }
 
@@ -392,62 +392,67 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           </div>
         </div>
 
-        <div className="builder-meta-grid">
-          <Input
-            label="템플릿 제목"
-            placeholder="예: AI 이미지 생성 실습"
-            value={form.title}
-            onChange={(event) => handleFormPatch({ title: event.target.value })}
-          />
-          <Input
-            label="과목 유형"
-            placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
-            value={form.subject}
-            onChange={(event) => handleFormPatch({ subject: event.target.value })}
-          />
-          <Input
-            label="대상 학년"
-            placeholder="예: 초5-중1"
-            value={form.targetGrade}
-            onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
-          />
-          <Input
-            label="사용 툴"
-            placeholder="예: Canva, Scratch, ChatGPT"
-            value={form.toolInput}
-            onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
-          />
-        </div>
+        <Input
+          label="템플릿 제목"
+          placeholder="예: AI 이미지 생성 실습"
+          value={form.title}
+          onChange={(event) => handleFormPatch({ title: event.target.value })}
+        />
 
-        <label className="form-field">
-          <span className="form-label">설명</span>
-          <textarea
-            className="textarea"
-            rows={3}
-            placeholder="수업 목표와 진행 포인트를 적어주세요."
-            value={form.description}
-            onChange={(event) => handleFormPatch({ description: event.target.value })}
-          />
-        </label>
+        <details className="builder-optional-meta">
+          <summary>추가 정보 (선택)</summary>
 
-        {canShareTemplate ? (
+          <div className="builder-meta-grid">
+            <Input
+              label="과목 유형"
+              placeholder="예: 인공지능, 로봇, 피지컬 컴퓨팅"
+              value={form.subject}
+              onChange={(event) => handleFormPatch({ subject: event.target.value })}
+            />
+            <Input
+              label="대상 학년"
+              placeholder="예: 초5-중1"
+              value={form.targetGrade}
+              onChange={(event) => handleFormPatch({ targetGrade: event.target.value })}
+            />
+            <Input
+              label="사용 툴"
+              placeholder="예: Canva, Scratch, ChatGPT"
+              value={form.toolInput}
+              onChange={(event) => handleFormPatch({ toolInput: event.target.value })}
+            />
+          </div>
+
           <label className="form-field">
-            <span className="form-label">공개 범위</span>
-            <select
-              className="select-sm"
-              value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
-              onChange={(event) =>
-                handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
-              }
-            >
-              {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            <span className="form-label">설명</span>
+            <textarea
+              className="textarea"
+              rows={3}
+              placeholder="수업 목표와 진행 포인트를 적어주세요."
+              value={form.description}
+              onChange={(event) => handleFormPatch({ description: event.target.value })}
+            />
           </label>
-        ) : null}
+
+          {canShareTemplate ? (
+            <label className="form-field">
+              <span className="form-label">공개 범위</span>
+              <select
+                className="select-sm"
+                value={form.templateVisibility === 'shared' ? 'shared' : 'private'}
+                onChange={(event) =>
+                  handleFormPatch({ templateVisibility: event.target.value as TemplateVisibility })
+                }
+              >
+                {SHAREABLE_VISIBILITY_LABELS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </details>
       </Card>
 
       <Card className="builder-meta-card">
