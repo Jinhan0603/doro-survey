@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
-import { ExternalLink, Link2, MonitorPlay, PencilLine, PlayCircle, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
+import { ExternalLink, Link2, MonitorPlay, PlayCircle, QrCode, ShieldCheck, Smartphone } from 'lucide-react';
 import { TeacherGate } from '../components/teacher/TeacherGate';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
@@ -9,7 +9,6 @@ import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { QrPanel } from '../components/admin/QrPanel';
 import { createSessionFromLessonTemplate } from '../firebase/lessonTemplates';
-import { signOutUser } from '../firebase/auth';
 import { useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { buildAppUrl, buildHashPath } from '../utils/urls';
@@ -35,7 +34,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
     profile?.organizationId ?? 'dorossaem',
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplateId);
-  const [sessionId, setSessionId] = useState(createSessionIdSuggestion());
+  const [sessionId] = useState(createSessionIdSuggestion);
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,10 +94,6 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
     <div className="session-new-page">
       <Card className="session-new-card" tone="accent">
         <div className="builder-section-head">
-          <div>
-            <h3>템플릿으로 세션 열기</h3>
-            <p>저장된 설문지 템플릿을 실제 운영용 세션으로 바꿉니다. 생성 후 학생 QR과 운영 링크가 만들어집니다.</p>
-          </div>
           <Badge tone="accent">{selectedTemplate ? '템플릿 선택됨' : '템플릿 필요'}</Badge>
         </div>
 
@@ -119,12 +114,6 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
             </select>
           </label>
           <Input
-            label="sessionId"
-            placeholder="예: ai-image-lab-0421"
-            value={sessionId}
-            onChange={(event) => setSessionId(event.target.value.trim().toLowerCase())}
-          />
-          <Input
             label="설문 제목"
             placeholder="예: AI 이미지 생성 실습 1반"
             value={title}
@@ -133,9 +122,6 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
         </div>
 
         <div className="session-new-actions">
-          <Button size="sm" variant="secondary" onClick={() => setSessionId(createSessionIdSuggestion())}>
-            ID 다시 만들기
-          </Button>
           <Button disabled={busy || loading} onClick={() => void handleCreate()}>
             <PlayCircle size={16} />
             {busy ? '세션 생성 중...' : '템플릿으로 세션 만들기'}
@@ -226,33 +212,7 @@ function LessonSessionContent({ ownerUid }: { ownerUid: string }) {
 
 export function NewLessonSessionPage() {
   return (
-    <TeacherGate
-      compact
-      description="저장된 설문지 템플릿을 실제 운영 세션으로 바꾸고 학생 QR, Admin, Display 링크를 생성합니다."
-      eyebrow="DORO Session"
-      title="템플릿 세션 열기"
-      actions={() => (
-        <div className="hero-actions">
-          <Link className="builder-link-button" to="/custom-session">
-            <PencilLine size={16} />
-            직접 질문 만들기
-          </Link>
-          <Button size="sm" variant="ghost" onClick={() => { void signOutUser(); }}>
-            로그아웃
-          </Button>
-        </div>
-      )}
-      loginAside={
-        <Card className="banner-card">
-          <h3>템플릿 세션 생성</h3>
-          <ol className="flow-list">
-            <li>설문지 템플릿을 하나 고릅니다.</li>
-            <li>sessionId와 설문 제목을 입력합니다.</li>
-            <li>생성 후 QR과 운영 링크를 사용합니다.</li>
-          </ol>
-        </Card>
-      }
-    >
+    <TeacherGate compact>
       {(user) => <LessonSessionContent ownerUid={user.uid} />}
     </TeacherGate>
   );

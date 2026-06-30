@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
+import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PlayCircle } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
@@ -168,10 +168,6 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           <Link className="builder-link-button builder-link-button--ghost" to="/session-new">
             <PlayCircle size={16} />
             템플릿 세션 열기
-          </Link>
-          <Link className="builder-link-button builder-link-button--ghost" to="/custom-session">
-            <PencilLine size={16} />
-            직접 질문 만들기
           </Link>
         </div>
       </Card>
