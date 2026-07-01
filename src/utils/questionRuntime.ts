@@ -1,7 +1,13 @@
+import { nanoid } from 'nanoid';
 import type { AnswerDoc, QuestionDoc, QuestionInputType, ResultVisibility } from '../firebase/types';
 
 export const STATUS_OPTIONS = ['ready', 'doing', 'done', 'need_help'] as const;
 export const SCALE_OPTIONS = ['1', '2', '3', '4', '5'] as const;
+
+/** 선택지 고유 id를 생성한다(질문 doc의 choiceIds / 응답의 answerChoiceId에 사용). */
+export function makeChoiceId(): string {
+  return `c-${nanoid(8)}`;
+}
 
 export function getQuestionInputType(
   question: Pick<QuestionDoc, 'type' | 'inputType'>,

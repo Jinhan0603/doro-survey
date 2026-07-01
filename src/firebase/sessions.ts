@@ -16,6 +16,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { requireDb } from './client';
+import { makeChoiceId } from '../utils/questionRuntime';
 import type {
   InteractionPurpose,
   InteractionType,
@@ -137,6 +138,8 @@ export type CustomSessionQuestionInput = {
   visibility: ResultVisibility;
   phase?: LessonPhase;
   choices?: string[];
+  // choices와 인덱스 정렬된 기존 선택지 id(편집 시 유지). 없으면 저장 시 생성된다.
+  choiceIds?: string[];
   maxLength?: number;
 };
 
@@ -169,28 +172,47 @@ function normalizeCustomSessionId(rawSessionId: string) {
   return sessionId;
 }
 
-function sanitizeChoices(inputType: QuestionInputType, choices: string[] | undefined) {
-  const cleanedChoices = (choices ?? [])
-    .map((choice) => choice.trim())
-    .filter(Boolean)
-    .slice(0, 20);
+/**
+ * 선택지 텍스트와 고유 id를 lockstep으로 정리한다. 빈 텍스트는 id와 함께 제거하고,
+ * id가 없는 자리는 새로 생성한다. scale/status 기본 선택지에도 id를 부여한다.
+ */
+function sanitizeChoicesWithIds(
+  inputType: QuestionInputType,
+  choices: string[] | undefined,
+  choiceIds: string[] | undefined,
+): { choices: string[]; choiceIds: string[] } {
+  const paired: { text: string; id: string }[] = [];
+  (choices ?? []).forEach((choice, index) => {
+    const text = choice.trim();
+    if (!text) return;
+    paired.push({ text, id: choiceIds?.[index]?.trim() || makeChoiceId() });
+  });
+  const cleaned = paired.slice(0, 20);
+
+  const withDefaults = (defaults: readonly string[]) =>
+    cleaned.length > 0 ? cleaned : defaults.map((text) => ({ text, id: makeChoiceId() }));
+
+  const split = (list: { text: string; id: string }[]) => ({
+    choices: list.map((item) => item.text),
+    choiceIds: list.map((item) => item.id),
+  });
 
   if (inputType === 'scale') {
-    return cleanedChoices.length > 0 ? cleanedChoices : DEFAULT_SCALE_CHOICES;
+    return split(withDefaults(DEFAULT_SCALE_CHOICES));
   }
 
   if (inputType === 'status') {
-    return cleanedChoices.length > 0 ? cleanedChoices : DEFAULT_STATUS_CHOICES;
+    return split(withDefaults(DEFAULT_STATUS_CHOICES));
   }
 
   if (inputType === 'choice' || inputType === 'multi') {
-    if (cleanedChoices.length < 2) {
+    if (cleaned.length < 2) {
       throw new Error('객관식/복수 선택 질문은 선택지를 2개 이상 입력해주세요.');
     }
-    return cleanedChoices;
+    return split(cleaned);
   }
 
-  return [];
+  return { choices: [], choiceIds: [] };
 }
 
 export function inferInteractionType(phase: LessonPhase, inputType: QuestionInputType): InteractionType {
@@ -221,13 +243,20 @@ function normalizeCustomQuestion(question: CustomSessionQuestionInput, index: nu
     throw new Error(`Q${index + 1} 질문 문구를 입력해주세요.`);
   }
 
+  const { choices, choiceIds } = sanitizeChoicesWithIds(
+    question.inputType,
+    question.choices,
+    question.choiceIds,
+  );
+
   return {
     id: `q${String(index + 1).padStart(2, '0')}`,
     order: index + 1,
     type: question.inputType === 'text' ? 'text' : 'choice',
     title,
     prompt,
-    choices: sanitizeChoices(question.inputType, question.choices),
+    choices,
+    choiceIds,
     maxLength,
     visible: true,
     phase,
