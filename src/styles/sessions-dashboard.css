@@ -382,60 +382,69 @@
 .sessionDetailBody {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 24px 28px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
+  gap: 14px;
+  /* 본문 자체는 스크롤하지 않는다. 넘치면 질문 미리보기 리스트만 내부 스크롤한다. */
+  overflow: hidden;
 }
 
-.sessionDetailBody::-webkit-scrollbar,
+.questionPreviewList::-webkit-scrollbar,
 .sessionListScroll::-webkit-scrollbar {
   width: 8px;
 }
 
-.sessionDetailBody::-webkit-scrollbar-track,
+.questionPreviewList::-webkit-scrollbar-track,
 .sessionListScroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sessionDetailBody::-webkit-scrollbar-thumb,
+.questionPreviewList::-webkit-scrollbar-thumb,
 .sessionListScroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
 }
 
-.sessionDetailBody::-webkit-scrollbar-thumb:hover,
+.questionPreviewList::-webkit-scrollbar-thumb:hover,
 .sessionListScroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.sessionDetailBody,
+.questionPreviewList,
 .sessionListScroll {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
 
+/* 학생 입장 카드 아래 2열(질문 미리보기 | 요약)이 본문 남은 높이를 채운다. */
 .sessionDetailGrid {
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 20px;
-  align-items: start;
+  gap: 16px;
+  align-items: stretch;
 }
 
 .sessionDetailMain,
 .sessionDetailAside {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* 요약 카드는 늘어나지 않고 상단에 자연 높이로 둔다. */
+.sessionDetailAside {
+  align-self: start;
+}
+
 /* 학생 입장 카드 */
 .studentEntryCard {
-  padding: 20px;
+  flex: 0 0 auto;
+  padding: 18px 20px;
   border: 1px solid #dbe3ef;
   border-radius: 18px;
   background: #ffffff;
@@ -574,8 +583,8 @@
 }
 
 .summaryTile {
-  min-height: 92px;
-  padding: 14px;
+  min-height: 82px;
+  padding: 13px 14px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -614,10 +623,18 @@
 
 /* 질문 미리보기 */
 .questionPreviewSection {
-  padding: 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
   border: 1px solid #dbe3ef;
   border-radius: 18px;
   background: #ffffff;
+}
+
+.questionPreviewSection .sectionTitleRow {
+  flex: 0 0 auto;
 }
 
 .sectionTitleRow {
@@ -643,10 +660,19 @@
 }
 
 .questionPreviewList {
+  flex: 1 1 auto;
+  min-height: 0;
   margin-top: 14px;
+  padding-right: 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.questionPreviewCard {
+  flex: 0 0 auto;
 }
 
 .questionPreviewCard {
@@ -810,8 +836,32 @@
     grid-template-columns: 300px minmax(0, 1fr);
   }
 
+  /* 스택되면 본문 전체가 정상 스크롤(내부 스크롤 해제). */
+  .sessionDetailBody {
+    overflow-y: auto;
+  }
+
   .sessionDetailGrid {
+    flex: 0 0 auto;
+    min-height: auto;
     grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .sessionDetailMain,
+  .sessionDetailAside {
+    min-height: auto;
+  }
+
+  .questionPreviewSection {
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+
+  .questionPreviewList {
+    min-height: auto;
+    overflow: visible;
+    padding-right: 0;
   }
 }
 
