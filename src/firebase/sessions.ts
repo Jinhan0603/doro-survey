@@ -374,6 +374,37 @@ export async function openQuestionExclusively(
   await batch.commit();
 }
 
+/**
+ * 결과 공개(응답 열림과 상호배타). 모든 질문의 응답을 닫고(open=false, accepting=false),
+ * 대상 질문을 결과 공개 대상(resultQuestionId)으로 지정한다.
+ * → 어떤 질문도 '응답 열림'이면서 '결과 공개'일 수 없다. 상태를 가진 질문은 항상 최대 1개.
+ */
+export async function publishQuestionResult(
+  sessionId: string,
+  questionId: string,
+  allQuestionIds: string[],
+) {
+  const batch = writeBatch(requireDb());
+  allQuestionIds.forEach((id) => {
+    batch.update(getQuestionRef(sessionId, id), {
+      open: false,
+      updatedAt: serverTimestamp(),
+    });
+  });
+  batch.update(getSessionRef(sessionId), {
+    accepting: false,
+    showResults: true,
+    resultQuestionId: questionId,
+    updatedAt: serverTimestamp(),
+  });
+  await batch.commit();
+}
+
+/** 결과 공개를 해제한다(상태 없음으로 되돌림). */
+export async function unpublishQuestionResult(sessionId: string) {
+  await updateSession(sessionId, { showResults: false, resultQuestionId: null });
+}
+
 /** 현재 열린 질문을 닫는다. 질문 open=false, 세션 accepting=false, 결과 비공개로 리셋. */
 export async function closeQuestion(sessionId: string, questionId: string) {
   const batch = writeBatch(requireDb());

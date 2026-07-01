@@ -127,6 +127,17 @@ export function StudentPage() {
       return null;
     }
 
+    // 결과가 공개된 상태(응답 열림과 상호배타)면 발표 화면 안내만 띄운다.
+    // 결과는 발표 화면(프로젝터) 전용이므로 학생 화면에는 집계를 노출하지 않는다.
+    if (session.showResults && session.resultQuestionId) {
+      return (
+        <WaitingState
+          description="앞에 있는 발표 화면에서 결과를 확인하세요."
+          title="결과가 공개되었습니다"
+        />
+      );
+    }
+
     // 단일-오픈: 지금 응답이 열린 그 질문 하나만 학생에게 노출한다.
     const accepting = session.accepting ?? false;
     const openQuestion = questions.find((question) => (question.open ?? false) && accepting) ?? null;
@@ -140,18 +151,7 @@ export function StudentPage() {
       );
     }
 
-    // 결과가 공개되면 학생 화면에는 집계를 띄우지 않는다(개별 답변 노출 방지).
-    // 결과는 발표 화면(프로젝터) 전용이므로 앞 화면을 보라고 안내한다.
-    if (session.showResults) {
-      return (
-        <WaitingState
-          description="앞에 있는 발표 화면에서 결과를 확인하세요."
-          title="결과가 공개되었습니다"
-        />
-      );
-    }
-
-    // 결과 공개 전에는 열린 그 질문의 응답 폼만 표시한다.
+    // 열린 그 질문의 응답 폼을 표시한다.
     return (
       <LiveQuestionForm
         key={openQuestion.id}

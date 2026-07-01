@@ -13,7 +13,13 @@ import {
   deleteAnswersForSession,
 } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
-import { closeQuestion, openQuestionExclusively, updateSession } from '../firebase/sessions';
+import {
+  closeQuestion,
+  openQuestionExclusively,
+  publishQuestionResult,
+  unpublishQuestionResult,
+  updateSession,
+} from '../firebase/sessions';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
@@ -169,17 +175,19 @@ export function AdminPage() {
   };
 
   const handleToggleResultVisibility = () => {
-    // 결과 공개/비공개는 현재 선택한 질문에 대해 수행한다(응답 마감 여부와 무관).
     if (!activeQuestion || !canPublishResult) return;
-    const nextVisible = !isResultVisible;
+    if (isResultVisible) {
+      void runAdminAction(
+        () => unpublishQuestionResult(sessionId),
+        '결과를 비공개로 전환했습니다.',
+      );
+      return;
+    }
+    // 결과 공개는 응답 열림과 상호배타 — 공개하면 모든 질문의 응답이 자동으로 마감된다.
+    const allQuestionIds = questions.map((question) => question.id);
     void runAdminAction(
-      () =>
-        updateSession(sessionId, {
-          showResults: nextVisible,
-          // 공개 대상 질문을 함께 기록해, 다른 질문으로 전환해도 결과가 새지 않게 한다.
-          resultQuestionId: nextVisible ? activeQuestion.id : null,
-        }),
-      nextVisible ? '결과를 공개했습니다.' : '결과를 비공개로 전환했습니다.',
+      () => publishQuestionResult(sessionId, activeQuestion.id, allQuestionIds),
+      '결과를 공개했습니다. 응답은 자동으로 마감됩니다.',
     );
   };
 
