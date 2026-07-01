@@ -13,7 +13,7 @@ import {
   deleteAnswersForSession,
 } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
-import { setQuestionOpen, updateSession } from '../firebase/sessions';
+import { closeQuestion, openQuestionExclusively, updateSession } from '../firebase/sessions';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
@@ -90,12 +90,19 @@ export function AdminPage() {
   const currentText = activeQuestion?.prompt?.trim() || '질문 문장이 없습니다.';
   const activeResponseCount = answers.length;
 
-  // 응답 상태 = 현재 질문 open && 세션 accepting. 결과 상태 = 세션 showResults.
-  const isResponseOpen = Boolean(activeQuestion?.open) && Boolean(session?.accepting);
-  const isResultVisible = Boolean(session?.showResults);
-  const canPublishResult = activeQuestion
-    ? getQuestionResultVisibility(activeQuestion) === 'public'
-    : false;
+  // 단일-오픈 모델: 지금 응답이 열린 질문은 세션 전체에서 최대 1개다.
+  const openQuestion =
+    questions.find((question) => (question.open ?? false) && Boolean(session?.accepting)) ?? null;
+  // 결과 공개·응답 상태는 '현재 열린 그 질문'에 대해서만 유효하다.
+  const isActiveTheOpenOne = Boolean(
+    activeQuestion && openQuestion && activeQuestion.id === openQuestion.id,
+  );
+  const isResponseOpen = isActiveTheOpenOne;
+  const isResultVisible = isActiveTheOpenOne && Boolean(session?.showResults);
+  const canPublishResult =
+    isActiveTheOpenOne && activeQuestion
+      ? getQuestionResultVisibility(activeQuestion) === 'public'
+      : false;
 
   const getRowCount = (questionId: string) =>
     questionId === activeQuestion?.id ? activeResponseCount : questionCounts[questionId] ?? 0;
@@ -114,32 +121,30 @@ export function AdminPage() {
 
   const handleSelectQuestion = (questionId: string) => {
     if (questionId === activeQuestion?.id) return;
-    // 다른 질문으로 전환하면 결과 공개를 초기화한다 — 한 번에 한 질문만 결과 공개 상태를 유지한다.
-    void runAdminAction(() =>
-      updateSession(sessionId, { activeQuestionId: questionId, showResults: false }),
-    );
+    // 목록에서 질문을 고르는 건 '보기/조작 대상' 전환일 뿐, 열림/결과 공개 상태는 건드리지 않는다.
+    void runAdminAction(() => updateSession(sessionId, { activeQuestionId: questionId }));
   };
 
   const handleToggleResponseCollection = () => {
     if (!activeQuestion) return;
     if (isResponseOpen) {
       void runAdminAction(
-        () => setQuestionOpen(sessionId, activeQuestion.id, false),
+        () => closeQuestion(sessionId, activeQuestion.id),
         '현재 질문의 응답을 마감했습니다.',
       );
       return;
     }
-    // 열 때는 질문 open과 세션 accepting을 함께 보장해 학생 게이트를 확실히 연다.
-    void runAdminAction(async () => {
-      await setQuestionOpen(sessionId, activeQuestion.id, true);
-      if (!session?.accepting) {
-        await updateSession(sessionId, { accepting: true });
-      }
-    }, '현재 질문의 응답을 다시 열었습니다.');
+    // 단일-오픈: 이 질문만 열고 나머지는 자동으로 닫는다. 결과 공개도 초기화된다.
+    const allQuestionIds = questions.map((question) => question.id);
+    void runAdminAction(
+      () => openQuestionExclusively(sessionId, activeQuestion.id, allQuestionIds),
+      '이 질문의 응답을 열었습니다. 다른 질문은 자동으로 닫혔습니다.',
+    );
   };
 
   const handleToggleResultVisibility = () => {
-    if (!activeQuestion || !canPublishResult) return;
+    // 결과 공개/비공개는 '지금 열린 그 질문'에 대해서만 가능하다.
+    if (!activeQuestion || !isActiveTheOpenOne || !canPublishResult) return;
     void runAdminAction(
       () => updateSession(sessionId, { showResults: !isResultVisible }),
       isResultVisible ? '결과를 비공개로 전환했습니다.' : '결과를 공개했습니다.',
@@ -211,6 +216,7 @@ export function AdminPage() {
               ) : (
                 questions.map((question, index) => {
                   const isSelected = question.id === activeQuestion?.id;
+                  const isOpenRow = question.id === openQuestion?.id;
                   const typeLabel = getQuestionTypeLabel(question);
                   return (
                     <button
@@ -225,6 +231,7 @@ export function AdminPage() {
                         <strong>{question.title || typeLabel}</strong>
                         <span>
                           {typeLabel} · 응답 {getRowCount(question.id)}개
+                          {isOpenRow ? ' · 열림' : ''}
                         </span>
                       </span>
                     </button>
@@ -319,13 +326,21 @@ export function AdminPage() {
                   disabled={busy || !activeQuestion}
                   onClick={handleToggleResponseCollection}
                 >
-                  {isResponseOpen ? '응답 마감하기' : '응답 다시 열기'}
+                  {isResponseOpen ? '응답 마감하기' : '응답 열기'}
                 </button>
                 <button
                   type="button"
                   className="secondaryOperationButton"
                   disabled={busy || !activeQuestion || !canPublishResult}
-                  title={!canPublishResult ? '이 질문은 결과를 공개할 수 없는 설정입니다.' : undefined}
+                  title={
+                    !activeQuestion
+                      ? undefined
+                      : !isActiveTheOpenOne
+                        ? '응답을 먼저 열어야 결과를 공개할 수 있습니다.'
+                        : !canPublishResult
+                          ? '이 질문은 결과를 공개할 수 없는 설정입니다.'
+                          : undefined
+                  }
                   onClick={handleToggleResultVisibility}
                 >
                   {isResultVisible ? '결과 비공개로 전환' : '결과 공개하기'}

@@ -11,7 +11,7 @@ import { WaitingState } from '../components/survey/WaitingState';
 import { LiveQuestionForm } from '../components/student/LiveQuestionForm';
 import { NicknameOnboarding } from '../components/student/NicknameOnboarding';
 import { StudentPreview } from '../components/student/StudentPreview';
-import { StudentQuestionList } from '../components/student/StudentQuestionList';
+import { StudentQuestionResults } from '../components/student/StudentQuestionResults';
 import { StudentShell } from '../components/student/StudentShell';
 
 const NICKNAME_STORAGE_KEY = 'doro-live-survey.nickname';
@@ -33,7 +33,6 @@ export function StudentPage() {
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -79,10 +78,6 @@ export function StudentPage() {
     );
   }
 
-  const selectedQuestion = selectedQuestionId
-    ? questions.find((question) => question.id === selectedQuestionId) ?? null
-    : null;
-
   const liveContent = (() => {
     if (authLoading || loading) {
       return null;
@@ -114,43 +109,11 @@ export function StudentPage() {
       return null;
     }
 
-    // 답변 뷰: 목록에서 고른 질문. 실시간으로 닫히면 안내로 전환한다.
-    if (selectedQuestion) {
-      const isOpen = (selectedQuestion.open ?? false) && (session.accepting ?? false);
-      return (
-        <div className="student-answer-view">
-          <button
-            type="button"
-            className="student-back"
-            onClick={() => setSelectedQuestionId(null)}
-          >
-            ← 질문 목록으로
-          </button>
-          {isOpen ? (
-            <LiveQuestionForm
-              key={selectedQuestion.id}
-              existingAnswer={ownAnswers[selectedQuestion.id] ?? null}
-              nickname={nickname}
-              question={selectedQuestion}
-              sessionId={sessionId}
-              uid={user.uid}
-            />
-          ) : (
-            <WaitingState
-              description="강사님이 이 질문을 다시 열면 답변할 수 있습니다."
-              title="지금은 닫힌 질문입니다"
-            />
-          )}
-        </div>
-      );
-    }
-
-    // 목록 뷰: 지금 응답 수집 중(질문 open && 세션 accepting)인 질문만 동적으로 보여준다.
-    // 강사가 응답을 마감하면 해당 질문은 목록에서 사라진다.
+    // 단일-오픈: 지금 응답이 열린 그 질문 하나만 학생에게 노출한다.
     const accepting = session.accepting ?? false;
-    const openQuestions = questions.filter((question) => (question.open ?? false) && accepting);
+    const openQuestion = questions.find((question) => (question.open ?? false) && accepting) ?? null;
 
-    if (openQuestions.length === 0) {
+    if (!openQuestion) {
       return (
         <WaitingState
           description="강사님이 질문을 열면 이곳에 자동으로 표시됩니다."
@@ -159,12 +122,20 @@ export function StudentPage() {
       );
     }
 
+    // 결과가 공개되면 폼 대신 그 질문의 결과를 보여준다.
+    if (session.showResults) {
+      return <StudentQuestionResults question={openQuestion} sessionId={sessionId} />;
+    }
+
+    // 결과 공개 전에는 열린 그 질문의 응답 폼만 표시한다.
     return (
-      <StudentQuestionList
-        accepting={accepting}
-        ownAnswers={ownAnswers}
-        questions={openQuestions}
-        onSelect={(questionId) => setSelectedQuestionId(questionId)}
+      <LiveQuestionForm
+        key={openQuestion.id}
+        existingAnswer={ownAnswers[openQuestion.id] ?? null}
+        nickname={nickname}
+        question={openQuestion}
+        sessionId={sessionId}
+        uid={user.uid}
       />
     );
   })();

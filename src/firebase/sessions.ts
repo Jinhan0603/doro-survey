@@ -338,6 +338,47 @@ export async function setQuestionOpen(sessionId: string, questionId: string, ope
   });
 }
 
+/**
+ * 한 번에 한 질문만 응답을 여는 단일-오픈 모델.
+ * 대상 질문만 open=true로 열고 나머지는 모두 닫는다. 세션은 accepting=true,
+ * activeQuestionId=대상, showResults=false(결과는 항상 비공개로 리셋)로 맞춘다.
+ */
+export async function openQuestionExclusively(
+  sessionId: string,
+  questionId: string,
+  allQuestionIds: string[],
+) {
+  const batch = writeBatch(requireDb());
+  allQuestionIds.forEach((id) => {
+    batch.update(getQuestionRef(sessionId, id), {
+      open: id === questionId,
+      updatedAt: serverTimestamp(),
+    });
+  });
+  batch.update(getSessionRef(sessionId), {
+    accepting: true,
+    activeQuestionId: questionId,
+    showResults: false,
+    updatedAt: serverTimestamp(),
+  });
+  await batch.commit();
+}
+
+/** 현재 열린 질문을 닫는다. 질문 open=false, 세션 accepting=false, 결과 비공개로 리셋. */
+export async function closeQuestion(sessionId: string, questionId: string) {
+  const batch = writeBatch(requireDb());
+  batch.update(getQuestionRef(sessionId, questionId), {
+    open: false,
+    updatedAt: serverTimestamp(),
+  });
+  batch.update(getSessionRef(sessionId), {
+    accepting: false,
+    showResults: false,
+    updatedAt: serverTimestamp(),
+  });
+  await batch.commit();
+}
+
 /** 편집 시 질문 draft. questionId가 있으면 기존 질문(응답 보존), 없으면 새 질문. */
 export type EditCustomSessionQuestionInput = CustomSessionQuestionInput & {
   questionId?: string;

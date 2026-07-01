@@ -199,6 +199,17 @@ service cloud.firestore {
         && questionDoc(sessionId, questionId).data.get('open', false) == true;
     }
 
+    // 결과 공개된 '지금 열린 그 질문'의 답변만 학생(익명 포함)이 읽을 수 있게 한다.
+    // 공개 대상 = 세션 showResults && accepting 이고, 이 질문이 열린(open) 질문.
+    // (앱의 openQuestion 정의 open && accepting 과 동일하게 맞춰 activeQuestionId 이동과 무관하게 한다.)
+    function questionResultsPublished(sessionId, questionId) {
+      return exists(/databases/$(database)/documents/sessions/$(sessionId))
+        && sessionDoc(sessionId).data.get('showResults', false) == true
+        && sessionDoc(sessionId).data.get('accepting', false) == true
+        && exists(/databases/$(database)/documents/sessions/$(sessionId)/questions/$(questionId))
+        && questionDoc(sessionId, questionId).data.get('open', false) == true;
+    }
+
     function studentCreatesAnswer(sessionId, questionId, uid) {
       return isOwnAnswer(uid)
         && sessionAcceptsStudentAnswer(sessionId, questionId)
@@ -291,7 +302,10 @@ service cloud.firestore {
         allow create, update, delete: if isAdmin() || isSessionOwner(sessionId);
 
         match /answers/{uid} {
-          allow read: if isAdmin() || isOwnAnswer(uid) || isSessionOwner(sessionId);
+          allow read: if isAdmin()
+            || isOwnAnswer(uid)
+            || isSessionOwner(sessionId)
+            || questionResultsPublished(sessionId, questionId);
           allow create: if isAdmin() || studentCreatesAnswer(sessionId, questionId, uid);
           allow update: if isAdmin() || studentUpdatesAnswer(sessionId, questionId, uid);
           allow delete: if isAdmin() || isSessionOwner(sessionId);

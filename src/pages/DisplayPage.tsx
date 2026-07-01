@@ -109,10 +109,16 @@ export function DisplayPage() {
   // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
   const { user } = usePresenterAuth();
   const hasTeacherAuth = Boolean(user) && Boolean(sessionId);
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', {
+  const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', {
     enabled: hasTeacherAuth,
   });
-  const { answers, error: answersError } = useAnswers(sessionId ?? '', hasTeacherAuth ? activeQuestion?.id : undefined);
+  // 단일-오픈 모델: 발표 화면은 지금 응답이 열린 그 질문을 따라간다.
+  const openQuestion =
+    questions.find((question) => (question.open ?? false) && Boolean(session?.accepting)) ?? null;
+  const { answers, error: answersError } = useAnswers(
+    sessionId ?? '',
+    hasTeacherAuth ? openQuestion?.id : undefined,
+  );
 
   if (!firebaseConfigStatus.isConfigured) {
     return <DisplayPreview />;
@@ -137,18 +143,18 @@ export function DisplayPage() {
     content = null;
   } else if (error || answersError) {
     content = <Card className="banner-card banner-card--error">{error ?? answersError}</Card>;
-  } else if (!session || !activeQuestion) {
+  } else if (!session || !openQuestion) {
     content = (
       <Card className="banner-card">
-        Admin에서 세션을 seed 하고 현재 질문을 열면 이 화면이 자동으로 연결됩니다.
+        Admin에서 질문의 응답을 열면 이 화면에 자동으로 표시됩니다.
       </Card>
     );
-  } else if (!isDisplayableQuestion(activeQuestion)) {
+  } else if (!isDisplayableQuestion(openQuestion)) {
     content = (
       <Card className="collecting-stage" tone="muted">
         <strong>발표 화면 비노출 질문</strong>
         <span>
-          {getQuestionResultVisibility(activeQuestion) === 'teacher-only'
+          {getQuestionResultVisibility(openQuestion) === 'teacher-only'
             ? '이 질문 결과는 강사 화면에서만 집계됩니다.'
             : '이 질문 결과는 발표 화면에 표시되지 않습니다.'}
         </span>
@@ -157,34 +163,34 @@ export function DisplayPage() {
   } else if (!session.showResults) {
     content = (
       <Card className="collecting-stage" tone="muted">
-        <h2>{activeQuestion.title}</h2>
-        <p>{activeQuestion.prompt}</p>
+        <h2>{openQuestion.title}</h2>
+        <p>{openQuestion.prompt}</p>
         <strong>답변 수집 중</strong>
         <span>결과 공개를 누르면 그래프 또는 승인 답변이 나타납니다.</span>
       </Card>
     );
-  } else if (getQuestionInputType(activeQuestion) === 'text') {
+  } else if (getQuestionInputType(openQuestion) === 'text') {
     const approvedAnswers = getApprovedTextAnswers(answers);
     content = (
       <DisplayStage
-        prompt={activeQuestion.prompt}
-        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
+        prompt={openQuestion.prompt}
+        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
         responseCount={approvedAnswers.length}
-        title={activeQuestion.title}
+        title={openQuestion.title}
       >
         <AnswerWall answers={approvedAnswers} />
       </DisplayStage>
     );
-  } else if (getQuestionInputType(activeQuestion) === 'status') {
+  } else if (getQuestionInputType(openQuestion) === 'status') {
     content = (
       <DisplayStage
-        prompt={activeQuestion.prompt}
-        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
+        prompt={openQuestion.prompt}
+        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
         responseCount={answers.length}
-        title={activeQuestion.title}
+        title={openQuestion.title}
       >
         <StatusSummary
-          items={buildStatusResults(activeQuestion, answers).map((item) => ({
+          items={buildStatusResults(openQuestion, answers).map((item) => ({
             label: item.name,
             value: item.value,
           }))}
@@ -194,12 +200,12 @@ export function DisplayPage() {
   } else {
     content = (
       <DisplayStage
-        prompt={activeQuestion.prompt}
-        questionLabel={`Q${String(activeQuestion.order).padStart(2, '0')}`}
+        prompt={openQuestion.prompt}
+        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
         responseCount={answers.length}
-        title={activeQuestion.title}
+        title={openQuestion.title}
       >
-        <ResultChart data={buildChoiceResults(activeQuestion, answers)} />
+        <ResultChart data={buildChoiceResults(openQuestion, answers)} />
       </DisplayStage>
     );
   }
