@@ -494,8 +494,11 @@
 
 .studentQrBox canvas,
 .studentQrBox svg {
-  max-width: 128px;
-  max-height: 128px;
+  /* SVG(width/height 속성)가 아니라 CSS로 크기를 고정해야, 화면 전환 후에도
+     QR이 viewBox 단위로 쪼그라들지 않고 항상 같은 크기로 렌더된다. */
+  width: 128px;
+  height: 128px;
+  display: block;
 }
 
 .studentLinkArea {
