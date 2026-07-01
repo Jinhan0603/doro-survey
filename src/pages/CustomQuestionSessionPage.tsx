@@ -9,6 +9,7 @@ import {
   createDraftFromQuestion,
   createInitialDrafts,
   swapDrafts,
+  toChoiceDrafts,
   toQuestionInput,
   type CustomQuestionDraft,
 } from '../components/session/customQuestionDraft';
@@ -87,7 +88,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
             prompt: interaction.prompt,
             inputType: interaction.inputType,
             visibility: interaction.visibility,
-            choicesText: (interaction.choices ?? []).join('\n'),
+            choices: toChoiceDrafts(interaction.choices ?? []),
             maxLength: interaction.maxLength ?? 300,
           }),
         ),

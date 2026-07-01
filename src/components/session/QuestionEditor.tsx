@@ -1,11 +1,13 @@
-import { type ChangeEvent } from 'react';
+import { type ChangeEvent, useMemo } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
 import '../../styles/survey-builder.css';
 import type { ResultVisibility } from '../../firebase/types';
+import { makeChoiceId } from '../../utils/questionRuntime';
 import {
   INPUT_TYPE_HELP,
   VISIBILITY_HELP,
   getDefaultChoices,
+  type ChoiceDraft,
   type CustomQuestionDraft,
 } from './customQuestionDraft';
 
@@ -33,12 +35,13 @@ export function QuestionEditor({
   const handleTypeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const target = event.target.value as 'choice' | 'text';
     if (target === 'text') {
-      onPatch(draft.clientId, { inputType: 'text', choicesText: '' });
+      onPatch(draft.clientId, { inputType: 'text', choices: [] });
       return;
     }
+    const hasText = draft.choices.some((choice) => choice.text.trim());
     onPatch(draft.clientId, {
       inputType: 'choice',
-      choicesText: draft.choicesText.trim() ? draft.choicesText : getDefaultChoices('choice'),
+      choices: hasText ? draft.choices : getDefaultChoices('choice'),
       maxLength: 300,
     });
   };
@@ -47,15 +50,20 @@ export function QuestionEditor({
     onPatch(draft.clientId, { inputType: isMulti ? 'choice' : 'multi' });
   };
 
-  // choicesText('\n' 구분 문자열)를 단일 소스로 두되, 객관식은 최소 2개를 보장한다.
-  // 빈 문자열도 한 행으로 유지하고, 2칸 미만이면 빈 칸으로 채워 표시한다.
-  const rawOptions = draft.choicesText.split('\n');
-  const options =
-    rawOptions.length >= 2 ? rawOptions : [...rawOptions, ...Array(2 - rawOptions.length).fill('')];
-  const setOptions = (next: string[]) => onPatch(draft.clientId, { choicesText: next.join('\n') });
+  // 선택지는 {id,text}[]를 단일 소스로 두되, 객관식은 최소 2개를 보장한다.
+  // 2칸 미만이면 빈 칸(새 id 부여)으로 채워 표시한다. 패딩 id는 렌더 간 안정적으로 유지한다.
+  const options = useMemo<ChoiceDraft[]>(() => {
+    if (draft.choices.length >= 2) return draft.choices;
+    const padded = [...draft.choices];
+    while (padded.length < 2) {
+      padded.push({ id: makeChoiceId(), text: '' });
+    }
+    return padded;
+  }, [draft.choices]);
+  const setOptions = (next: ChoiceDraft[]) => onPatch(draft.clientId, { choices: next });
   const updateOption = (target: number, value: string) =>
-    setOptions(options.map((option, idx) => (idx === target ? value : option)));
-  const addOption = () => setOptions([...options, '']);
+    setOptions(options.map((option, idx) => (idx === target ? { ...option, text: value } : option)));
+  const addOption = () => setOptions([...options, { id: makeChoiceId(), text: '' }]);
   const removeOption = (target: number) => {
     // 최소 2개 유지: 2개 이하일 때는 삭제하지 않는다.
     if (options.length <= 2) return;
@@ -189,14 +197,14 @@ export function QuestionEditor({
               </div>
               <div className="optionList">
                 {options.map((option, optionIndex) => (
-                  <div className="optionRow" key={optionIndex}>
+                  <div className="optionRow" key={option.id}>
                     <span className="optionDragHandle" aria-hidden="true">
                       <GripVertical size={16} />
                     </span>
                     <input
                       className="optionInput"
                       aria-label={`선택지 ${optionIndex + 1}`}
-                      value={option}
+                      value={option.text}
                       onChange={(event) => updateOption(optionIndex, event.target.value)}
                     />
                     {options.length > 2 ? (

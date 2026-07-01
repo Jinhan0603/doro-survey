@@ -12,8 +12,9 @@ import '../styles/template-builder.css';
 import { QuestionEditor } from '../components/session/QuestionEditor';
 import {
   createDraft,
-  parseChoices,
+  draftChoiceTexts,
   swapDrafts,
+  toChoiceDrafts,
   type CustomQuestionDraft,
 } from '../components/session/customQuestionDraft';
 import {
@@ -122,7 +123,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             prompt: interaction.prompt,
             inputType: interaction.inputType,
             visibility: interaction.visibility,
-            choicesText: (interaction.choices ?? []).join('\n'),
+            choices: toChoiceDrafts(interaction.choices ?? []),
             maxLength: interaction.maxLength ?? 300,
           }),
         ),
@@ -203,7 +204,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           prompt: draft.prompt,
           inputType: draft.inputType,
           visibility: draft.visibility,
-          choicesText: (draft.choices ?? []).join('\n'),
+          choices: toChoiceDrafts(draft.choices ?? []),
           maxLength: draft.maxLength ?? 300,
         }),
       ),
@@ -315,7 +316,7 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             visibility: question.visibility,
             title: question.title.trim() || `질문 ${index + 1}`,
             prompt: question.prompt.trim(),
-            choices: parseChoices(question.choicesText),
+            choices: draftChoiceTexts(question.choices),
             maxLength: question.maxLength,
             presenterNote: '',
             timingLabel: '',

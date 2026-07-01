@@ -1,6 +1,10 @@
 import { nanoid } from 'nanoid';
 import type { EditCustomSessionQuestionInput } from '../../firebase/sessions';
 import type { LessonPhase, QuestionDoc, QuestionInputType, ResultVisibility } from '../../firebase/types';
+import { makeChoiceId } from '../../utils/questionRuntime';
+
+/** 편집기 내 선택지 한 칸. id는 저장 후에도 유지되어 응답 집계의 기준이 된다. */
+export type ChoiceDraft = { id: string; text: string };
 
 export type CustomQuestionDraft = {
   clientId: string;
@@ -11,7 +15,7 @@ export type CustomQuestionDraft = {
   prompt: string;
   inputType: QuestionInputType;
   visibility: ResultVisibility;
-  choicesText: string;
+  choices: ChoiceDraft[];
   maxLength: number;
 };
 
@@ -29,21 +33,26 @@ export const VISIBILITY_HELP: Record<ResultVisibility, string> = {
   hidden: '학생 화면에 공개하지 않습니다.',
 };
 
-export function getDefaultChoices(inputType: QuestionInputType) {
+/** 텍스트 배열을 새 id가 붙은 ChoiceDraft 배열로 만든다. */
+export function toChoiceDrafts(texts: string[]): ChoiceDraft[] {
+  return texts.map((text) => ({ id: makeChoiceId(), text }));
+}
+
+export function getDefaultChoices(inputType: QuestionInputType): ChoiceDraft[] {
   if (inputType === 'scale') {
-    return ['1', '2', '3', '4', '5'].join('\n');
+    return toChoiceDrafts(['1', '2', '3', '4', '5']);
   }
 
   if (inputType === 'status') {
-    return ['준비 완료', '진행 중', '완료', '도움 필요'].join('\n');
+    return toChoiceDrafts(['준비 완료', '진행 중', '완료', '도움 필요']);
   }
 
   if (inputType === 'multi') {
-    return ['개념 이해', '실습 진행', '질문 있음', '공유하고 싶음'].join('\n');
+    return toChoiceDrafts(['개념 이해', '실습 진행', '질문 있음', '공유하고 싶음']);
   }
 
   // 객관식(choice)은 예시 없이 빈 2칸으로 시작한다(에디터가 최소 2개를 보장).
-  return '';
+  return toChoiceDrafts(['', '']);
 }
 
 export function hasChoiceOptions(inputType: QuestionInputType) {
@@ -61,7 +70,7 @@ export function createDraft(input: Partial<CustomQuestionDraft> = {}): CustomQue
     prompt: input.prompt ?? '',
     inputType,
     visibility: input.visibility ?? 'public',
-    choicesText: input.choicesText ?? getDefaultChoices(inputType),
+    choices: input.choices ?? getDefaultChoices(inputType),
     maxLength: input.maxLength ?? 300,
   };
 }
@@ -73,6 +82,13 @@ export function createInitialDrafts(): CustomQuestionDraft[] {
 /** 기존 세션 질문(QuestionDoc)을 편집용 draft로 변환한다(응답 보존을 위해 questionId 유지). */
 export function createDraftFromQuestion(question: QuestionDoc): CustomQuestionDraft {
   const inputType: QuestionInputType = question.inputType ?? (question.type === 'text' ? 'text' : 'choice');
+  const texts = question.choices ?? [];
+  const ids = question.choiceIds ?? [];
+  // 저장된 choiceIds가 있으면 그대로 재사용(응답 집계 정체성 유지), 없으면 새로 부여.
+  const choices: ChoiceDraft[] = texts.map((text, index) => ({
+    id: ids[index] ?? makeChoiceId(),
+    text,
+  }));
   return createDraft({
     questionId: question.id,
     phase: question.phase ?? 'intro',
@@ -80,16 +96,14 @@ export function createDraftFromQuestion(question: QuestionDoc): CustomQuestionDr
     prompt: question.prompt,
     inputType,
     visibility: question.visibility ?? 'public',
-    choicesText: (question.choices ?? []).join('\n'),
+    choices,
     maxLength: question.maxLength ?? 300,
   });
 }
 
-export function parseChoices(choicesText: string) {
-  return choicesText
-    .split(/[\n,]/)
-    .map((choice) => choice.trim())
-    .filter(Boolean);
+/** draft 선택지에서 공백 제거·빈칸 제외한 텍스트만 뽑는다(템플릿 interaction 저장 등). */
+export function draftChoiceTexts(choices: ChoiceDraft[]): string[] {
+  return choices.map((choice) => choice.text.trim()).filter(Boolean);
 }
 
 export function swapDrafts(drafts: CustomQuestionDraft[], clientId: string, direction: -1 | 1) {
@@ -106,6 +120,7 @@ export function swapDrafts(drafts: CustomQuestionDraft[], clientId: string, dire
 }
 
 export function toQuestionInput(draft: CustomQuestionDraft): EditCustomSessionQuestionInput {
+  // choices/choiceIds를 인덱스 정렬로 함께 넘긴다(빈칸 정리는 sanitizeChoicesWithIds가 lockstep 처리).
   return {
     questionId: draft.questionId,
     title: draft.title,
@@ -113,7 +128,8 @@ export function toQuestionInput(draft: CustomQuestionDraft): EditCustomSessionQu
     inputType: draft.inputType,
     visibility: draft.visibility,
     phase: draft.phase,
-    choices: parseChoices(draft.choicesText),
+    choices: draft.choices.map((choice) => choice.text),
+    choiceIds: draft.choices.map((choice) => choice.id),
     maxLength: draft.maxLength,
   };
 }
