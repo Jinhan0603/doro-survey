@@ -27,13 +27,11 @@ function DisplayQuestionHeader({
   questionNumber,
   typeLabel,
   responseCount,
-  responseOpen,
   resultVisible,
 }: {
   questionNumber: string;
   typeLabel: string;
   responseCount: number;
-  responseOpen: boolean;
   resultVisible: boolean;
 }) {
   return (
@@ -41,20 +39,14 @@ function DisplayQuestionHeader({
       <div className="displayQuestionMeta">
         <span className="questionNumberBadge">{questionNumber}</span>
         <span className="questionTypeBadge">{typeLabel}</span>
-      </div>
-      <div className="displayStatusGroup">
-        <span className="responseCountBadge">
-          <Users className="displayBadgeIcon" aria-hidden="true" />
-          응답 {responseCount}개
-        </span>
-        <span className={`responseStateBadge ${responseOpen ? 'isOpen' : 'isClosed'}`}>
-          <span className="responseStateDot" aria-hidden="true" />
-          {responseOpen ? '답변 수집 중' : '응답 마감'}
-        </span>
         <span className={`resultStateBadge ${resultVisible ? 'isVisible' : 'isHidden'}`}>
-          {resultVisible ? null : <Lock className="displayBadgeIcon" aria-hidden="true" />}
           {resultVisible ? '결과 공개' : '결과 비공개'}
         </span>
+      </div>
+      <div className="responseSummaryBadge">
+        <Users className="displayBadgeIcon" aria-hidden="true" />
+        <span>총 응답</span>
+        <strong>{responseCount}개</strong>
       </div>
     </header>
   );
@@ -79,27 +71,37 @@ function ChoicePreview({ choices }: { choices: string[] }) {
   );
 }
 
-function ChoiceResultChart({ results, total }: { results: ChoiceResult[]; total: number }) {
+function ChoiceResultChart({ results }: { results: ChoiceResult[] }) {
+  // 분모는 선택 합계(단일 선택은 응답자 수와 동일). 선택지 순서·0표 항목을 모두 유지한다.
+  const total = results.reduce((sum, item) => sum + item.value, 0);
   return (
     <div className="choiceResultList">
       {results.map((item, index) => {
         const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+        const isZero = item.value === 0;
         return (
-          <div className="choiceResultRow" key={`${item.name}-${index}`}>
-            <div className="choiceResultLabel">
-              <strong>{item.name}</strong>
-              <span>
-                {item.value}명 · {percent}%
-              </span>
+          <article
+            className={`choiceResultRow ${isZero ? 'isZero' : ''}`}
+            key={`${item.name}-${index}`}
+          >
+            <div className="choiceResultContent">
+              <div className="choiceResultName">
+                <span className="choiceNumber">{index + 1}</span>
+                <strong>{item.name}</strong>
+              </div>
+              <div className="choiceResultValue">
+                <strong>{item.value}명</strong>
+                <span>{percent}%</span>
+              </div>
+              <div
+                className="choiceResultBarTrack"
+                role="img"
+                aria-label={`${item.name}: ${item.value}명, ${percent}%`}
+              >
+                <div className="choiceResultBar" style={{ width: `${percent}%` }} />
+              </div>
             </div>
-            <div
-              className="choiceResultBarTrack"
-              role="img"
-              aria-label={`${item.name}: ${item.value}명, ${percent}%`}
-            >
-              <div className="choiceResultBar" style={{ width: `${percent}%` }} />
-            </div>
-          </div>
+          </article>
         );
       })}
     </div>
@@ -141,7 +143,6 @@ type PresentationStageProps = {
   questionNumber: string;
   typeLabel: string;
   responseCount: number;
-  responseOpen: boolean;
   resultVisible: boolean;
   isSubjective: boolean;
   choices: string[];
@@ -155,7 +156,6 @@ function PresentationStage({
   questionNumber,
   typeLabel,
   responseCount,
-  responseOpen,
   resultVisible,
   isSubjective,
   choices,
@@ -168,7 +168,6 @@ function PresentationStage({
         questionNumber={questionNumber}
         typeLabel={typeLabel}
         responseCount={responseCount}
-        responseOpen={responseOpen}
         resultVisible={resultVisible}
       />
 
@@ -179,9 +178,7 @@ function PresentationStage({
 
       <section className="displayContentArea">
         {!isSubjective && !resultVisible ? <ChoicePreview choices={choices} /> : null}
-        {!isSubjective && resultVisible ? (
-          <ChoiceResultChart results={choiceResults} total={responseCount} />
-        ) : null}
+        {!isSubjective && resultVisible ? <ChoiceResultChart results={choiceResults} /> : null}
         {isSubjective && !resultVisible ? <SubjectiveWaiting responseCount={responseCount} /> : null}
         {isSubjective && resultVisible ? <SubjectiveAnswerList answers={textAnswers} /> : null}
       </section>
@@ -235,7 +232,6 @@ function DisplayPreview() {
         questionNumber={`Q${String(question.order ?? 1).padStart(2, '0')}`}
         typeLabel={getQuestionTypeLabel(question)}
         responseCount={2}
-        responseOpen
         resultVisible={false}
         isSubjective={getQuestionInputType(question) === 'text'}
         choices={getQuestionChoices(question)}
@@ -283,7 +279,6 @@ export function DisplayPage() {
   const isActiveTheOpenOne = Boolean(
     activeQuestion && openQuestion && activeQuestion.id === openQuestion.id,
   );
-  const responseOpen = isActiveTheOpenOne;
   const resultVisible =
     isActiveTheOpenOne &&
     Boolean(session?.showResults) &&
@@ -314,7 +309,6 @@ export function DisplayPage() {
         questionNumber={`Q${String(index + 1).padStart(2, '0')}`}
         typeLabel={getQuestionTypeLabel(activeQuestion)}
         responseCount={answers.length}
-        responseOpen={responseOpen}
         resultVisible={resultVisible}
         isSubjective={getQuestionInputType(activeQuestion) === 'text'}
         choices={getQuestionChoices(activeQuestion)}
