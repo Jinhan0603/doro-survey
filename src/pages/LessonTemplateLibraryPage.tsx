@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BookCopy,
-  Brain,
+  BookOpen,
   CopyPlus,
   FileText,
   FolderKanban,
@@ -148,7 +148,7 @@ function TemplateDetail({
                 </div>
                 <div className="summaryTile">
                   <dt>
-                    <Brain size={18} aria-hidden="true" />
+                    <BookOpen size={18} aria-hidden="true" />
                     과목 유형
                   </dt>
                   <dd>{subjectType || '미입력'}</dd>
