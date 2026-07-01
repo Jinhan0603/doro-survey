@@ -1,34 +1,29 @@
-import { useState } from 'react';
-import { AdminControls } from '../components/admin/AdminControls';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { AdminPreview } from '../components/admin/AdminPreview';
-import { AnswerResetZone } from '../components/admin/AnswerResetZone';
-import { AnswerTable } from '../components/admin/AnswerTable';
-import { QrPanel } from '../components/admin/QrPanel';
-import { QuestionList } from '../components/admin/QuestionList';
-import { StatusInsightCard } from '../components/admin/StatusInsightCard';
-import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { ToastStack } from '../components/common/Toast';
 import { AppShell } from '../components/layout/AppShell';
-import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
+import {
+  countAnswersForQuestions,
+  deleteAnswersForQuestion,
+  deleteAnswersForSession,
+} from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
 import { setActiveQuestionId, setQuestionOpen, updateSession } from '../firebase/sessions';
-import { type ResultVisibility } from '../firebase/types';
-import { Link } from 'react-router-dom';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToasts } from '../hooks/useToasts';
-import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
-import {
-  getQuestionInputType,
-  getQuestionResultVisibility,
-  isModeratedQuestion,
-} from '../utils/questionRuntime';
+import { formatTimestamp, getAnswerSummary } from '../utils/stats';
+import { getQuestionResultVisibility, getQuestionTypeLabel } from '../utils/questionRuntime';
 import { buildAppUrl } from '../utils/urls';
+import '../styles/admin-live.css';
 
 export function AdminPage() {
   const sessionId = useSessionId();
@@ -36,10 +31,35 @@ export function AdminPage() {
   const { user, role } = usePresenterAuth();
   const { profile } = useUserProfile(user?.uid);
   const firestoreEnabled = Boolean(user) && Boolean(sessionId);
-  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
+  const { session, questions, activeQuestion, error } = useActiveQuestion(sessionId ?? '', {
+    enabled: firestoreEnabled,
+  });
   const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
   const { toasts, pushToast } = useToasts();
   const [busy, setBusy] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+
+  // 좌측 목록의 질문별 응답 수를 count 집계로 채운다(활성 질문은 실시간 answers로 대체).
+  const questionIdsKey = questions.map((question) => question.id).join(',');
+  useEffect(() => {
+    const ids = questionIdsKey ? questionIdsKey.split(',') : [];
+    if (!sessionId || ids.length === 0) {
+      setQuestionCounts({});
+      return;
+    }
+    let cancelled = false;
+    countAnswersForQuestions(sessionId, ids)
+      .then((counts) => {
+        if (!cancelled) setQuestionCounts(counts);
+      })
+      .catch(() => {
+        if (!cancelled) setQuestionCounts({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, questionIdsKey]);
 
   if (!firebaseConfigStatus.isConfigured) {
     return <AdminPreview />;
@@ -47,7 +67,7 @@ export function AdminPage() {
 
   if (!sessionId) {
     return (
-      <AppShell compact title="Admin 운영 화면">
+      <AppShell compact title="실시간 운영">
         <Card className="banner-card">
           <p>운영할 설문을 먼저 선택하세요.</p>
           <Link to="/sessions">
@@ -58,27 +78,27 @@ export function AdminPage() {
     );
   }
 
-  const studentUrl = buildAppUrl('/student', sessionId);
-  // 실데이터(questions)만 표시한다. 로딩 중 mock 질문으로 채우면 실데이터 연동 시 값이 튀므로 폴백하지 않는다.
-  const displayQuestions = questions;
-  const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
-  const hiddenCount = answers.filter((a) => a.hidden).length;
-  const activeInputType = activeQuestion ? getQuestionInputType(activeQuestion) : null;
-  const activeVisibility: ResultVisibility = activeQuestion
-    ? getQuestionResultVisibility(activeQuestion)
-    : 'public';
-  const moderatedQuestion = activeQuestion ? isModeratedQuestion(activeQuestion) : false;
-  const statusResults = activeQuestion && activeInputType === 'status'
-    ? buildStatusResults(activeQuestion, answers)
-    : [];
-  const needHelpCount = statusResults.find((item) => item.name === 'need_help')?.value ?? 0;
-  const completedCount =
-    (statusResults.find((item) => item.name === 'done')?.value ?? 0) +
-    (statusResults.find((item) => item.name === 'ready')?.value ?? 0);
+  const studentJoinUrl = buildAppUrl('/student', sessionId);
   const canManageAnswerDocs = (role ?? profile?.role) === 'admin';
 
-  const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
-    value ? onLabel : offLabel;
+  const currentIndex = Math.max(
+    0,
+    questions.findIndex((question) => question.id === activeQuestion?.id),
+  );
+  const currentQuestionNumber = activeQuestion ? `Q${String(currentIndex + 1).padStart(2, '0')}` : '—';
+  const currentTypeLabel = activeQuestion ? getQuestionTypeLabel(activeQuestion) : '';
+  const currentText = activeQuestion?.prompt?.trim() || '질문 문장이 없습니다.';
+  const activeResponseCount = answers.length;
+
+  // 응답 상태 = 현재 질문 open && 세션 accepting. 결과 상태 = 세션 showResults.
+  const isResponseOpen = Boolean(activeQuestion?.open) && Boolean(session?.accepting);
+  const isResultVisible = Boolean(session?.showResults);
+  const canPublishResult = activeQuestion
+    ? getQuestionResultVisibility(activeQuestion) === 'public'
+    : false;
+
+  const getRowCount = (questionId: string) =>
+    questionId === activeQuestion?.id ? activeResponseCount : questionCounts[questionId] ?? 0;
 
   const runAdminAction = async (action: () => Promise<void>, successMessage?: string) => {
     try {
@@ -92,229 +112,306 @@ export function AdminPage() {
     }
   };
 
-  const handleResetQuestion = async () => {
+  const handleSelectQuestion = (questionId: string) => {
+    void runAdminAction(() => setActiveQuestionId(sessionId, questionId));
+  };
+
+  const handleToggleResponseCollection = () => {
     if (!activeQuestion) return;
-    const confirmed = window.confirm(
-      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
+    if (isResponseOpen) {
+      void runAdminAction(
+        () => setQuestionOpen(sessionId, activeQuestion.id, false),
+        '현재 질문의 응답을 마감했습니다.',
+      );
+      return;
+    }
+    // 열 때는 질문 open과 세션 accepting을 함께 보장해 학생 게이트를 확실히 연다.
+    void runAdminAction(async () => {
+      await setQuestionOpen(sessionId, activeQuestion.id, true);
+      if (!session?.accepting) {
+        await updateSession(sessionId, { accepting: true });
+      }
+    }, '현재 질문의 응답을 다시 열었습니다.');
+  };
+
+  const handleToggleResultVisibility = () => {
+    if (!activeQuestion || !canPublishResult) return;
+    void runAdminAction(
+      () => updateSession(sessionId, { showResults: !isResultVisible }),
+      isResultVisible ? '결과를 비공개로 전환했습니다.' : '결과를 공개했습니다.',
     );
-    if (!confirmed) return;
-    await runAdminAction(async () => {
+  };
+
+  const handleCopyStudentLink = async () => {
+    try {
+      await navigator.clipboard.writeText(studentJoinUrl);
+      pushToast('학생 입장 링크를 복사했습니다.', 'success');
+    } catch {
+      pushToast('링크 복사에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleOpenStudentPage = () => {
+    window.open(studentJoinUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleResetCurrentQuestion = () => {
+    if (!activeQuestion) return;
+    setResetModalOpen(false);
+    void runAdminAction(async () => {
       const count = await deleteAnswersForQuestion(sessionId, activeQuestion.id);
       pushToast(`현재 질문 응답 ${count}개를 삭제했습니다.`, 'success');
     });
   };
 
-  const handleResetSession = async () => {
-    if (displayQuestions.length === 0) return;
-    const input = window.prompt(
-      '전체 응답을 초기화합니다.\n\n삭제 후에는 되돌릴 수 없습니다.\n계속하려면 아래에 RESET을 정확히 입력하세요.',
-    );
-    if (input !== 'RESET') {
-      if (input !== null) window.alert('RESET을 정확히 입력해야 삭제됩니다.');
-      return;
-    }
-    await runAdminAction(async () => {
-      const questionIds = displayQuestions.map((q) => q.id);
+  const handleResetSession = () => {
+    if (questions.length === 0) return;
+    setResetModalOpen(false);
+    void runAdminAction(async () => {
+      const questionIds = questions.map((question) => question.id);
       const count = await deleteAnswersForSession(sessionId, questionIds);
       await updateSession(sessionId, {
         accepting: false,
         showResults: false,
-        activeQuestionId: displayQuestions[0]?.id,
+        activeQuestionId: questions[0]?.id,
       });
       pushToast(`전체 응답 ${count}개를 삭제했습니다.`, 'success');
     });
   };
 
-  const answerRows = activeQuestion
-    ? answers.map((answer) => ({
-        id: answer.uid,
-        nickname: answer.nickname,
-        answer: getAnswerSummary(activeQuestion, answer),
-        statusLabel:
-          moderatedQuestion
-            ? answer.hidden
-              ? '숨김'
-              : answer.approved
-                ? '승인됨'
-                : '검토 필요'
-            : activeVisibility === 'teacher-only'
-              ? '강사용 집계'
-              : activeVisibility === 'hidden'
-                ? '비공개 집계'
-                : '집계됨',
-        submittedAt: formatTimestamp(answer.updatedAt ?? answer.createdAt),
-        actions:
-          moderatedQuestion && canManageAnswerDocs ? (
-            <div className="inline-actions">
-              <Button
-                disabled={busy}
-                size="sm"
-                variant={answer.approved ? 'secondary' : 'primary'}
-                onClick={() => {
-                  void runAdminAction(
-                    () =>
-                      updateAnswerModeration({
-                        sessionId,
-                        questionId: activeQuestion.id,
-                        uid: answer.uid,
-                        approved: !answer.approved,
-                      }),
-                    `주관식 답변을 ${answer.approved ? '승인 해제' : '승인'}했습니다.`,
-                  );
-                }}
-              >
-                {answer.approved ? '승인 해제' : '승인'}
-              </Button>
-              <Button
-                disabled={busy}
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  void runAdminAction(
-                    () =>
-                      updateAnswerModeration({
-                        sessionId,
-                        questionId: activeQuestion.id,
-                        uid: answer.uid,
-                        hidden: !answer.hidden,
-                      }),
-                    `답변을 ${answer.hidden ? '다시 표시' : '숨김'} 처리했습니다.`,
-                  );
-                }}
-              >
-                {answer.hidden ? '표시' : '숨김'}
-              </Button>
-            </div>
-          ) : undefined,
-      }))
-    : [];
-
   return (
-    <AppShell
-      compact
-      title="Admin 운영 화면"
-    >
-      <div className="page-grid page-grid--admin">
-        <QuestionList
-          activeQuestionId={session?.activeQuestionId ?? displayQuestions[0]?.id ?? ''}
-          disabled={busy}
-          questions={displayQuestions}
-          onSelect={(questionId) => {
-            void runAdminAction(
-              () => setActiveQuestionId(sessionId, questionId),
-              `현재 질문을 ${questionId}로 전환했습니다.`,
-            );
-          }}
-          onToggleOpen={(questionId, nextOpen) => {
-            void runAdminAction(
-              () => setQuestionOpen(sessionId, questionId, nextOpen),
-              `${questionId} 질문을 ${nextOpen ? '열었습니다' : '닫았습니다'}.`,
-            );
-          }}
-        />
+    <main className="adminLivePage">
+      <div className="adminLiveShell">
+        <header className="adminLiveToolbar">
+          <div className="adminLiveTitleBlock">
+            <h1>실시간 운영</h1>
+            <p>질문을 열고 닫고, 학생 응답과 결과 공개를 관리합니다.</p>
+          </div>
+        </header>
 
-        <div className="stack">
-          <Card className="status-strip">
-            <div className="status-tile">
-              <span>현재 응답 수</span>
-              <strong>{answers.length}</strong>
-            </div>
-            <div className="status-tile">
-              <span>{moderatedQuestion ? '승인된 답변' : '질문 타입'}</span>
-              <strong>{moderatedQuestion ? approvedCount : activeInputType ?? '—'}</strong>
-            </div>
-            <div className="status-tile">
-              <span>{moderatedQuestion ? '숨김 답변' : '표시 범위'}</span>
-              <strong>{moderatedQuestion ? hiddenCount : activeVisibility}</strong>
-            </div>
-          </Card>
+        {error ? <div className="inline-message inline-message--error adminLiveError">{error}</div> : null}
+        {answersError ? (
+          <div className="inline-message inline-message--error adminLiveError">{answersError}</div>
+        ) : null}
 
-          <AdminControls
-            accepting={session?.accepting ?? false}
-            disabled={busy}
-            resultVisibility={activeVisibility}
-            showResults={session?.showResults ?? false}
-            onToggleAccepting={() => {
-              void runAdminAction(
-                () => updateSession(sessionId, { accepting: !(session?.accepting ?? false) }),
-                `응답 수집을 ${(session?.accepting ?? false) ? '마감' : '오픈'}했습니다.`,
-              );
-            }}
-            onToggleResults={() => {
-              if (activeVisibility !== 'public') {
-                return;
-              }
-              void runAdminAction(
-                () => updateSession(sessionId, { showResults: !(session?.showResults ?? false) }),
-                `결과 공개를 ${(session?.showResults ?? false) ? '비공개' : '공개'}로 변경했습니다.`,
-              );
-            }}
-          />
+        <section className="adminLiveWorkspace">
+          <aside className="adminQuestionPanel">
+            <header className="panelHeader">
+              <h2>질문 목록</h2>
+              <span>{questions.length}</span>
+            </header>
 
-          <Card className="admin-current">
-            <div className="section-heading">
-              <h3>현재 진행 질문</h3>
-              <Badge tone="accent">
-                {activeQuestion ? `Q${String(activeQuestion.order).padStart(2, '0')}` : '—'}
-              </Badge>
+            <div className="questionListScroll">
+              {questions.length === 0 ? (
+                <div className="questionListEmpty">등록된 질문이 없습니다.</div>
+              ) : (
+                questions.map((question, index) => {
+                  const isSelected = question.id === activeQuestion?.id;
+                  const typeLabel = getQuestionTypeLabel(question);
+                  return (
+                    <button
+                      key={question.id}
+                      type="button"
+                      className={`adminQuestionRow ${isSelected ? 'isSelected' : ''}`}
+                      disabled={busy}
+                      onClick={() => handleSelectQuestion(question.id)}
+                    >
+                      <span className="questionIndexBadge">Q{String(index + 1).padStart(2, '0')}</span>
+                      <span className="questionRowContent">
+                        <strong>{question.title || typeLabel}</strong>
+                        <span>
+                          {typeLabel} · 응답 {getRowCount(question.id)}개
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })
+              )}
             </div>
-            {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-            {answersError ? <div className="inline-message inline-message--error">{answersError}</div> : null}
-            {!activeQuestion && !loading ? <p>진행할 질문이 없습니다. 질문 목록에서 질문을 선택해주세요.</p> : null}
-            {activeQuestion ? (
-              <>
-                <strong>{activeQuestion.title}</strong>
-                <p>{activeQuestion.prompt}</p>
-              </>
+          </aside>
+
+          <section className="adminMainColumn">
+            <section className="liveResponsesCard">
+              <header className="liveResponsesHeader">
+                <div>
+                  <h2>실시간 응답</h2>
+                  <p>
+                    현재 질문 기준 · <span className="highlight">{currentQuestionNumber}</span>
+                    {currentTypeLabel ? (
+                      <>
+                        {' · '}
+                        {currentTypeLabel}
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+                <span className="responseCountBadge">응답 {activeResponseCount}개</span>
+              </header>
+
+              <div className="liveResponsesTableWrap">
+                {activeQuestion && answers.length > 0 ? (
+                  <table className="liveResponsesTable">
+                    <thead>
+                      <tr>
+                        <th>닉네임</th>
+                        <th>답변</th>
+                        <th>상태</th>
+                        <th>시간</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {answers.map((answer) => (
+                        <tr key={answer.uid}>
+                          <td>{answer.nickname || '익명'}</td>
+                          <td>{getAnswerSummary(activeQuestion, answer) || '-'}</td>
+                          <td>
+                            <span className="countedBadge">집계됨</span>
+                          </td>
+                          <td>{formatTimestamp(answer.updatedAt ?? answer.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="emptyResponses">
+                    <strong>아직 들어온 응답이 없습니다.</strong>
+                    <p>학생이 응답하면 이곳에 실시간으로 표시됩니다.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="compactQuestionControlCard">
+              <div className="compactQuestionInfo">
+                <p className="sectionEyebrow">현재 질문 운영</p>
+                <div className="compactQuestionTitleRow">
+                  <strong>
+                    {currentQuestionNumber}
+                    {currentTypeLabel ? ` · ${currentTypeLabel}` : ''}
+                  </strong>
+                  <span>{currentText}</span>
+                </div>
+              </div>
+
+              <div className="compactStateRow">
+                <div className="compactStateItem">
+                  <span>응답 상태</span>
+                  <strong className={isResponseOpen ? 'stateGreen' : 'stateGray'}>
+                    {isResponseOpen ? '응답 열림' : '응답 마감'}
+                  </strong>
+                </div>
+                <div className="compactStateItem">
+                  <span>결과 상태</span>
+                  <strong className={isResultVisible ? 'stateBlue' : 'stateGray'}>
+                    {isResultVisible ? '결과 공개' : '결과 비공개'}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="compactActionRow">
+                <button
+                  type="button"
+                  className="primaryOperationButton"
+                  disabled={busy || !activeQuestion}
+                  onClick={handleToggleResponseCollection}
+                >
+                  {isResponseOpen ? '응답 마감하기' : '응답 다시 열기'}
+                </button>
+                <button
+                  type="button"
+                  className="secondaryOperationButton"
+                  disabled={busy || !activeQuestion || !canPublishResult}
+                  title={!canPublishResult ? '이 질문은 결과를 공개할 수 없는 설정입니다.' : undefined}
+                  onClick={handleToggleResultVisibility}
+                >
+                  {isResultVisible ? '결과 비공개로 전환' : '결과 공개하기'}
+                </button>
+              </div>
+            </section>
+          </section>
+
+          <aside className="adminRightRail">
+            <section className="studentEntryCard">
+              <h2>학생 입장</h2>
+              <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
+
+              <div className="studentQrBox" aria-label="학생 입장 QR 코드">
+                <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
+              </div>
+
+              <div className="studentLinkField">
+                <label htmlFor="studentJoinUrl">학생 입장 링크</label>
+                <input
+                  id="studentJoinUrl"
+                  value={studentJoinUrl}
+                  readOnly
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              </div>
+
+              <div className="studentLinkActions">
+                <button type="button" onClick={() => void handleCopyStudentLink()}>
+                  <Copy />
+                  링크 복사
+                </button>
+                <button type="button" onClick={handleOpenStudentPage}>
+                  <ExternalLink />
+                  학생 화면 열기
+                </button>
+              </div>
+            </section>
+
+            {canManageAnswerDocs ? (
+              <section className="dangerCompactCard">
+                <h2>위험 작업</h2>
+                <p>테스트 응답을 삭제하고 다시 시작할 수 있습니다.</p>
+                <button type="button" disabled={busy} onClick={() => setResetModalOpen(true)}>
+                  <Trash2 />
+                  응답 초기화
+                </button>
+              </section>
             ) : null}
-          </Card>
-
-          {activeQuestion && activeInputType === 'status' ? (
-            <StatusInsightCard
-              answersCount={answers.length}
-              completedCount={completedCount}
-              needHelpCount={needHelpCount}
-              question={activeQuestion}
-              statusResults={statusResults}
-            />
-          ) : null}
-
-          {activeQuestion ? <AnswerTable rows={answerRows} title="실시간 응답" /> : null}
-
-          {canManageAnswerDocs ? (
-            <AnswerResetZone
-              busy={busy}
-              hasActiveQuestion={Boolean(activeQuestion)}
-              hasQuestions={displayQuestions.length > 0}
-              onResetQuestion={() => { void handleResetQuestion(); }}
-              onResetSession={() => { void handleResetSession(); }}
-            />
-          ) : (
-            <div className="inline-message">
-              teacher role은 자기 세션 응답을 읽고 집계할 수 있지만, 응답 숨김/삭제 같은 전역 moderation 작업은 admin allowlist 계정에서만 수행합니다.
-            </div>
-          )}
-        </div>
-
-        <div className="stack">
-          <QrPanel url={studentUrl} />
-          <Card className="metric-panel">
-            <div className="metric-panel__row">
-              <span>현재 응답 수</span>
-              <strong>{answers.length}</strong>
-            </div>
-            <div className="metric-panel__row">
-              <span>수집 상태</span>
-              <strong>{buildStatusLabel(session?.accepting ?? false, 'Open', 'Closed')}</strong>
-            </div>
-            <div className="metric-panel__row">
-              <span>결과 공개</span>
-              <strong>{buildStatusLabel(session?.showResults ?? false, 'Visible', 'Hidden')}</strong>
-            </div>
-          </Card>
-        </div>
+          </aside>
+        </section>
       </div>
+
+      {resetModalOpen ? (
+        <div
+          className="resetModalOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="응답 초기화"
+          onClick={() => setResetModalOpen(false)}
+        >
+          <div className="resetModal" onClick={(event) => event.stopPropagation()}>
+            <h2>응답 초기화</h2>
+            <p>테스트 응답을 삭제하고 다시 시작할 수 있습니다. 삭제 후에는 되돌릴 수 없습니다.</p>
+            <div className="resetModalActions">
+              <button
+                type="button"
+                className="resetDangerButton"
+                disabled={busy || !activeQuestion}
+                onClick={handleResetCurrentQuestion}
+              >
+                현재 질문 응답 초기화
+              </button>
+              <button
+                type="button"
+                className="resetDangerButton"
+                disabled={busy || questions.length === 0}
+                onClick={handleResetSession}
+              >
+                전체 응답 초기화
+              </button>
+              <button type="button" className="resetCancelButton" onClick={() => setResetModalOpen(false)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <ToastStack toasts={toasts} />
-    </AppShell>
+    </main>
   );
 }

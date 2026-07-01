@@ -1,0 +1,863 @@
+/* Admin 실시간 운영(/admin) 3열 대시보드 */
+
+.adminLivePage {
+  height: calc(100dvh - var(--app-header-height, 72px));
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.12), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(147, 197, 253, 0.1), transparent 32%),
+    #f8fafc;
+}
+
+.adminLiveShell {
+  width: 100%;
+  max-width: 1240px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adminLiveToolbar {
+  flex: 0 0 auto;
+  min-height: 54px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.adminLiveToolbar h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+
+.adminLiveToolbar p {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.adminLiveWorkspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.adminLiveError {
+  flex: 0 0 auto;
+}
+
+/* 좌: 질문 목록 */
+.adminQuestionPanel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.panelHeader {
+  flex: 0 0 auto;
+  padding: 20px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.panelHeader span {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.questionListScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.adminQuestionRow {
+  width: 100%;
+  min-height: 76px;
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e5eaf2;
+  border-radius: 16px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.adminQuestionRow + .adminQuestionRow {
+  margin-top: 10px;
+}
+
+.adminQuestionRow:hover {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.adminQuestionRow.isSelected {
+  border-color: #60a5fa;
+  background: #eff6ff;
+  box-shadow: inset 4px 0 0 #2563eb;
+}
+
+.adminQuestionRow:active {
+  transform: translateY(1px);
+}
+
+.questionIndexBadge {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.questionRowContent {
+  min-width: 0;
+}
+
+.questionRowContent strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.questionRowContent span {
+  margin-top: 5px;
+  display: block;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.questionListEmpty {
+  padding: 30px 14px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 중앙: 실시간 응답 + 컴팩트 운영 */
+.adminMainColumn {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.liveResponsesCard {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.liveResponsesHeader {
+  flex: 0 0 auto;
+  padding: 20px 22px 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.liveResponsesHeader h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.liveResponsesHeader p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.liveResponsesHeader p .highlight {
+  color: #2563eb;
+}
+
+.responseCountBadge {
+  height: 30px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.liveResponsesTableWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px 22px 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.liveResponsesTable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.liveResponsesTable th {
+  height: 32px;
+  padding: 0 10px 4px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.liveResponsesTable th:nth-child(1) {
+  width: 22%;
+}
+
+.liveResponsesTable th:nth-child(2) {
+  width: 42%;
+}
+
+.liveResponsesTable th:nth-child(3) {
+  width: 18%;
+}
+
+.liveResponsesTable th:nth-child(4) {
+  width: 18%;
+  text-align: right;
+}
+
+.liveResponsesTable td {
+  height: 44px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-top: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.liveResponsesTable td:first-child {
+  border-left: 1px solid #eef2f7;
+  border-radius: 12px 0 0 12px;
+}
+
+.liveResponsesTable td:last-child {
+  border-right: 1px solid #eef2f7;
+  border-radius: 0 12px 12px 0;
+  text-align: right;
+  color: #4b5563;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveResponsesTable td:nth-child(1),
+.liveResponsesTable td:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.countedBadge {
+  min-height: 24px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.emptyResponses {
+  height: 100%;
+  min-height: 180px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.emptyResponses strong {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.emptyResponses p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+/* 컴팩트 현재 질문 운영 */
+.compactQuestionControlCard {
+  flex: 0 0 172px;
+  min-height: 172px;
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-rows: auto auto;
+  gap: 14px 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.compactQuestionInfo {
+  min-width: 0;
+}
+
+.sectionEyebrow {
+  margin: 0 0 7px;
+  color: #2563eb;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.compactQuestionTitleRow {
+  min-width: 0;
+}
+
+.compactQuestionTitleRow strong {
+  display: block;
+  color: #111827;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -0.025em;
+}
+
+.compactQuestionTitleRow span {
+  margin-top: 5px;
+  display: block;
+  overflow: hidden;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactStateRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.compactStateItem {
+  min-height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.compactStateItem span {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.compactStateItem strong {
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.stateGreen {
+  color: #059669 !important;
+}
+
+.stateBlue {
+  color: #2563eb !important;
+}
+
+.stateGray {
+  color: #64748b !important;
+}
+
+.compactActionRow {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.primaryOperationButton,
+.secondaryOperationButton {
+  height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.primaryOperationButton {
+  border: 0;
+  background: #0b7ff3;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(11, 127, 243, 0.22);
+}
+
+.primaryOperationButton:hover {
+  background: #006ee6;
+  box-shadow: 0 14px 30px rgba(11, 127, 243, 0.28);
+}
+
+.secondaryOperationButton {
+  border: 1px solid #2563eb;
+  background: #ffffff;
+  color: #2563eb;
+}
+
+.secondaryOperationButton:hover {
+  background: #eff6ff;
+}
+
+.primaryOperationButton:active,
+.secondaryOperationButton:active {
+  transform: translateY(1px);
+}
+
+.primaryOperationButton:disabled,
+.secondaryOperationButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 우: 학생 입장 + 위험 작업 */
+.adminRightRail {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.adminRightRail .studentEntryCard {
+  flex: 0 0 auto;
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.adminRightRail .studentEntryCard h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -0.025em;
+}
+
+.adminRightRail .studentEntryCard > p {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.studentQrBox {
+  margin-top: 16px;
+  height: 166px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.studentQrBox canvas,
+.studentQrBox svg {
+  max-width: 132px;
+  max-height: 132px;
+}
+
+.studentLinkField {
+  margin-top: 14px;
+}
+
+.studentLinkField label {
+  display: block;
+  margin-bottom: 7px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.studentLinkField input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d4dbe8;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  outline: none;
+  text-overflow: ellipsis;
+}
+
+.studentLinkField input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.studentLinkActions {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.studentLinkActions button {
+  height: 38px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #d4dbe8;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.studentLinkActions button:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.dangerCompactCard {
+  flex: 0 0 auto;
+  padding: 16px 18px;
+  border: 1px solid #fecaca;
+  border-radius: 20px;
+  background: #fff7f7;
+}
+
+.dangerCompactCard h2 {
+  margin: 0;
+  color: #dc2626;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.dangerCompactCard p {
+  margin: 7px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.dangerCompactCard button {
+  margin-top: 12px;
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.dangerCompactCard button:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+/* 응답 초기화 모달 */
+.resetModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.resetModal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border: 1px solid #e5eaf2;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
+}
+
+.resetModal h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.resetModal p {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.resetModalActions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resetModalActions button {
+  height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.resetModalActions .resetDangerButton {
+  border: 1px solid #fca5a5;
+  background: #ffffff;
+  color: #dc2626;
+}
+
+.resetModalActions .resetDangerButton:hover {
+  background: #fef2f2;
+}
+
+.resetModalActions .resetCancelButton {
+  border: 1px solid #d4dbe8;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.resetModalActions .resetCancelButton:hover {
+  background: #f8fafc;
+}
+
+/* 내부 스크롤바 */
+.questionListScroll::-webkit-scrollbar,
+.liveResponsesTableWrap::-webkit-scrollbar {
+  width: 8px;
+}
+
+.questionListScroll::-webkit-scrollbar-track,
+.liveResponsesTableWrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.questionListScroll::-webkit-scrollbar-thumb,
+.liveResponsesTableWrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.questionListScroll::-webkit-scrollbar-thumb:hover,
+.liveResponsesTableWrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.questionListScroll,
+.liveResponsesTableWrap {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* 반응형 */
+@media (max-width: 1080px) {
+  .adminLiveWorkspace {
+    grid-template-columns: 250px minmax(0, 1fr) 280px;
+  }
+
+  .compactQuestionControlCard {
+    grid-template-columns: 1fr;
+    flex-basis: 214px;
+    min-height: 214px;
+  }
+
+  .compactActionRow {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 840px) {
+  .adminLivePage {
+    height: auto;
+    min-height: calc(100dvh - var(--app-header-height, 72px));
+    overflow: auto;
+    padding: 20px 16px;
+  }
+
+  .adminLiveShell {
+    height: auto;
+  }
+
+  .adminLiveWorkspace {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .adminQuestionPanel,
+  .adminMainColumn,
+  .adminRightRail,
+  .liveResponsesCard {
+    min-height: auto;
+  }
+
+  .liveResponsesCard {
+    min-height: 420px;
+  }
+
+  .compactQuestionControlCard {
+    flex-basis: auto;
+    min-height: auto;
+  }
+}
