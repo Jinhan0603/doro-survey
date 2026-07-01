@@ -1,64 +1,215 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BookCopy, CopyPlus, FolderKanban, LayoutTemplate, PencilLine, PlayCircle } from 'lucide-react';
-import { Button } from '../components/common/Button';
+import {
+  BookCopy,
+  Brain,
+  CopyPlus,
+  FileText,
+  FolderKanban,
+  Globe,
+  GraduationCap,
+  LayoutTemplate,
+  List,
+  PencilLine,
+  Target,
+  User,
+} from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { duplicateLessonTemplate } from '../firebase/lessonTemplates';
-import { useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
+import { useLessonTemplateDetail, useLessonTemplateLibrary } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
-import type { LessonTemplateDoc } from '../firebase/types';
+import type {
+  LessonInteractionDoc,
+  LessonTemplateDoc,
+  QuestionInputType,
+  ResultVisibility,
+} from '../firebase/types';
 import '../styles/survey-builder.css';
 import '../styles/template-builder.css';
 
+const QUESTION_TYPE_LABELS: Record<QuestionInputType, string> = {
+  choice: '객관식',
+  multi: '복수 선택',
+  text: '주관식',
+  scale: '척도',
+  status: '상태',
+};
+
+function getInteractionTypeLabel(inputType: QuestionInputType | null | undefined): string {
+  return (inputType && QUESTION_TYPE_LABELS[inputType]) || '객관식';
+}
+
+function getInteractionVisibilityLabel(visibility: ResultVisibility | null | undefined): string {
+  return visibility === 'public' ? '공개' : '비공개';
+}
+
 function TemplateDetail({
   template,
+  interactions,
   editable,
   busy,
   onDuplicate,
 }: {
   template: LessonTemplateDoc;
+  interactions: LessonInteractionDoc[];
   editable: boolean;
   busy: boolean;
   onDuplicate: (templateId: string) => void;
 }) {
-  return (
-    <div className="templateDetail">
-      <h3 className="templateDetail__title">{template.title}</h3>
-      <p className="templateDetail__desc">{template.description || '설명이 아직 없습니다.'}</p>
+  const isShared =
+    template.shared ||
+    template.templateVisibility === 'shared' ||
+    template.templateVisibility === 'org';
+  const visibilityLabel = isShared ? '공유 템플릿' : '개인용';
+  const description = template.description?.trim() ?? '';
+  const subjectType = template.subject?.trim() ?? '';
+  const targetGrade = template.targetGrade?.trim() ?? '';
+  const toolList = (template.toolTags ?? []).map((tool) => tool.trim()).filter(Boolean);
+  const questionCount = template.interactionCount ?? interactions.length;
 
-      <div className="templateDetail__meta">
-        {template.subject ? <span>{template.subject}</span> : null}
-        {template.targetGrade ? <span>{template.targetGrade}</span> : null}
-        <span>질문 {template.interactionCount ?? 0}개</span>
+  return (
+    <>
+      <header className="templateDetailHeader">
+        <div className="templateDetailTitleBlock">
+          <p className="templateDetailEyebrow">
+            <FileText size={16} aria-hidden="true" />
+            템플릿 정보
+          </p>
+          <h2>{template.title}</h2>
+          <div className="templateDetailBadges">
+            <span className="detailBadge detailBadgeBlue">
+              {isShared ? <Globe size={15} aria-hidden="true" /> : <User size={15} aria-hidden="true" />}
+              {visibilityLabel}
+            </span>
+            <span className="detailBadge detailBadgeNeutral">
+              <List size={15} aria-hidden="true" />
+              질문 {questionCount}개
+            </span>
+          </div>
+        </div>
+
+        <div className="templateDetailHeaderActions">
+          {editable ? (
+            <Link className="detailSecondaryButton" to={`/custom-template/${template.id}`}>
+              <PencilLine size={17} aria-hidden="true" />
+              편집
+            </Link>
+          ) : null}
+          <button
+            type="button"
+            className="detailSecondaryButton"
+            disabled={busy}
+            onClick={() => onDuplicate(template.id)}
+          >
+            <CopyPlus size={17} aria-hidden="true" />
+            복제
+          </button>
+        </div>
+      </header>
+
+      <div className="templateDetailBody">
+        <div className="templateDetailContentGrid">
+          <div className="templateDetailMainColumn">
+            <section className="detailSection">
+              <h3>설명</h3>
+              {description ? (
+                <div className="descriptionBox">{description}</div>
+              ) : (
+                <div className="emptyInfoBox">설명이 없습니다.</div>
+              )}
+            </section>
+
+            <section className="detailSection">
+              <h3>사용 툴</h3>
+              {toolList.length > 0 ? (
+                <div className="toolChipList">
+                  {toolList.map((tool) => (
+                    <span key={tool} className="toolChip">
+                      {tool}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="emptyInfoBox">미입력</div>
+              )}
+            </section>
+          </div>
+
+          <aside className="templateDetailAsideColumn">
+            <section className="detailSection">
+              <h3>요약 정보</h3>
+              <dl className="templateSummaryGrid">
+                <div className="summaryTile">
+                  <dt>
+                    <Globe size={18} aria-hidden="true" />
+                    공개 범위
+                  </dt>
+                  <dd>{visibilityLabel}</dd>
+                </div>
+                <div className="summaryTile">
+                  <dt>
+                    <Brain size={18} aria-hidden="true" />
+                    과목 유형
+                  </dt>
+                  <dd>{subjectType || '미입력'}</dd>
+                </div>
+                <div className="summaryTile">
+                  <dt>
+                    <GraduationCap size={18} aria-hidden="true" />
+                    대상 학년
+                  </dt>
+                  <dd>{targetGrade || '미입력'}</dd>
+                </div>
+                <div className="summaryTile">
+                  <dt>
+                    <FileText size={18} aria-hidden="true" />
+                    질문 수
+                  </dt>
+                  <dd>{questionCount}개</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className="detailSection">
+              <div className="detailSectionHeader">
+                <h3>질문 미리보기</h3>
+                <span>{questionCount}개</span>
+              </div>
+              {interactions.length > 0 ? (
+                <div className="questionPreviewList">
+                  {interactions.map((interaction, index) => (
+                    <article key={interaction.id} className="questionPreviewCard">
+                      <span className="questionNumberBadge">
+                        Q{String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className="questionPreviewContent">
+                        <strong>{interaction.title || `질문 ${index + 1}`}</strong>
+                        <span>
+                          {getInteractionTypeLabel(interaction.inputType)}
+                          {' · '}
+                          {getInteractionVisibilityLabel(interaction.visibility)}
+                          {' · '}
+                          선택지 {interaction.choices?.length ?? 0}개
+                        </span>
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="emptyInfoBox">등록된 질문이 없습니다.</div>
+              )}
+            </section>
+          </aside>
+        </div>
       </div>
 
-      {template.toolTags?.length ? (
-        <div className="templateDetail__tags">
-          {template.toolTags.map((tool) => (
-            <span key={tool} className="library-template-tag">
-              {tool}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="templateDetail__actions">
-        <Link className="builder-link-button" to={`/custom-session?template=${template.id}`}>
-          <PlayCircle size={16} />
+      <footer className="templateDetailFooter">
+        <Link className="primaryUseTemplateButton" to={`/custom-session?template=${template.id}`}>
+          <Target size={18} aria-hidden="true" />
           템플릿으로 설문 제작
         </Link>
-        {editable ? (
-          <Link className="builder-link-button builder-link-button--ghost" to={`/custom-template/${template.id}`}>
-            <PencilLine size={16} />
-            편집
-          </Link>
-        ) : null}
-        <Button disabled={busy} size="sm" variant="secondary" onClick={() => onDuplicate(template.id)}>
-          <CopyPlus size={16} />
-          복제하기
-        </Button>
-      </div>
-    </div>
+      </footer>
+    </>
   );
 }
 
@@ -86,6 +237,7 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
 
   const activeTemplates = filter === 'mine' ? myTemplates : orgTemplates;
   const selected = activeTemplates.find((template) => template.id === selectedId) ?? null;
+  const { interactions: selectedInteractions } = useLessonTemplateDetail(selected?.id);
 
   // 필터/목록이 바뀌면 첫 항목을 자동 선택한다.
   // 저장 직후 ?selected= 로 진입하면 해당 템플릿을 우선 선택한다(최초 1회).
@@ -220,26 +372,21 @@ function LessonTemplateLibraryContent({ ownerUid }: { ownerUid: string }) {
           </aside>
 
           <section className="questionBuilderPanel">
-            <header className="questionBuilderHeader">
-              <div className="builderPaneHeader">
-                <h2>템플릿 정보</h2>
+            {selected ? (
+              <TemplateDetail
+                template={selected}
+                interactions={selectedInteractions}
+                editable={filter === 'mine'}
+                busy={busyTemplateId === selected.id}
+                onDuplicate={handleDuplicate}
+              />
+            ) : (
+              <div className="templateDetailEmpty">
+                <FileText className="templateDetailEmptyIcon" aria-hidden="true" />
+                <h2>템플릿을 선택하세요</h2>
+                <p>왼쪽 목록에서 템플릿을 선택하면 상세 정보가 표시됩니다.</p>
               </div>
-            </header>
-            <div className="questionBuilderScroll">
-              {selected ? (
-                <TemplateDetail
-                  template={selected}
-                  editable={filter === 'mine'}
-                  busy={busyTemplateId === selected.id}
-                  onDuplicate={handleDuplicate}
-                />
-              ) : (
-                <div className="library-section__empty">
-                  <FolderKanban size={20} />
-                  <strong>왼쪽에서 템플릿을 선택하세요.</strong>
-                </div>
-              )}
-            </div>
+            )}
           </section>
         </section>
       </div>
