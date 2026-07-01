@@ -23,6 +23,9 @@ type UpsertAnswerInput = {
   answerKind: AnswerKind;
   value?: string | null;
   values?: string[];
+  // 선택형 응답이 가리키는 선택지 고유 id(집계용). 단일 선택은 choiceId, 복수 선택은 choiceIds.
+  choiceId?: string | null;
+  choiceIds?: string[];
   displayAnswer: string;
 };
 
@@ -83,6 +86,8 @@ export async function upsertAnswer({
   answerKind,
   value = null,
   values = [],
+  choiceId = null,
+  choiceIds = [],
   displayAnswer,
 }: UpsertAnswerInput) {
   const answerRef = getAnswerRef(sessionId, questionId, uid);
@@ -109,6 +114,9 @@ export async function upsertAnswer({
     answerKind,
     answerValue: answerKind === 'multi' ? null : trimmedValue,
     answerValues: answerKind === 'multi' ? trimmedValues : null,
+    // 텍스트 문항은 선택지 id 없음. 단일/복수 선택형만 각각 id 기록.
+    answerChoiceId: answerKind === 'text' || answerKind === 'multi' ? null : choiceId,
+    answerChoiceIds: answerKind === 'multi' ? choiceIds : null,
     displayAnswer: normalizedDisplayAnswer,
     approved: false,
     hidden: false,

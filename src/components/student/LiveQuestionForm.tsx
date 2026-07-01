@@ -7,6 +7,7 @@ import {
   getAnswerValues,
   getQuestionChoices,
   getQuestionInputType,
+  resolveChoiceIdByText,
 } from '../../utils/questionRuntime';
 import { Button } from '../common/Button';
 import { ChoiceQuestion } from '../survey/ChoiceQuestion';
@@ -104,6 +105,7 @@ export function LiveQuestionForm({
           nickname: normalizedNickname,
           answerKind: inputType,
           value: normalizedValue,
+          choiceId: resolveChoiceIdByText(question, normalizedValue),
           displayAnswer: normalizedValue,
         });
       } else if (inputType === 'multi') {
@@ -114,6 +116,10 @@ export function LiveQuestionForm({
           return;
         }
 
+        const choiceIds = normalizedValues
+          .map((item) => resolveChoiceIdByText(question, item))
+          .filter((id): id is string => Boolean(id));
+
         await upsertAnswer({
           sessionId,
           questionId: question.id,
@@ -121,6 +127,7 @@ export function LiveQuestionForm({
           nickname: normalizedNickname,
           answerKind: 'multi',
           values: normalizedValues,
+          choiceIds,
           displayAnswer: normalizedValues.join(' | '),
         });
       } else {
