@@ -7,7 +7,6 @@ import { Button } from '../components/common/Button';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useMySessions } from '../hooks/useMySessions';
 import { deleteSessionCascade, type SessionSummary } from '../firebase/sessions';
-import { buildAppUrl } from '../utils/urls';
 import '../styles/survey-builder.css';
 import '../styles/template-builder.css';
 
@@ -25,14 +24,14 @@ function SessionDetail({
   deleting,
   onOpenAdmin,
   onOpenDisplay,
-  onCopyLink,
+  onEdit,
   onDelete,
 }: {
   session: SessionSummary;
   deleting: boolean;
   onOpenAdmin: () => void;
   onOpenDisplay: () => void;
-  onCopyLink: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   const created = formatCreated(session.createdAt);
@@ -59,8 +58,8 @@ function SessionDetail({
         <Button size="sm" variant="secondary" onClick={onOpenDisplay}>
           결과 화면
         </Button>
-        <Button size="sm" variant="ghost" onClick={onCopyLink}>
-          학생 링크 복사
+        <Button size="sm" variant="ghost" onClick={onEdit}>
+          편집
         </Button>
         <Button size="sm" variant="ghost" disabled={deleting} onClick={onDelete}>
           삭제
@@ -105,10 +104,6 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
       setSelectedId(sessions[0].id);
     }
   }, [sessions, selectedId, requestedId]);
-
-  const copyStudentLink = (id: string) => {
-    void navigator.clipboard.writeText(buildAppUrl('/student', id));
-  };
 
   const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`"${title}" 설문을 삭제할까요?\n질문과 응답이 모두 영구 삭제되며 되돌릴 수 없습니다.`)) {
@@ -211,7 +206,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
                   deleting={deletingId === selected.id}
                   onOpenAdmin={() => navigate(`/admin?session=${selected.id}`)}
                   onOpenDisplay={() => navigate(`/display?session=${selected.id}`)}
-                  onCopyLink={() => copyStudentLink(selected.id)}
+                  onEdit={() => navigate(`/custom-session/${selected.id}`)}
                   onDelete={() => void handleDelete(selected.id, selected.title)}
                 />
               ) : (
