@@ -243,6 +243,7 @@ export function AdminPage() {
                 questions.map((question, index) => {
                   const isSelected = question.id === activeQuestion?.id;
                   const isOpenRow = question.id === openQuestion?.id;
+                  const isPublishedRow = isOpenRow && Boolean(session?.showResults);
                   const typeLabel = getQuestionTypeLabel(question);
                   return (
                     <button
@@ -258,10 +259,17 @@ export function AdminPage() {
                           {typeLabel} · 응답 {getRowCount(question.id)}개
                         </span>
                       </span>
-                      {isOpenRow ? (
-                        <span className="questionOpenBadge">
-                          <span className="questionOpenDot" aria-hidden="true" />
-                          열림
+                      {isOpenRow || isPublishedRow ? (
+                        <span className="questionRowBadges">
+                          {isOpenRow ? (
+                            <span className="questionOpenBadge">
+                              <span className="questionOpenDot" aria-hidden="true" />
+                              열림
+                            </span>
+                          ) : null}
+                          {isPublishedRow ? (
+                            <span className="questionPublishedBadge">공개됨</span>
+                          ) : null}
                         </span>
                       ) : null}
                     </button>
