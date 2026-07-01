@@ -382,10 +382,10 @@
 .sessionDetailBody {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 20px 24px;
+  padding: 16px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   /* 평소엔 넘치지 않아 스크롤이 없고, 질문 미리보기 리스트만 내부 스크롤한다.
      창이 아주 낮아 요약 내용까지 못 담을 때만 본문이 폴백 스크롤한다(요약 잘림 방지). */
   overflow-y: auto;
@@ -450,7 +450,7 @@
 /* 학생 입장 카드 */
 .studentEntryCard {
   flex: 0 0 auto;
-  padding: 18px 20px;
+  padding: 14px 20px;
   border: 1px solid #dbe3ef;
   border-radius: 18px;
   background: #ffffff;
@@ -475,15 +475,15 @@
 
 .studentEntryContent {
   display: grid;
-  grid-template-columns: 154px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 14px;
   align-items: center;
 }
 
 .studentQrBox {
-  width: 154px;
-  height: 154px;
-  padding: 10px;
+  width: 140px;
+  height: 140px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -494,8 +494,8 @@
 
 .studentQrBox canvas,
 .studentQrBox svg {
-  max-width: 132px;
-  max-height: 132px;
+  max-width: 128px;
+  max-height: 128px;
 }
 
 .studentLinkArea {
@@ -589,8 +589,8 @@
 }
 
 .summaryTile {
-  min-height: 78px;
-  padding: 12px 14px;
+  min-height: 72px;
+  padding: 11px 14px;
   display: flex;
   flex-direction: column;
   justify-content: center;
