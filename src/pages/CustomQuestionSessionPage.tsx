@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { FileText, ListChecks, QrCode, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
+import { BackLink } from '../components/common/BackLink';
 import { QuestionEditor } from '../components/session/QuestionEditor';
 import {
   createDraft,
@@ -152,6 +153,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
     const notFound = !editLoading && !editingSession;
     return (
       <main className="surveyCreatePage">
+        <BackLink to="/sessions" label="진행 중인 설문" />
         <h1 className="surveyPageTitle">설문 편집</h1>
         <section className="surveyBuilderPanel">
           <div className="builderPanelScrollBody">
@@ -173,6 +175,7 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <main className="surveyCreatePage">
+      <BackLink to="/sessions" label="진행 중인 설문" />
       <h1 className="surveyPageTitle">{isEditMode ? '설문 편집' : '설문 만들기'}</h1>
       <section className="surveyBuilderPanel">
         <header className="builderPanelHeader">

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, ListChecks, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
+import { BackLink } from '../components/common/BackLink';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
@@ -238,7 +239,10 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
     <main className="templateBuilderPage">
       <div className="templateBuilderShell">
         <header className="templateBuilderToolbar">
-          <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
+          <div className="templateBuilderTitleBlock">
+            <BackLink to="/templates" label="설문지 템플릿" />
+            <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
+          </div>
           <div className="templateBuilderActions">
             <Button
               disabled={busy || !form.title.trim() || questions.length === 0}

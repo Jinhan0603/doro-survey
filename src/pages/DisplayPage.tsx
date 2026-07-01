@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, Users } from 'lucide-react';
+import { BackLink } from '../components/common/BackLink';
 import type { QuestionDoc, ResultVisibility } from '../firebase/types';
 import { firebaseConfigStatus } from '../firebase/client';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -213,7 +214,10 @@ function DisplayShell({ children }: { children: ReactNode }) {
     <main className="displayPage">
       <div className="displayShell">
         <header className="displayToolbar">
-          <h1>발표 화면</h1>
+          <div className="displayTitleBlock">
+            <BackLink to="/sessions" label="진행 중인 설문" />
+            <h1>발표 화면</h1>
+          </div>
         </header>
         {children}
       </div>
