@@ -1,10 +1,5 @@
 import { nanoid } from 'nanoid';
 import type { LessonPhase, TemplateVisibility } from '../../firebase/types';
-import type {
-  InteractionGeneratorAudienceLevel,
-  InteractionGeneratorDensity,
-  InteractionGeneratorSubjectType,
-} from '../../utils/interactionGenerator';
 
 export type TemplateFormState = {
   title: string;
@@ -26,12 +21,6 @@ export type EditableSlide = {
   phaseConfidence: number;
 };
 
-export type GeneratorOptionsState = {
-  subjectType: InteractionGeneratorSubjectType;
-  audienceLevel: InteractionGeneratorAudienceLevel;
-  density: InteractionGeneratorDensity;
-};
-
 export const EMPTY_TEMPLATE: TemplateFormState = {
   title: '',
   description: '',
@@ -46,12 +35,6 @@ export const SHAREABLE_VISIBILITY_LABELS: [TemplateVisibility, string][] = [
   ['private', '개인용'],
   ['shared', '전체 공유'],
 ];
-
-export const DEFAULT_GENERATOR_OPTIONS: GeneratorOptionsState = {
-  subjectType: 'mixed',
-  audienceLevel: 'middle',
-  density: 'medium',
-};
 
 export function parseToolTags(input: string) {
   return input

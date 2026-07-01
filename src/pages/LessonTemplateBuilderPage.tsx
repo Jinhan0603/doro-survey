@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, FileUp, ListChecks, Save } from 'lucide-react';
+import { FileText, ListChecks, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
-import { PptxExtractModal } from '../components/builder/PptxExtractModal';
 import '../styles/survey-builder.css';
 import '../styles/template-builder.css';
 // 질문 편집 카드는 설문 만들기 화면과 동일한 소스를 공유한다(한 곳만 고치면 양쪽 반영).
@@ -18,7 +17,6 @@ import {
   type CustomQuestionDraft,
 } from '../components/session/customQuestionDraft';
 import {
-  DEFAULT_GENERATOR_OPTIONS,
   EMPTY_TEMPLATE,
   SHAREABLE_VISIBILITY_LABELS,
   createEditableSlide,
@@ -26,7 +24,6 @@ import {
   parseToolTags,
   sortSlides,
   type EditableSlide,
-  type GeneratorOptionsState,
   type TemplateFormState,
 } from '../components/builder/builderModel';
 import {
@@ -39,11 +36,6 @@ import { inferInteractionType, inferPurpose } from '../firebase/sessions';
 import type { QuestionInputType, TemplateVisibility } from '../firebase/types';
 import { useLessonTemplateDetail } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
-import {
-  generateInteractionsFromSlides,
-  type GeneratedInteractionDraft,
-} from '../utils/interactionGenerator';
-import { extractSlidesFromPptx } from '../utils/pptx';
 
 function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   const navigate = useNavigate();
@@ -63,14 +55,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
   const [busy, setBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [pptxError, setPptxError] = useState<string | null>(null);
-  const [uploadingPptx, setUploadingPptx] = useState(false);
-  const [sourceFileName, setSourceFileName] = useState<string | null>(null);
-  const [generatorOptions, setGeneratorOptions] = useState<GeneratorOptionsState>(DEFAULT_GENERATOR_OPTIONS);
-  const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedInteractionDraft[]>([]);
-  const [generatorError, setGeneratorError] = useState<string | null>(null);
-  const [generatorMessage, setGeneratorMessage] = useState<string | null>(null);
-  const [pptxModalOpen, setPptxModalOpen] = useState(false);
   // 모바일(≤960px)에서 좌/우 패널을 탭으로 전환한다.
   const [activePane, setActivePane] = useState<'meta' | 'questions'>('questions');
 
@@ -132,12 +116,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   const sortedSlides = useMemo(() => sortSlides(slides), [slides]);
 
-  useEffect(() => {
-    setGeneratedDrafts([]);
-    setGeneratorError(null);
-    setGeneratorMessage(null);
-  }, [slides]);
-
   const handleFormPatch = (patch: Partial<TemplateFormState>) => {
     setForm((current) => ({ ...current, ...patch }));
   };
@@ -154,100 +132,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   const handleQuestionDelete = (clientId: string) => {
     setQuestions((current) => current.filter((question) => question.clientId !== clientId));
-  };
-
-  const handleGeneratorOptionPatch = (patch: Partial<GeneratorOptionsState>) => {
-    setGeneratorOptions((current) => ({ ...current, ...patch }));
-  };
-
-  const handleGenerateDrafts = () => {
-    if (sortedSlides.length === 0) {
-      setGeneratorError('질문 초안을 만들려면 먼저 PPTX를 올리거나 슬라이드를 준비해주세요.');
-      setGeneratorMessage(null);
-      setGeneratedDrafts([]);
-      return;
-    }
-
-    const drafts = generateInteractionsFromSlides(
-      sortedSlides.map((slide) => ({
-        slideNumber: slide.slideNumber,
-        title: slide.title,
-        text: slide.content,
-        rawTexts: slide.rawTexts,
-        phase: slide.phase,
-        detectedPhase: slide.detectedPhase,
-      })),
-      generatorOptions,
-    );
-
-    if (drafts.length === 0) {
-      setGeneratorError('현재 슬라이드 구조로는 생성할 초안이 없습니다.');
-      setGeneratorMessage(null);
-      setGeneratedDrafts([]);
-      return;
-    }
-
-    setGeneratorError(null);
-    setGeneratorMessage(`질문 초안 ${drafts.length}개를 생성했습니다.`);
-    setGeneratedDrafts(drafts);
-  };
-
-  const handleApplyGeneratedDrafts = () => {
-    if (generatedDrafts.length === 0) return;
-
-    setQuestions((current) => [
-      ...current,
-      ...generatedDrafts.map((draft) =>
-        createDraft({
-          phase: draft.phase,
-          title: draft.title,
-          prompt: draft.prompt,
-          inputType: draft.inputType,
-          visibility: draft.visibility,
-          choices: toChoiceDrafts(draft.choices ?? []),
-          maxLength: draft.maxLength ?? 300,
-        }),
-      ),
-    ]);
-
-    setGeneratorMessage('초안을 질문 목록에 반영했습니다. 저장 전에 각 질문을 수정해주세요.');
-    setGeneratorError(null);
-    setGeneratedDrafts([]);
-    setPptxModalOpen(false);
-  };
-
-  const handlePptxUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingPptx(true);
-      setPptxError(null);
-      const extractedSlides = await extractSlidesFromPptx(file);
-      setSlides(
-        extractedSlides.map((slide) =>
-          createEditableSlide({
-            slideNumber: slide.slideNumber,
-            title: slide.title,
-            content: slide.text,
-            rawTexts: slide.rawTexts,
-            phase: slide.detectedPhase,
-            detectedPhase: slide.detectedPhase,
-            phaseConfidence: slide.phaseConfidence,
-          }),
-        ),
-      );
-      setSourceFileName(file.name);
-    } catch (uploadError) {
-      setPptxError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : 'PPTX를 분석하는 중 오류가 발생했습니다. 다른 파일로 다시 시도해주세요.',
-      );
-    } finally {
-      event.target.value = '';
-      setUploadingPptx(false);
-    }
   };
 
   const handleSave = async () => {
@@ -356,10 +240,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
         <header className="templateBuilderToolbar">
           <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
           <div className="templateBuilderActions">
-            <Button size="sm" variant="secondary" onClick={() => setPptxModalOpen(true)}>
-              <FileUp size={16} />
-              PPTX에서 추출하기
-            </Button>
             <Button
               disabled={busy || !form.title.trim() || questions.length === 0}
               size="sm"
@@ -507,25 +387,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
           </section>
         </section>
       </div>
-
-      <PptxExtractModal
-        open={pptxModalOpen}
-        onClose={() => setPptxModalOpen(false)}
-        uploadingPptx={uploadingPptx}
-        sourceFileName={sourceFileName}
-        slideCount={sortedSlides.length}
-        pptxError={pptxError}
-        onUpload={(event) => {
-          void handlePptxUpload(event);
-        }}
-        generatorOptions={generatorOptions}
-        onOptionPatch={handleGeneratorOptionPatch}
-        onGenerate={handleGenerateDrafts}
-        drafts={generatedDrafts}
-        generatorError={generatorError}
-        generatorMessage={generatorMessage}
-        onApply={handleApplyGeneratedDrafts}
-      />
     </main>
   );
 }

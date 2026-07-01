@@ -195,72 +195,6 @@ Builder에서는 자주 쓰는 DORO 기본 버튼도 제공합니다.
 
 ---
 
-## PPTX Import
-
-Builder는 PPTX 원본 파일을 **브라우저에서만** 읽습니다.
-
-- 서버 저장 금지
-- Firebase Storage 사용 금지
-- 추출된 슬라이드 메타데이터만 템플릿에 반영
-
-사용 패키지:
-
-- `jszip`
-- `fast-xml-parser`
-
-추출 유틸:
-
-- [src/utils/pptx.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/pptx.ts>)
-- `extractSlidesFromPptx(file: File): Promise<ExtractedSlide[]>`
-
-`ExtractedSlide`는 다음 정보를 제공합니다.
-
-- `slideNumber`
-- `title`
-- `text`
-- `rawTexts`
-- `detectedPhase`
-- `phaseConfidence`
-
-phase 분류 규칙:
-
-- `intro`: 도입, 목표, 왜, 문제, 궁금, 해볼까요
-- `theory`: 원리, 개념, 구조, 설명, 특징, 문법, 알고리즘
-- `practice`: 실습, 따라하기, 조립, 코딩, 설정, 만들기, 미션, 활동
-- `ethics`: 윤리, 사례, 활용, 저작권, 개인정보, 안전, 책임, 오용, 한계
-- `wrapup`: 정리, 회고, 퀴즈, 발표, 오늘 배운 것, 다음 시간
-
-강사는 Builder에서 자동 분류 결과를 수동으로 수정할 수 있습니다.
-
----
-
-## Interaction Generator
-
-외부 AI API는 사용하지 않습니다.
-interaction 초안은 브라우저에서 **규칙 기반**으로 생성되며, 생성 후 강사가 직접 수정할 수 있습니다.
-
-생성 유틸:
-
-- [src/utils/interactionGenerator.ts](</C:/Users/User/Documents/Jindex/doro-survey/src/utils/interactionGenerator.ts>)
-- `generateInteractionsFromSlides(slides, options)`
-
-옵션:
-
-- `subjectType`: `ai | robot | making | coding | mixed`
-- `audienceLevel`: `elementary | middle | high | university`
-- `density`: `low | medium | high`
-
-대표 규칙:
-
-- `intro`에서 prior-knowledge / prediction / confidence-check 생성
-- `theory`에서 concept-check / confidence-check 생성
-- `practice` 시작 전 readiness-check 자동 생성
-- practice slide가 3장 이상이면 progress-check 자동 생성
-- ethics slide가 있으면 ethics-case 자동 생성
-- 마지막 2~3장을 기준으로 exit-ticket 생성
-
----
-
 ## Runtime Model
 
 기존 `choice / text` 질문은 그대로 유지하면서 V2 타입을 확장합니다.
@@ -433,7 +367,6 @@ lessonTemplates/{templateId}/interactions/{interactionId}
 | 인증 | 학생: Anonymous Auth / 강사: Email + Password |
 | 차트 | Recharts |
 | QR | qrcode.react |
-| PPTX 분석 | jszip, fast-xml-parser |
 | ID 생성 | nanoid |
 | 배포 | GitHub Pages |
 
