@@ -59,7 +59,13 @@ export function subscribeAnswers(
     (snapshot) => {
       callback(snapshot.docs.map((documentSnapshot) => documentSnapshot.data() as AnswerDoc));
     },
-    (error) => onError?.(error),
+    (error) => {
+      console.error(
+        `[firestore] answers 구독 실패 · session=${sessionId} question=${questionId}`,
+        error,
+      );
+      onError?.(error);
+    },
   );
 }
 
@@ -75,7 +81,13 @@ export function subscribeOwnAnswer(
     (snapshot) => {
       callback(snapshot.exists() ? (snapshot.data() as AnswerDoc) : null);
     },
-    (error) => onError?.(error),
+    (error) => {
+      console.error(
+        `[firestore] 내 답변 구독 실패 · session=${sessionId} question=${questionId} uid=${uid}`,
+        error,
+      );
+      onError?.(error);
+    },
   );
 }
 

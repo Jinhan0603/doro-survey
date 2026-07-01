@@ -29,7 +29,10 @@ export function subscribeQuestions(
     (snapshot) => {
       callback(snapshot.docs.map((d) => ({ ...d.data(), id: d.id }) as QuestionDoc));
     },
-    (error) => onError?.(error),
+    (error) => {
+      console.error(`[firestore] questions 구독 실패 · session=${sessionId}`, error);
+      onError?.(error);
+    },
   );
 }
 

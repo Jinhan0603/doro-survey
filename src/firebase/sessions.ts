@@ -66,7 +66,10 @@ export function subscribeMySessions(
         }),
       );
     },
-    (error) => onError?.(error),
+    (error) => {
+      console.error(`[firestore] 내 세션 목록 구독 실패 · owner=${ownerUid}`, error);
+      onError?.(error);
+    },
   );
 }
 
@@ -88,7 +91,10 @@ export function subscribeSession(
     (snapshot) => {
       callback(snapshot.exists() ? (snapshot.data() as SessionDoc) : null);
     },
-    (error) => onError?.(error),
+    (error) => {
+      console.error(`[firestore] session 구독 실패 · session=${sessionId}`, error);
+      onError?.(error);
+    },
   );
 }
 

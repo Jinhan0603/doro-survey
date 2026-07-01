@@ -47,6 +47,7 @@ export function StudentPage() {
   useEffect(() => {
     if (!liveEnabled || authLoading || user) return;
     signInStudentAnonymously().catch((nextError) => {
+      console.error('[auth] 학생 익명 로그인 실패', nextError);
       setAuthError(nextError instanceof Error ? nextError.message : '학생 로그인에 실패했습니다.');
     });
   }, [authLoading, liveEnabled, user]);
