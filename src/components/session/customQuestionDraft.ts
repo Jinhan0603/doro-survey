@@ -15,6 +15,11 @@ export type CustomQuestionDraft = {
   maxLength: number;
 };
 
+/** 선택지 고유 id를 생성한다(질문 doc의 choiceIds / 응답의 answerChoiceId에 사용). */
+export function makeChoiceId(): string {
+  return `c-${nanoid(8)}`;
+}
+
 export const INPUT_TYPE_HELP: Record<QuestionInputType, string> = {
   choice: '하나만 고르는 투표형 질문입니다.',
   text: '학생 생각을 짧은 문장으로 받습니다.',

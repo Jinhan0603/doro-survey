@@ -27,6 +27,9 @@ export type QuestionDoc = {
   title: string;
   prompt: string;
   choices: string[];
+  // choices와 인덱스 정렬된 선택지 고유 id. 신규/편집 질문에 부여되며,
+  // 응답 집계가 선택지 이름 변경에도 정체성을 따라가게 한다. 레거시 질문엔 없을 수 있음.
+  choiceIds?: string[] | null;
   maxLength: number;
   visible: boolean;
   // V2 optional fields — existing V1 docs without these still work
@@ -49,6 +52,9 @@ export type AnswerDoc = {
   answerKind?: QuestionInputType | null;
   answerValue?: string | null;
   answerValues?: string[] | null;
+  // 선택형 응답이 가리키는 선택지 고유 id(신규 응답에만 기록). 텍스트 문항은 null.
+  answerChoiceId?: string | null;
+  answerChoiceIds?: string[] | null;
   displayAnswer?: string | null;
   approved: boolean;
   hidden: boolean;

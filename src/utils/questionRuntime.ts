@@ -31,6 +31,31 @@ export function getQuestionChoices(
   return question.choices ?? [];
 }
 
+export function getQuestionChoiceIds(question: Pick<QuestionDoc, 'choiceIds'>): string[] {
+  return question.choiceIds ?? [];
+}
+
+/** 선택지 텍스트 → 고유 id (현재 선택지 목록 기준, 없으면 null). */
+export function resolveChoiceIdByText(
+  question: Pick<QuestionDoc, 'choices' | 'choiceIds' | 'type' | 'inputType'>,
+  text: string,
+): string | null {
+  const choices = getQuestionChoices(question);
+  const index = choices.indexOf(text);
+  if (index < 0) return null;
+  return getQuestionChoiceIds(question)[index] ?? null;
+}
+
+/** 선택지 고유 id → 현재 텍스트 (없으면 null). */
+export function resolveChoiceTextById(
+  question: Pick<QuestionDoc, 'choices' | 'choiceIds' | 'type' | 'inputType'>,
+  id: string,
+): string | null {
+  const index = getQuestionChoiceIds(question).indexOf(id);
+  if (index < 0) return null;
+  return getQuestionChoices(question)[index] ?? null;
+}
+
 export function isModeratedQuestion(
   question: Pick<QuestionDoc, 'type' | 'inputType'>,
 ) {

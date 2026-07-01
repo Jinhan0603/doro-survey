@@ -172,6 +172,14 @@ service cloud.firestore {
           request.resource.data.answerValues is list
           && request.resource.data.answerValues.size() <= 20
         ))
+        && (!('answerChoiceId' in request.resource.data) || request.resource.data.answerChoiceId == null || (
+          request.resource.data.answerChoiceId is string
+          && request.resource.data.answerChoiceId.size() <= 64
+        ))
+        && (!('answerChoiceIds' in request.resource.data) || request.resource.data.answerChoiceIds == null || (
+          request.resource.data.answerChoiceIds is list
+          && request.resource.data.answerChoiceIds.size() <= 20
+        ))
         && (!('displayAnswer' in request.resource.data) || request.resource.data.displayAnswer == null || (
           request.resource.data.displayAnswer is string
           && request.resource.data.displayAnswer.size() <= 300
@@ -195,6 +203,8 @@ service cloud.firestore {
           'answerKind',
           'answerValue',
           'answerValues',
+          'answerChoiceId',
+          'answerChoiceIds',
           'displayAnswer',
           'approved',
           'hidden',
@@ -218,6 +228,8 @@ service cloud.firestore {
           'answerKind',
           'answerValue',
           'answerValues',
+          'answerChoiceId',
+          'answerChoiceIds',
           'displayAnswer',
           'updatedAt'
         ])
