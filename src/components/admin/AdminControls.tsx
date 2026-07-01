@@ -8,7 +8,6 @@ type AdminControlsProps = {
   showResults: boolean;
   resultVisibility?: ResultVisibility;
   disabled?: boolean;
-  note?: string;
   onToggleAccepting(): void;
   onToggleResults(): void;
 };
@@ -18,7 +17,6 @@ export function AdminControls({
   showResults,
   resultVisibility = 'public',
   disabled = false,
-  note = '현재 질문의 응답 수집과 결과 공개 상태를 제어합니다.',
   onToggleAccepting,
   onToggleResults,
 }: AdminControlsProps) {
@@ -36,7 +34,6 @@ export function AdminControls({
     <Card className="admin-controls">
       <div>
         <h3>운영 제어</h3>
-        <p>{note}</p>
       </div>
       <div className="admin-controls__status-row">
         <Badge tone={accepting ? 'success' : 'default'}>{accepting ? '응답 수집 중' : '응답 마감'}</Badge>

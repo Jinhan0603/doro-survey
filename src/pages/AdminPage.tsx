@@ -75,13 +75,6 @@ export function AdminPage() {
   const completedCount =
     (statusResults.find((item) => item.name === 'done')?.value ?? 0) +
     (statusResults.find((item) => item.name === 'ready')?.value ?? 0);
-  const controlNote = activeQuestion
-    ? activeVisibility === 'teacher-only'
-      ? '이 질문 결과는 Admin에서만 집계되며 Display에는 공개되지 않습니다.'
-      : activeVisibility === 'hidden'
-        ? '이 질문 결과는 Display에 표시되지 않습니다.'
-        : '응답 열기/마감은 전체 마스터 스위치입니다. 질문별 열기/닫기는 왼쪽 질문 목록에서 제어합니다.'
-    : '응답 열기/마감은 전체 마스터 스위치입니다. 질문별 열기/닫기는 왼쪽 질문 목록에서 제어합니다.';
   const canManageAnswerDocs = (role ?? profile?.role) === 'admin';
 
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
@@ -239,7 +232,6 @@ export function AdminPage() {
           <AdminControls
             accepting={session?.accepting ?? false}
             disabled={busy}
-            note={controlNote}
             resultVisibility={activeVisibility}
             showResults={session?.showResults ?? false}
             onToggleAccepting={() => {

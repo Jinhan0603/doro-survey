@@ -54,7 +54,6 @@ export function AdminPreview() {
 
           <AdminControls
             accepting={accepting}
-            note="응답 수집 시작과 결과 공개 상태를 조작해보세요."
             showResults={showResults}
             onToggleAccepting={() => setAccepting((v) => !v)}
             onToggleResults={() => setShowResults((v) => !v)}
