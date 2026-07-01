@@ -11,6 +11,10 @@ export type SessionDoc = {
   activeQuestionId: string | null;
   accepting: boolean;
   showResults: boolean;
+  // 결과가 공개된 질문 id. showResults와 함께 '어느 질문의 결과가 공개 중인지'를 식별한다.
+  // 응답 마감(open=false)된 질문도 결과 공개가 가능하도록, 공개 대상은 open 상태와 분리한다.
+  // 없거나 activeQuestionId와 다르면 그 질문은 결과 비공개로 취급한다.
+  resultQuestionId?: string | null;
   templateId?: string | null;
   currentPhase?: LessonPhase | null;
   ownerUid?: string | null;

@@ -277,15 +277,11 @@ export function DisplayPage() {
     );
   }
 
-  // 응답 열림/결과 공개 상태는 '지금 실제로 열린 그 질문'에 대해서만 유효하다(단일-오픈 모델).
-  const openQuestion =
-    questions.find((question) => (question.open ?? false) && Boolean(session?.accepting)) ?? null;
-  const isActiveTheOpenOne = Boolean(
-    activeQuestion && openQuestion && activeQuestion.id === openQuestion.id,
-  );
+  // 결과 공개는 응답 열림 상태와 분리한다 — 강사가 마감한 질문도 결과를 공개할 수 있다.
+  // showResults가 켜져 있고 공개 대상(resultQuestionId)이 지금 보여줄 질문과 일치할 때만 공개한다.
   const resultVisible =
-    isActiveTheOpenOne &&
     Boolean(session?.showResults) &&
+    session?.resultQuestionId === activeQuestion?.id &&
     Boolean(activeQuestion && isDisplayableQuestion(activeQuestion));
 
   let stage: ReactNode;

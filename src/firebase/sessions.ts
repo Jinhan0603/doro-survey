@@ -100,7 +100,9 @@ export function subscribeSession(
 
 export async function updateSession(
   sessionId: string,
-  patch: Partial<Pick<SessionDoc, 'activeQuestionId' | 'accepting' | 'showResults' | 'title'>>,
+  patch: Partial<
+    Pick<SessionDoc, 'activeQuestionId' | 'accepting' | 'showResults' | 'resultQuestionId' | 'title'>
+  >,
 ) {
   await updateDoc(getSessionRef(sessionId), {
     ...patch,
@@ -364,7 +366,9 @@ export async function openQuestionExclusively(
   batch.update(getSessionRef(sessionId), {
     accepting: true,
     activeQuestionId: questionId,
+    // 새로 여는 질문은 결과 비공개에서 시작한다(이전 공개 대상도 함께 해제).
     showResults: false,
+    resultQuestionId: null,
     updatedAt: serverTimestamp(),
   });
   await batch.commit();

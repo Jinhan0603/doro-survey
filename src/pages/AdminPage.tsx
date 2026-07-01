@@ -115,11 +115,15 @@ export function AdminPage() {
     activeQuestion && openQuestion && activeQuestion.id === openQuestion.id,
   );
   const isResponseOpen = isActiveTheOpenOne;
-  const isResultVisible = isActiveTheOpenOne && Boolean(session?.showResults);
-  const canPublishResult =
-    isActiveTheOpenOne && activeQuestion
-      ? getQuestionResultVisibility(activeQuestion) === 'public'
-      : false;
+  // 결과 공개는 응답 열림(open) 상태와 분리한다 — 마감된 질문도 공개할 수 있다.
+  // '지금 결과가 공개된 그 질문'은 showResults && resultQuestionId === 활성 질문으로 판정한다.
+  const isResultVisible =
+    Boolean(session?.showResults) &&
+    Boolean(activeQuestion) &&
+    session?.resultQuestionId === activeQuestion?.id;
+  const canPublishResult = activeQuestion
+    ? getQuestionResultVisibility(activeQuestion) === 'public'
+    : false;
 
   const getRowCount = (questionId: string) =>
     questionId === activeQuestion?.id ? activeResponseCount : questionCounts[questionId] ?? 0;
@@ -165,11 +169,17 @@ export function AdminPage() {
   };
 
   const handleToggleResultVisibility = () => {
-    // 결과 공개/비공개는 '지금 열린 그 질문'에 대해서만 가능하다.
-    if (!activeQuestion || !isActiveTheOpenOne || !canPublishResult) return;
+    // 결과 공개/비공개는 현재 선택한 질문에 대해 수행한다(응답 마감 여부와 무관).
+    if (!activeQuestion || !canPublishResult) return;
+    const nextVisible = !isResultVisible;
     void runAdminAction(
-      () => updateSession(sessionId, { showResults: !isResultVisible }),
-      isResultVisible ? '결과를 비공개로 전환했습니다.' : '결과를 공개했습니다.',
+      () =>
+        updateSession(sessionId, {
+          showResults: nextVisible,
+          // 공개 대상 질문을 함께 기록해, 다른 질문으로 전환해도 결과가 새지 않게 한다.
+          resultQuestionId: nextVisible ? activeQuestion.id : null,
+        }),
+      nextVisible ? '결과를 공개했습니다.' : '결과를 비공개로 전환했습니다.',
     );
   };
 
@@ -243,7 +253,8 @@ export function AdminPage() {
                 questions.map((question, index) => {
                   const isSelected = question.id === activeQuestion?.id;
                   const isOpenRow = question.id === openQuestion?.id;
-                  const isPublishedRow = isOpenRow && Boolean(session?.showResults);
+                  const isPublishedRow =
+                    question.id === session?.resultQuestionId && Boolean(session?.showResults);
                   const typeLabel = getQuestionTypeLabel(question);
                   return (
                     <button
@@ -377,11 +388,9 @@ export function AdminPage() {
                   title={
                     !activeQuestion
                       ? undefined
-                      : !isActiveTheOpenOne
-                        ? '응답을 먼저 열어야 결과를 공개할 수 있습니다.'
-                        : !canPublishResult
-                          ? '이 질문은 결과를 공개할 수 없는 설정입니다.'
-                          : undefined
+                      : !canPublishResult
+                        ? '이 질문은 결과를 공개할 수 없는 설정입니다.'
+                        : undefined
                   }
                   onClick={handleToggleResultVisibility}
                 >
