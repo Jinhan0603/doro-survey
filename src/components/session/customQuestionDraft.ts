@@ -1,9 +1,11 @@
 import { nanoid } from 'nanoid';
-import type { CustomSessionQuestionInput } from '../../firebase/sessions';
-import type { LessonPhase, QuestionInputType, ResultVisibility } from '../../firebase/types';
+import type { EditCustomSessionQuestionInput } from '../../firebase/sessions';
+import type { LessonPhase, QuestionDoc, QuestionInputType, ResultVisibility } from '../../firebase/types';
 
 export type CustomQuestionDraft = {
   clientId: string;
+  // 편집 모드에서 기존 질문이면 원본 doc ID(응답 보존용). 새 질문은 undefined.
+  questionId?: string;
   phase: LessonPhase;
   title: string;
   prompt: string;
@@ -53,6 +55,7 @@ export function createDraft(input: Partial<CustomQuestionDraft> = {}): CustomQue
 
   return {
     clientId: nanoid(),
+    questionId: input.questionId,
     phase: input.phase ?? 'intro',
     title: input.title ?? '',
     prompt: input.prompt ?? '',
@@ -65,6 +68,21 @@ export function createDraft(input: Partial<CustomQuestionDraft> = {}): CustomQue
 
 export function createInitialDrafts(): CustomQuestionDraft[] {
   return [];
+}
+
+/** 기존 세션 질문(QuestionDoc)을 편집용 draft로 변환한다(응답 보존을 위해 questionId 유지). */
+export function createDraftFromQuestion(question: QuestionDoc): CustomQuestionDraft {
+  const inputType: QuestionInputType = question.inputType ?? (question.type === 'text' ? 'text' : 'choice');
+  return createDraft({
+    questionId: question.id,
+    phase: question.phase ?? 'intro',
+    title: question.title,
+    prompt: question.prompt,
+    inputType,
+    visibility: question.visibility ?? 'public',
+    choicesText: (question.choices ?? []).join('\n'),
+    maxLength: question.maxLength ?? 300,
+  });
 }
 
 export function parseChoices(choicesText: string) {
@@ -87,8 +105,9 @@ export function swapDrafts(drafts: CustomQuestionDraft[], clientId: string, dire
   return nextDrafts;
 }
 
-export function toQuestionInput(draft: CustomQuestionDraft): CustomSessionQuestionInput {
+export function toQuestionInput(draft: CustomQuestionDraft): EditCustomSessionQuestionInput {
   return {
+    questionId: draft.questionId,
     title: draft.title,
     prompt: draft.prompt,
     inputType: draft.inputType,

@@ -96,6 +96,7 @@ export function AppRouter() {
             <Route path="/builder/:templateId" element={<RedirectBuilderToCustomTemplate />} />
             <Route path="/session-new" element={<NewLessonSessionPage />} />
             <Route path="/custom-session" element={<CustomQuestionSessionPage />} />
+            <Route path="/custom-session/:sessionId" element={<CustomQuestionSessionPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/display" element={<DisplayPage />} />
             <Route path="*" element={<NotFoundPage />} />
