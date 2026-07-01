@@ -126,7 +126,8 @@ export function toQuestionInput(draft: CustomQuestionDraft): EditCustomSessionQu
     title: draft.title,
     prompt: draft.prompt,
     inputType: draft.inputType,
-    visibility: draft.visibility,
+    // 결과 공개 범위는 더 이상 나누지 않는다 — 항상 공개(public)로 저장한다.
+    visibility: 'public',
     phase: draft.phase,
     choices: draft.choices.map((choice) => choice.text),
     choiceIds: draft.choices.map((choice) => choice.id),

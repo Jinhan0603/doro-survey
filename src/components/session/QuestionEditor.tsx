@@ -1,11 +1,9 @@
 import { type ChangeEvent, useMemo } from 'react';
 import { ArrowDown, ArrowUp, GripVertical, Trash2, X } from 'lucide-react';
 import '../../styles/survey-builder.css';
-import type { ResultVisibility } from '../../firebase/types';
 import { makeChoiceId } from '../../utils/questionRuntime';
 import {
   INPUT_TYPE_HELP,
-  VISIBILITY_HELP,
   getDefaultChoices,
   type ChoiceDraft,
   type CustomQuestionDraft,
@@ -73,7 +71,6 @@ export function QuestionEditor({
   const typeHint = baseType === 'text' ? INPUT_TYPE_HELP.text : isMulti ? INPUT_TYPE_HELP.multi : INPUT_TYPE_HELP.choice;
 
   const typeId = `type-${draft.clientId}`;
-  const visibilityId = `visibility-${draft.clientId}`;
   const maxLengthId = `maxlen-${draft.clientId}`;
   const promptId = `prompt-${draft.clientId}`;
 
@@ -130,24 +127,6 @@ export function QuestionEditor({
                 <option value="text">주관식</option>
               </select>
               <p className="formHint">{typeHint}</p>
-            </div>
-
-            <div className="formField">
-              <label className="formLabel" htmlFor={visibilityId}>
-                결과 공개 범위
-              </label>
-              <select
-                id={visibilityId}
-                className="formSelect"
-                value={draft.visibility === 'public' ? 'public' : 'hidden'}
-                onChange={(event) => onPatch(draft.clientId, { visibility: event.target.value as ResultVisibility })}
-              >
-                <option value="public">공개</option>
-                <option value="hidden">비공개</option>
-              </select>
-              <p className="formHint">
-                {draft.visibility === 'public' ? VISIBILITY_HELP.public : VISIBILITY_HELP.hidden}
-              </p>
             </div>
           </div>
 
