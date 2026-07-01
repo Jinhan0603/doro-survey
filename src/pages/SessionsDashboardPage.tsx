@@ -137,7 +137,7 @@ function SessionDetail({
             onClick={onToggleAccepting}
           >
             {isCollecting ? <Lock size={16} /> : <Unlock size={16} />}
-            {isCollecting ? '마감하기' : '수집 재개'}
+            {isCollecting ? '종료하기' : '수집 재개'}
           </button>
           <button type="button" className="detailSecondaryButton" onClick={onEdit}>
             <Pencil size={17} />
