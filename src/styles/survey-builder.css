@@ -162,6 +162,8 @@
   flex: 1 1 auto;
   min-height: 0;
   padding: 0 28px 24px;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
@@ -194,6 +196,7 @@
 }
 
 .emptyQuestionState {
+  flex: 1 1 auto;
   min-height: 260px;
   margin-top: 6px;
   padding: 56px 24px;
