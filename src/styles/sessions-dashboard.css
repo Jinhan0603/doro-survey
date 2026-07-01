@@ -386,8 +386,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* 본문 자체는 스크롤하지 않는다. 넘치면 질문 미리보기 리스트만 내부 스크롤한다. */
-  overflow: hidden;
+  /* 평소엔 넘치지 않아 스크롤이 없고, 질문 미리보기 리스트만 내부 스크롤한다.
+     창이 아주 낮아 요약 내용까지 못 담을 때만 본문이 폴백 스크롤한다(요약 잘림 방지). */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .questionPreviewList::-webkit-scrollbar,
@@ -417,18 +419,19 @@
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* 학생 입장 카드 아래 2열(질문 미리보기 | 요약)이 본문 남은 높이를 채운다. */
+/* 학생 입장 카드 아래 2열(질문 미리보기 | 요약)이 본문 남은 높이를 채운다.
+   flex row + align-items:stretch로 두 컬럼 높이를 일치시킨다. 요약(aside)은
+   min-height auto라 자기 내용 아래로 줄어들지 않아 잘리지 않고, 질문 미리보기(main)는
+   min-height:0이라 남는 높이를 채우며 넘치면 내부 리스트가 스크롤한다. */
 .sessionDetailGrid {
   flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  display: flex;
   gap: 16px;
   align-items: stretch;
 }
 
-.sessionDetailMain,
-.sessionDetailAside {
+.sessionDetailMain {
+  flex: 1 1 0;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -436,9 +439,12 @@
   gap: 16px;
 }
 
-/* 요약 카드는 늘어나지 않고 상단에 자연 높이로 둔다. */
 .sessionDetailAside {
-  align-self: start;
+  flex: 0 0 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* 학생 입장 카드 */
@@ -560,14 +566,15 @@
 
 /* 요약 정보 카드 */
 .summaryCard {
-  padding: 20px;
+  flex: 1 1 auto;
+  padding: 18px 20px;
   border: 1px solid #dbe3ef;
   border-radius: 18px;
   background: #ffffff;
 }
 
 .summaryCard h3 {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   color: #111827;
   font-size: 16px;
   line-height: 1.35;
@@ -579,12 +586,12 @@
   margin: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .summaryTile {
-  min-height: 82px;
-  padding: 13px 14px;
+  min-height: 78px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -837,20 +844,23 @@
   }
 
   /* 스택되면 본문 전체가 정상 스크롤(내부 스크롤 해제). */
-  .sessionDetailBody {
-    overflow-y: auto;
-  }
-
   .sessionDetailGrid {
     flex: 0 0 auto;
-    min-height: auto;
-    grid-template-columns: 1fr;
-    align-items: start;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .sessionDetailMain,
-  .sessionDetailAside {
+  .sessionDetailMain {
+    flex: 0 0 auto;
     min-height: auto;
+  }
+
+  .sessionDetailAside {
+    flex: 0 0 auto;
+  }
+
+  .summaryCard {
+    flex: 0 0 auto;
   }
 
   .questionPreviewSection {
