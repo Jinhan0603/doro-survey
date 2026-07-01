@@ -81,6 +81,14 @@ export function getAnswerValues(answer: AnswerDoc): string[] {
   return singleValue ? [singleValue] : [];
 }
 
+export function getAnswerChoiceId(answer: AnswerDoc): string | null {
+  return answer.answerChoiceId ?? null;
+}
+
+export function getAnswerChoiceIds(answer: AnswerDoc): string[] {
+  return answer.answerChoiceIds ?? [];
+}
+
 export function getDisplayAnswer(answer: AnswerDoc) {
   if (answer.displayAnswer) {
     return answer.displayAnswer;
@@ -91,6 +99,27 @@ export function getDisplayAnswer(answer: AnswerDoc) {
   }
 
   return answer.answerText ?? answer.answer ?? answer.answerValue ?? '';
+}
+
+/** 표시용 텍스트: 선택지 id가 있으면 현재 텍스트로 해석, 없으면 저장된 표시 텍스트로 폴백. */
+export function getAnswerDisplayText(
+  question: Pick<QuestionDoc, 'choices' | 'choiceIds' | 'type' | 'inputType'>,
+  answer: AnswerDoc,
+): string {
+  if (getQuestionInputType(question) === 'multi') {
+    const texts = getAnswerChoiceIds(answer)
+      .map((id) => resolveChoiceTextById(question, id))
+      .filter((text): text is string => Boolean(text));
+    if (texts.length > 0) return texts.join(' | ');
+    return getDisplayAnswer(answer);
+  }
+
+  const id = getAnswerChoiceId(answer);
+  if (id) {
+    const text = resolveChoiceTextById(question, id);
+    if (text) return text;
+  }
+  return getDisplayAnswer(answer);
 }
 
 export function isDisplayableQuestion(
