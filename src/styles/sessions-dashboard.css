@@ -382,6 +382,58 @@
   cursor: not-allowed;
 }
 
+/* 응답 수집 마감/재개 토글 버튼 */
+.detailToggleButton {
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+/* 수집 중 → '마감하기'(주황) */
+.detailToggleButton.isClose {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.detailToggleButton.isClose:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+/* 마감됨 → '수집 재개'(초록) */
+.detailToggleButton.isOpen {
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.detailToggleButton.isOpen:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+}
+
+.detailToggleButton:active {
+  transform: translateY(1px);
+}
+
+.detailToggleButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* 상세 본문 */
 .sessionDetailBody {
   flex: 1 1 auto;

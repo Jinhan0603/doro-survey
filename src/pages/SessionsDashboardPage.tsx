@@ -9,10 +9,12 @@ import {
   FileText,
   Info,
   ListChecks,
+  Lock,
   MonitorPlay,
   Pencil,
   Plus,
   Trash2,
+  Unlock,
   Users,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -23,7 +25,7 @@ import { useQuestions } from '../hooks/useQuestions';
 import { useToasts } from '../hooks/useToasts';
 import { ToastStack } from '../components/common/Toast';
 import { countAnswersForQuestions } from '../firebase/answers';
-import { deleteSessionCascade, type SessionSummary } from '../firebase/sessions';
+import { deleteSessionCascade, updateSession, type SessionSummary } from '../firebase/sessions';
 import type { QuestionDoc } from '../firebase/types';
 import { getQuestionResultVisibility, getQuestionTypeLabel } from '../utils/questionRuntime';
 import { buildAppUrl } from '../utils/urls';
@@ -70,8 +72,10 @@ function SessionDetail({
   questions,
   answerCounts,
   deleting,
+  toggling,
   onEdit,
   onDelete,
+  onToggleAccepting,
   onOpenResult,
   onOpenLive,
   onCopyLink,
@@ -81,8 +85,10 @@ function SessionDetail({
   questions: QuestionDoc[];
   answerCounts: Record<string, number>;
   deleting: boolean;
+  toggling: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleAccepting: () => void;
   onOpenResult: () => void;
   onOpenLive: () => void;
   onCopyLink: () => void;
@@ -90,7 +96,7 @@ function SessionDetail({
 }) {
   const surveyTitle = session.title?.trim() || '제목 없는 설문';
   const isCollecting = session.accepting;
-  const statusLabel = isCollecting ? '응답 수집 중' : '응답 마감';
+  const statusLabel = isCollecting ? '응답 수집 중' : '마감됨';
   const createdAtLabel = formatCreatedFull(session.createdAt);
   const createdShort = formatCreatedShort(session.createdAt);
   const questionCount = questions.length;
@@ -124,6 +130,15 @@ function SessionDetail({
         </div>
 
         <div className="sessionHeaderActions">
+          <button
+            type="button"
+            className={`detailToggleButton ${isCollecting ? 'isClose' : 'isOpen'}`}
+            disabled={toggling}
+            onClick={onToggleAccepting}
+          >
+            {isCollecting ? <Lock size={16} /> : <Unlock size={16} />}
+            {isCollecting ? '마감하기' : '수집 재개'}
+          </button>
           <button type="button" className="detailSecondaryButton" onClick={onEdit}>
             <Pencil size={17} />
             편집
@@ -267,6 +282,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const appliedRequestedRef = useRef(false);
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [answerCounts, setAnswerCounts] = useState<Record<string, number>>({});
   const { toasts, pushToast } = useToasts();
@@ -332,6 +348,21 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
     }
   };
 
+  const handleToggleAccepting = async (session: SessionSummary) => {
+    try {
+      setTogglingId(session.id);
+      await updateSession(session.id, { accepting: !session.accepting });
+      pushToast(
+        session.accepting ? '응답을 마감했습니다.' : '응답 수집을 재개했습니다.',
+        'success',
+      );
+    } catch (err) {
+      pushToast(err instanceof Error ? err.message : '상태 변경에 실패했습니다.', 'error');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleCopyStudentLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -375,7 +406,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
                 sessions.map((session) => {
                   const isSelected = session.id === selectedId;
                   const isCollecting = session.accepting;
-                  const statusLabel = isCollecting ? '응답 수집 중' : '응답 마감';
+                  const statusLabel = isCollecting ? '응답 수집 중' : '마감됨';
                   return (
                     <button
                       key={session.id}
@@ -407,8 +438,10 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
                 questions={questions}
                 answerCounts={answerCounts}
                 deleting={deletingId === selected.id}
+                toggling={togglingId === selected.id}
                 onEdit={() => navigate(`/custom-session/${selected.id}`)}
                 onDelete={() => void handleDelete(selected.id, selected.title)}
+                onToggleAccepting={() => void handleToggleAccepting(selected)}
                 onOpenResult={() => navigate(`/display?session=${selected.id}`)}
                 onOpenLive={() => navigate(`/admin?session=${selected.id}`)}
                 onCopyLink={() => void handleCopyStudentLink(buildAppUrl('/student', selected.id))}
