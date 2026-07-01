@@ -2636,44 +2636,6 @@ button:disabled {
   gap: 18px;
 }
 
-.builder-draft-phase-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.builder-draft-phase-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  border: 1px solid rgba(210, 210, 215, 0.84);
-  border-radius: 28px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.78);
-}
-
-.builder-draft-phase-card__header,
-.builder-draft-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.builder-draft-phase-card__header {
-  align-items: center;
-  justify-content: space-between;
-}
-
-.builder-draft-card__meta span {
-  color: var(--color-text-muted);
-  line-height: 1.6;
-}
-
-.builder-draft-card__meta {
-  justify-content: space-between;
-  font-size: 0.82rem;
-}
-
 .builder-phase-card {
   padding: 24px;
 }
@@ -3042,11 +3004,6 @@ button:disabled {
   }
 
   .builder-interaction-card__title-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .builder-draft-card__meta {
     align-items: stretch;
     flex-direction: column;
   }

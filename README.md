@@ -81,16 +81,14 @@ README에는 V1과 V2의 운영 맥락을 계속 남깁니다.
 
 ## V2 Scope
 
-이번 V2 범위는 아래 8개 축으로 구성됩니다.
+이번 V2 범위는 아래 6개 축으로 구성됩니다.
 
 1. startup 전용 문구를 일반적인 **실시간 기술 수업 시스템** 관점으로 정리
 2. `lessonTemplates` 기반 데이터 구조 추가
 3. `Library / Builder / Session New` 화면 및 라우트 추가
-4. 브라우저 전용 PPTX 추출 + phase 분류
-5. 외부 AI 없이 동작하는 규칙 기반 interaction generator
-6. `choice / text / multi / scale / status` 런타임 지원
-7. `public / teacher-only / hidden` 결과 visibility 분리
-8. admin allowlist를 유지한 채 `teacher` role과 조직 공유 모델 확장
+4. `choice / text / multi / scale / status` 런타임 지원
+5. `public / teacher-only / hidden` 결과 visibility 분리
+6. admin allowlist를 유지한 채 `teacher` role과 조직 공유 모델 확장
 9. 직접 질문 기반 live session 생성 화면 추가
 
 ---
@@ -151,8 +149,6 @@ Builder에서는 자주 쓰는 DORO 기본 버튼도 제공합니다.
 - interaction block 추가/수정/삭제/정렬
 - `interactionType / purpose / resultVisibility / inputType` 편집
 - `presenterNote / timingLabel` 편집
-- PPTX 업로드 기반 slides 추출/phase 분류
-- 규칙 기반 interaction 초안 생성
 
 ### Session New
 
@@ -427,7 +423,6 @@ npm run build
 - `dangerouslySetInnerHTML`을 사용하지 않습니다.
 - 학생 텍스트 답변은 300자 이내로 제한합니다.
 - 입력은 trim 처리합니다.
-- PPTX 원본 파일은 브라우저에서만 읽고 서버에 저장하지 않습니다.
 - Firebase Storage는 사용하지 않습니다.
 - Cloud Functions나 별도 백엔드를 추가하지 않습니다.
 
