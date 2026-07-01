@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { ChevronLeft, Copy, ExternalLink, Lock, Trash2, Unlock } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { AdminPreview } from '../components/admin/AdminPreview';
 import { Button } from '../components/common/Button';
@@ -15,8 +15,10 @@ import {
 import { firebaseConfigStatus } from '../firebase/client';
 import {
   closeQuestion,
+  closeSession,
   openQuestionExclusively,
   publishQuestionResult,
+  reopenSession,
   unpublishQuestionResult,
   updateSession,
 } from '../firebase/sessions';
@@ -193,6 +195,17 @@ export function AdminPage() {
     );
   };
 
+  const handleToggleSessionClosed = () => {
+    if (isSessionClosed) {
+      void runAdminAction(() => reopenSession(sessionId), '설문을 다시 열었습니다.');
+      return;
+    }
+    void runAdminAction(
+      () => closeSession(sessionId, questions.map((question) => question.id)),
+      '설문을 종료했습니다.',
+    );
+  };
+
   const handleCopyStudentLink = async () => {
     try {
       await navigator.clipboard.writeText(studentJoinUrl);
@@ -241,6 +254,17 @@ export function AdminPage() {
             </Link>
             <h1>실시간 운영</h1>
             <p>질문을 열고 닫고, 학생 응답과 결과 공개를 관리합니다.</p>
+          </div>
+          <div className="adminLiveToolbarActions">
+            <button
+              type="button"
+              className={`adminSessionToggle ${!isSessionClosed ? 'isClose' : 'isOpen'}`}
+              disabled={busy}
+              onClick={handleToggleSessionClosed}
+            >
+              {!isSessionClosed ? <Lock size={16} /> : <Unlock size={16} />}
+              {!isSessionClosed ? '종료하기' : '수집 재개'}
+            </button>
           </div>
         </header>
 

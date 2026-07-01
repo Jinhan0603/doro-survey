@@ -72,6 +72,57 @@
   font-weight: 600;
 }
 
+/* 우측 상단 설문 종료/재개 토글(대시보드 detailToggleButton과 동일 톤). */
+.adminLiveToolbarActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adminSessionToggle {
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.adminSessionToggle.isClose {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.adminSessionToggle.isClose:hover:not(:disabled) {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.adminSessionToggle.isOpen {
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.adminSessionToggle.isOpen:hover:not(:disabled) {
+  background: #dcfce7;
+  border-color: #4ade80;
+}
+
+.adminSessionToggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .adminLiveWorkspace {
   flex: 1 1 auto;
   min-height: 0;
