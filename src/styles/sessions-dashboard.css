@@ -1,0 +1,883 @@
+/* 진행 중인 설문(/sessions) 목록·상세 레이아웃 */
+
+.sessionsPage {
+  height: calc(100dvh - var(--app-header-height, 72px));
+  padding: 28px 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.12), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(147, 197, 253, 0.1), transparent 32%),
+    #f8fafc;
+}
+
+.sessionsShell {
+  width: 100%;
+  max-width: 1160px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sessionsToolbar {
+  flex: 0 0 auto;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sessionsToolbar h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+}
+
+.createSurveyButton {
+  height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #93c5fd;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.createSurveyButton:hover {
+  border-color: #60a5fa;
+  background: #dbeafe;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.12);
+}
+
+.createSurveyButton:active {
+  transform: translateY(1px);
+}
+
+.sessionsWorkspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  overflow: hidden;
+}
+
+.sessionsError {
+  flex: 0 0 auto;
+}
+
+/* 좌측 목록 패널 */
+.sessionListPanel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.sessionListHeader {
+  flex: 0 0 auto;
+  padding: 22px 22px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.sessionListHeader h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.sessionListHeader span {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.sessionListScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sessionListEmpty {
+  padding: 40px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.sessionListItem {
+  width: 100%;
+  min-height: 76px;
+  padding: 14px 15px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e5eaf2;
+  border-radius: 16px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.sessionListItem + .sessionListItem {
+  margin-top: 10px;
+}
+
+.sessionListItem:hover {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.sessionListItem.isSelected {
+  border-color: #60a5fa;
+  background: #eff6ff;
+  box-shadow: inset 4px 0 0 #2563eb;
+}
+
+.sessionListIcon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.sessionListText {
+  min-width: 0;
+}
+
+.sessionListText strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionListText span {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inlineStatusDot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #10b981;
+}
+
+.inlineStatusDot.isClosed {
+  background: #9ca3af;
+}
+
+/* 우측 상세 패널 */
+.sessionDetailPanel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+}
+
+.sessionDetailHeader {
+  flex: 0 0 auto;
+  padding: 24px 28px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.sessionDetailTitleBlock {
+  min-width: 0;
+}
+
+.detailEyebrow {
+  margin: 0 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563eb;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.sessionDetailTitleBlock h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  line-height: 1.22;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+}
+
+.sessionDetailBadges {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.statusBadge,
+.neutralBadge {
+  min-height: 30px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 850;
+}
+
+.statusBadge.isCollecting {
+  border: 1px solid #bbf7d0;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.statusBadge.isClosed {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #6b7280;
+}
+
+.neutralBadge {
+  border: 1px solid #dbe3ef;
+  background: #f8fafc;
+  color: #4b5563;
+}
+
+.sessionHeaderActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailSecondaryButton,
+.detailDangerButton {
+  height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 12px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.detailSecondaryButton {
+  border: 1px solid #d4dbe8;
+  color: #111827;
+}
+
+.detailSecondaryButton:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0b7ff3;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
+}
+
+.detailDangerButton {
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.detailDangerButton:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.detailSecondaryButton:active,
+.detailDangerButton:active {
+  transform: translateY(1px);
+}
+
+.detailSecondaryButton:disabled,
+.detailDangerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 상세 본문 */
+.sessionDetailBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.sessionDetailBody::-webkit-scrollbar,
+.sessionListScroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sessionDetailBody::-webkit-scrollbar-track,
+.sessionListScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sessionDetailBody::-webkit-scrollbar-thumb,
+.sessionListScroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.sessionDetailBody::-webkit-scrollbar-thumb:hover,
+.sessionListScroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.sessionDetailBody,
+.sessionListScroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.sessionDetailGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.sessionDetailMain,
+.sessionDetailAside {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 학생 입장 카드 */
+.studentEntryCard {
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.studentEntryHeader h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.studentEntryHeader p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.studentEntryContent {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 154px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.studentQrBox {
+  width: 154px;
+  height: 154px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.studentQrBox canvas,
+.studentQrBox svg {
+  max-width: 132px;
+  max-height: 132px;
+}
+
+.studentLinkArea {
+  min-width: 0;
+}
+
+.studentLinkArea label {
+  display: block;
+  margin-bottom: 7px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.studentLinkArea input {
+  width: 100%;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #d4dbe8;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  text-overflow: ellipsis;
+}
+
+.studentLinkArea input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.studentLinkActions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.linkActionButton {
+  height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #d4dbe8;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.linkActionButton:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+}
+
+/* 요약 정보 카드 */
+.summaryCard {
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.summaryCard h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.summaryGrid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summaryTile {
+  min-height: 92px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #e5eaf2;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.summaryTile dt {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.summaryTile dt svg {
+  color: #2563eb;
+}
+
+.summaryTile dd {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.summaryValueGreen {
+  color: #059669 !important;
+}
+
+/* 질문 미리보기 */
+.questionPreviewSection {
+  padding: 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionTitleRow h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.sectionTitleRow span {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.questionPreviewList {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.questionPreviewCard {
+  min-height: 66px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e5eaf2;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.questionPreviewCard .questionNumberBadge {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #0b7ff3;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.questionPreviewContent {
+  min-width: 0;
+}
+
+.questionPreviewContent strong {
+  display: block;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.questionPreviewContent p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyInfoBox {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+/* 상세 푸터 */
+.sessionDetailFooter {
+  flex: 0 0 auto;
+  padding: 18px 28px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eef2f7;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.secondaryFooterButton,
+.primaryFooterButton {
+  height: 46px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.secondaryFooterButton {
+  border: 1px solid #d4dbe8;
+  background: #ffffff;
+  color: #111827;
+}
+
+.secondaryFooterButton:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0b7ff3;
+}
+
+.primaryFooterButton {
+  border: 0;
+  background: #0b7ff3;
+  color: #ffffff;
+  font-size: 15px;
+  box-shadow: 0 10px 24px rgba(11, 127, 243, 0.22);
+}
+
+.primaryFooterButton:hover {
+  background: #006ee6;
+  box-shadow: 0 14px 30px rgba(11, 127, 243, 0.28);
+}
+
+.secondaryFooterButton:active,
+.primaryFooterButton:active {
+  transform: translateY(1px);
+}
+
+/* 빈 상태 */
+.sessionDetailEmpty {
+  height: 100%;
+  min-height: 360px;
+  padding: 48px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sessionDetailEmpty svg {
+  margin-bottom: 16px;
+  color: #2563eb;
+}
+
+.sessionDetailEmpty h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.sessionDetailEmpty p {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* 반응형 */
+@media (max-width: 1040px) {
+  .sessionsWorkspace {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+
+  .sessionDetailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .sessionsPage {
+    height: auto;
+    padding: 20px 16px;
+    overflow: auto;
+  }
+
+  .sessionsShell {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .sessionsToolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sessionsWorkspace {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .sessionListPanel,
+  .sessionDetailPanel {
+    min-height: auto;
+  }
+
+  .sessionListScroll {
+    max-height: 320px;
+  }
+
+  .sessionDetailHeader {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 22px 20px 18px;
+  }
+
+  .sessionHeaderActions {
+    justify-content: flex-start;
+  }
+
+  .sessionDetailBody {
+    padding: 20px;
+  }
+
+  .studentEntryContent {
+    grid-template-columns: 1fr;
+  }
+
+  .studentQrBox {
+    width: 100%;
+    height: auto;
+    min-height: 180px;
+  }
+
+  .studentLinkActions {
+    grid-template-columns: 1fr;
+  }
+
+  .sessionDetailFooter {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+
+  .secondaryFooterButton,
+  .primaryFooterButton {
+    width: 100%;
+  }
+}

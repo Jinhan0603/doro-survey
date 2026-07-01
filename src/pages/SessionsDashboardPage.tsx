@@ -1,71 +1,269 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ClipboardList, Plus } from 'lucide-react';
+import {
+  BarChart3,
+  Calendar,
+  Clock,
+  Copy,
+  ExternalLink,
+  FileText,
+  Info,
+  ListChecks,
+  MonitorPlay,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+} from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import type { Timestamp } from 'firebase/firestore';
-import { Badge } from '../components/common/Badge';
-import { Button } from '../components/common/Button';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useMySessions } from '../hooks/useMySessions';
+import { useQuestions } from '../hooks/useQuestions';
+import { useToasts } from '../hooks/useToasts';
+import { ToastStack } from '../components/common/Toast';
 import { deleteSessionCascade, type SessionSummary } from '../firebase/sessions';
-import '../styles/survey-builder.css';
-import '../styles/template-builder.css';
+import type { QuestionDoc } from '../firebase/types';
+import { getQuestionResultVisibility, getQuestionTypeLabel } from '../utils/questionRuntime';
+import { buildAppUrl } from '../utils/urls';
+import '../styles/sessions-dashboard.css';
 
-function formatCreated(ts: Timestamp | null | undefined): string {
-  if (!ts) return '';
+function formatCreatedFull(ts: Timestamp | null | undefined): string {
+  if (!ts) return '생성일 미상';
   try {
-    return ts.toDate().toLocaleString('ko-KR');
+    const date = ts.toDate();
+    if (Number.isNaN(date.getTime())) return '생성일 미상';
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   } catch {
-    return '';
+    return '생성일 미상';
   }
+}
+
+function formatCreatedShort(ts: Timestamp | null | undefined): string {
+  if (!ts) return '미상';
+  try {
+    const date = ts.toDate();
+    if (Number.isNaN(date.getTime())) return '미상';
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    }).format(date);
+  } catch {
+    return '미상';
+  }
+}
+
+function getQuestionVisibilityLabel(question: QuestionDoc): string {
+  return getQuestionResultVisibility(question) === 'public' ? '공개' : '비공개';
+}
+
+// 목록 페이지에서는 질문별 응답 수를 조회하지 않는다(세션마다 N개 구독 비용). 0으로 표기.
+function getQuestionResponseCount(_question: QuestionDoc): number {
+  return 0;
 }
 
 function SessionDetail({
   session,
+  questions,
   deleting,
-  onOpenAdmin,
-  onOpenDisplay,
   onEdit,
   onDelete,
+  onOpenResult,
+  onOpenLive,
+  onCopyLink,
+  onOpenStudent,
 }: {
   session: SessionSummary;
+  questions: QuestionDoc[];
   deleting: boolean;
-  onOpenAdmin: () => void;
-  onOpenDisplay: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onOpenResult: () => void;
+  onOpenLive: () => void;
+  onCopyLink: () => void;
+  onOpenStudent: () => void;
 }) {
-  const created = formatCreated(session.createdAt);
+  const surveyTitle = session.title?.trim() || '제목 없는 설문';
+  const isCollecting = session.accepting;
+  const statusLabel = isCollecting ? '응답 수집 중' : '응답 마감';
+  const createdAtLabel = formatCreatedFull(session.createdAt);
+  const createdShort = formatCreatedShort(session.createdAt);
+  const questionCount = questions.length;
+  const responseCount = 0;
+  const studentJoinUrl = buildAppUrl('/student', session.id);
+
+  const sortedQuestions = [...questions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="templateDetail">
-      <div className="templateDetail__labels">
-        <Badge tone={session.accepting ? 'success' : 'default'}>
-          {session.accepting ? '응답 수집 중' : '대기'}
-        </Badge>
+    <>
+      <header className="sessionDetailHeader">
+        <div className="sessionDetailTitleBlock">
+          <p className="detailEyebrow">
+            <Info size={16} />
+            설문 정보
+          </p>
+
+          <h2>{surveyTitle}</h2>
+
+          <div className="sessionDetailBadges">
+            <span className={isCollecting ? 'statusBadge isCollecting' : 'statusBadge isClosed'}>
+              <Clock size={15} />
+              {statusLabel}
+            </span>
+
+            <span className="neutralBadge">
+              <Calendar size={15} />
+              생성일 {createdAtLabel}
+            </span>
+          </div>
+        </div>
+
+        <div className="sessionHeaderActions">
+          <button type="button" className="detailSecondaryButton" onClick={onEdit}>
+            <Pencil size={17} />
+            편집
+          </button>
+          <button
+            type="button"
+            className="detailDangerButton"
+            disabled={deleting}
+            onClick={onDelete}
+          >
+            <Trash2 size={17} />
+            삭제
+          </button>
+        </div>
+      </header>
+
+      <div className="sessionDetailBody">
+        <div className="sessionDetailGrid">
+          <div className="sessionDetailMain">
+            <section className="studentEntryCard">
+              <header className="studentEntryHeader">
+                <h3>학생 입장</h3>
+                <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
+              </header>
+
+              <div className="studentEntryContent">
+                <div className="studentQrBox" aria-label="학생 입장 QR 코드">
+                  <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
+                </div>
+
+                <div className="studentLinkArea">
+                  <label htmlFor="studentJoinUrl">학생 입장 링크</label>
+                  <input
+                    id="studentJoinUrl"
+                    value={studentJoinUrl}
+                    readOnly
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+
+                  <div className="studentLinkActions">
+                    <button type="button" className="linkActionButton" onClick={onCopyLink}>
+                      <Copy size={16} />
+                      링크 복사
+                    </button>
+                    <button type="button" className="linkActionButton" onClick={onOpenStudent}>
+                      <ExternalLink size={16} />
+                      학생 화면 열기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="questionPreviewSection">
+              <div className="sectionTitleRow">
+                <h3>질문 미리보기</h3>
+                <span>{questionCount}개 질문</span>
+              </div>
+
+              {questionCount > 0 ? (
+                <div className="questionPreviewList">
+                  {sortedQuestions.map((question, index) => (
+                    <article className="questionPreviewCard" key={question.id ?? index}>
+                      <span className="questionNumberBadge">Q{String(index + 1).padStart(2, '0')}</span>
+                      <div className="questionPreviewContent">
+                        <strong>{question.title || `질문 ${index + 1}`}</strong>
+                        <p>
+                          {getQuestionTypeLabel(question)}
+                          {' · '}
+                          {getQuestionVisibilityLabel(question)}
+                          {' · '}
+                          응답 {getQuestionResponseCount(question)}개
+                        </p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="emptyInfoBox">등록된 질문이 없습니다.</div>
+              )}
+            </section>
+          </div>
+
+          <aside className="sessionDetailAside">
+            <section className="summaryCard">
+              <h3>요약 정보</h3>
+
+              <dl className="summaryGrid">
+                <div className="summaryTile">
+                  <dt>
+                    <Users size={17} />
+                    응답 상태
+                  </dt>
+                  <dd className={isCollecting ? 'summaryValueGreen' : ''}>
+                    {isCollecting ? '수집 중' : '마감'}
+                  </dd>
+                </div>
+
+                <div className="summaryTile">
+                  <dt>
+                    <BarChart3 size={17} />
+                    응답 수
+                  </dt>
+                  <dd>{responseCount}개</dd>
+                </div>
+
+                <div className="summaryTile">
+                  <dt>
+                    <ListChecks size={17} />
+                    질문 수
+                  </dt>
+                  <dd>{questionCount}개</dd>
+                </div>
+
+                <div className="summaryTile">
+                  <dt>
+                    <Calendar size={17} />
+                    생성일
+                  </dt>
+                  <dd>{createdShort}</dd>
+                </div>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </div>
 
-      <h3 className="templateDetail__title">{session.title}</h3>
-
-      <div className="templateDetail__meta">
-        <span>설문 코드 {session.id}</span>
-        {created ? <span>{created} 생성</span> : null}
-      </div>
-
-      <div className="templateDetail__actions">
-        <Button size="sm" onClick={onOpenAdmin}>
-          진행 화면
-        </Button>
-        <Button size="sm" variant="secondary" onClick={onOpenDisplay}>
+      <footer className="sessionDetailFooter">
+        <button type="button" className="secondaryFooterButton" onClick={onOpenResult}>
+          <BarChart3 size={17} />
           결과 화면
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onEdit}>
-          편집
-        </Button>
-        <Button size="sm" variant="ghost" disabled={deleting} onClick={onDelete}>
-          삭제
-        </Button>
-      </div>
-    </div>
+        </button>
+        <button type="button" className="primaryFooterButton" onClick={onOpenLive}>
+          <MonitorPlay size={17} />
+          진행 화면 열기
+        </button>
+      </footer>
+    </>
   );
 }
 
@@ -76,12 +274,11 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const appliedRequestedRef = useRef(false);
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // 모바일(≤960px)에서 목록/정보를 탭으로 전환한다.
-  const [activePane, setActivePane] = useState<'meta' | 'questions'>('meta');
+  const { toasts, pushToast, dismissToast } = useToasts();
 
   const selected = sessions.find((session) => session.id === selectedId) ?? null;
+  const { questions } = useQuestions(selected?.id ?? '', { enabled: Boolean(selected) });
 
   // 목록이 바뀌면 첫 항목을 자동 선택한다(삭제 후 선택 유지 포함).
   // 생성 직후 ?selected= 로 진입하면 해당 설문을 우선 선택한다(최초 1회).
@@ -97,7 +294,6 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
     ) {
       appliedRequestedRef.current = true;
       setSelectedId(requestedId);
-      setActivePane('questions');
       return;
     }
     if (!sessions.some((session) => session.id === selectedId)) {
@@ -111,114 +307,108 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
     }
     try {
       setDeletingId(id);
-      setDeleteError(null);
       await deleteSessionCascade(id);
+      pushToast('설문을 삭제했습니다.', 'success');
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : '설문 삭제에 실패했습니다.');
+      pushToast(err instanceof Error ? err.message : '설문 삭제에 실패했습니다.', 'error');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-    setActivePane('questions');
+  const handleCopyStudentLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      pushToast('학생 입장 링크를 복사했습니다.', 'success');
+    } catch {
+      pushToast('링크 복사에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleOpenStudentPage = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <main className="templateBuilderPage">
-      <div className="templateBuilderShell">
-        <header className="templateBuilderToolbar">
+    <main className="sessionsPage">
+      <div className="sessionsShell">
+        <header className="sessionsToolbar">
           <h1>진행 중인 설문</h1>
-          <div className="templateBuilderActions">
-            <Link className="builder-link-button" to="/custom-session">
-              <Plus size={16} />
-              새 설문 만들기
-            </Link>
-          </div>
+          <Link className="createSurveyButton" to="/custom-session">
+            <Plus size={16} />
+            새 설문 만들기
+          </Link>
         </header>
 
-        {error ? <div className="inline-message inline-message--error">{error}</div> : null}
-        {deleteError ? <div className="inline-message inline-message--error">{deleteError}</div> : null}
+        {error ? <div className="inline-message inline-message--error sessionsError">{error}</div> : null}
 
-        <div className="mobilePaneTabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activePane === 'meta'}
-            className={`mobilePaneTab ${activePane === 'meta' ? 'isActive' : ''}`}
-            onClick={() => setActivePane('meta')}
-          >
-            목록
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activePane === 'questions'}
-            className={`mobilePaneTab ${activePane === 'questions' ? 'isActive' : ''}`}
-            onClick={() => setActivePane('questions')}
-          >
-            정보
-          </button>
-        </div>
-
-        <section className="templateBuilderWorkspace" data-active-pane={activePane}>
-          <aside className="templateMetaPanel">
-            <header className="builderPaneHeader">
+        <section className="sessionsWorkspace">
+          <aside className="sessionListPanel">
+            <header className="sessionListHeader">
               <h2>설문 목록</h2>
+              <span>{sessions.length}</span>
             </header>
-            <div className="templateMetaScroll">
+
+            <div className="sessionListScroll">
               {loading ? null : sessions.length === 0 ? (
-                <div className="library-section__empty">
-                  <ClipboardList size={20} />
+                <div className="sessionListEmpty">
+                  <FileText size={22} />
                   <strong>아직 만든 설문이 없습니다.</strong>
                 </div>
               ) : (
-                <div className="templateList">
-                  {sessions.map((session) => (
+                sessions.map((session) => {
+                  const isSelected = session.id === selectedId;
+                  const isCollecting = session.accepting;
+                  const statusLabel = isCollecting ? '응답 수집 중' : '응답 마감';
+                  return (
                     <button
                       key={session.id}
                       type="button"
-                      className={`templateListRow ${session.id === selectedId ? 'isActive' : ''}`}
-                      onClick={() => handleSelect(session.id)}
+                      className={`sessionListItem ${isSelected ? 'isSelected' : ''}`}
+                      onClick={() => setSelectedId(session.id)}
                     >
-                      <strong>{session.title}</strong>
-                      <span>
-                        {session.accepting ? '응답 수집 중' : '대기'} · {session.id}
+                      <span className="sessionListIcon">
+                        <FileText size={17} />
+                      </span>
+                      <span className="sessionListText">
+                        <strong>{session.title?.trim() || '제목 없는 설문'}</strong>
+                        <span>
+                          <span className={`inlineStatusDot ${isCollecting ? '' : 'isClosed'}`} />
+                          {statusLabel} · {formatCreatedFull(session.createdAt)}
+                        </span>
                       </span>
                     </button>
-                  ))}
-                </div>
+                  );
+                })
               )}
             </div>
           </aside>
 
-          <section className="questionBuilderPanel">
-            <header className="questionBuilderHeader">
-              <div className="builderPaneHeader">
-                <h2>설문 정보</h2>
+          <section className="sessionDetailPanel">
+            {selected ? (
+              <SessionDetail
+                session={selected}
+                questions={questions}
+                deleting={deletingId === selected.id}
+                onEdit={() => navigate(`/custom-session/${selected.id}`)}
+                onDelete={() => void handleDelete(selected.id, selected.title)}
+                onOpenResult={() => navigate(`/display?session=${selected.id}`)}
+                onOpenLive={() => navigate(`/admin?session=${selected.id}`)}
+                onCopyLink={() => void handleCopyStudentLink(buildAppUrl('/student', selected.id))}
+                onOpenStudent={() => handleOpenStudentPage(buildAppUrl('/student', selected.id))}
+              />
+            ) : (
+              <div className="sessionDetailEmpty">
+                <Info size={44} />
+                <h2>설문을 선택하세요</h2>
+                <p>왼쪽 목록에서 진행 중인 설문을 선택하면 상세 정보가 표시됩니다.</p>
               </div>
-            </header>
-            <div className="questionBuilderScroll">
-              {selected ? (
-                <SessionDetail
-                  session={selected}
-                  deleting={deletingId === selected.id}
-                  onOpenAdmin={() => navigate(`/admin?session=${selected.id}`)}
-                  onOpenDisplay={() => navigate(`/display?session=${selected.id}`)}
-                  onEdit={() => navigate(`/custom-session/${selected.id}`)}
-                  onDelete={() => void handleDelete(selected.id, selected.title)}
-                />
-              ) : (
-                <div className="library-section__empty">
-                  <ClipboardList size={20} />
-                  <strong>왼쪽에서 설문을 선택하세요.</strong>
-                </div>
-              )}
-            </div>
+            )}
           </section>
         </section>
       </div>
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </main>
   );
 }
