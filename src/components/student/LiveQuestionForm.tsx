@@ -56,6 +56,7 @@ type LiveQuestionFormProps = {
   nickname: string;
   existingAnswer: AnswerDoc | null;
   uid: string;
+  onSubmitted?: () => void;
 };
 
 export function LiveQuestionForm({
@@ -64,6 +65,7 @@ export function LiveQuestionForm({
   nickname,
   existingAnswer,
   uid,
+  onSubmitted,
 }: LiveQuestionFormProps) {
   const [choiceDraft, setChoiceDraft] = useState<string | null>(null);
   const [multiDraft, setMultiDraft] = useState<string[] | null>(null);
@@ -86,9 +88,6 @@ export function LiveQuestionForm({
   const isSubmitting = submitState === 'submitting';
   const hasAnswer = Boolean(existingAnswer) || justSubmitted;
 
-  const questionNumberLabel = `Q${String(question.order ?? 1).padStart(2, '0')}`;
-  const typeLabel = isSubjective ? '주관식' : '객관식';
-  const selectionModeLabel = allowsMultiple ? '복수 선택' : '단일 선택';
   const submitButtonLabel = hasAnswer ? '답변 다시 제출하기' : '답변 제출하기';
 
   const canSubmit =
@@ -189,6 +188,7 @@ export function LiveQuestionForm({
 
       setSubmitState('idle');
       setJustSubmitted(true);
+      onSubmitted?.();
     } catch (nextError) {
       setSubmitState('idle');
       setSubmitError(formatSubmitError(nextError));
@@ -200,14 +200,6 @@ export function LiveQuestionForm({
   return (
     <div className="studentAnswerShell">
       <div className="studentAnswerCard">
-        <header className="studentQuestionMetaRow">
-          <span className="studentMetaBadge isPrimary">{questionNumberLabel}</span>
-          <span className="studentMetaBadge">{typeLabel}</span>
-          {isChoice ? <span className="studentMetaBadge">{selectionModeLabel}</span> : null}
-          <span className="studentMetaBadge isOpen">응답 열림</span>
-          {hasAnswer ? <span className="studentMetaBadge isSubmitted">제출 완료</span> : null}
-        </header>
-
         <section className="studentQuestionText">
           <h1>{question.title}</h1>
           {question.prompt ? <p>{question.prompt}</p> : null}
@@ -252,11 +244,6 @@ export function LiveQuestionForm({
 
         <footer className="studentSubmitArea">
           {submitError ? <p className="studentErrorNotice">{submitError}</p> : null}
-          {hasAnswer && !submitError ? (
-            <p className="studentSubmittedNotice">
-              답변이 제출되었습니다. 선택을 바꾸고 다시 제출할 수 있습니다.
-            </p>
-          ) : null}
           <button
             type="button"
             className="studentSubmitButton"

@@ -5,8 +5,10 @@ import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useOwnAnswers } from '../hooks/useAnswers';
 import { useAuth } from '../hooks/useAuth';
 import { useSessionId } from '../hooks/useSessionId';
+import { useToasts } from '../hooks/useToasts';
 import { normalizeNickname } from '../utils/sanitize';
 import { Card } from '../components/common/Card';
+import { ToastStack } from '../components/common/Toast';
 import { WaitingState } from '../components/survey/WaitingState';
 import { LiveQuestionForm } from '../components/student/LiveQuestionForm';
 import { NicknameOnboarding } from '../components/student/NicknameOnboarding';
@@ -34,6 +36,7 @@ export function StudentPage() {
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
+  const { toasts, pushToast } = useToasts();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -157,6 +160,7 @@ export function StudentPage() {
         question={openQuestion}
         sessionId={sessionId}
         uid={user.uid}
+        onSubmitted={() => pushToast('답변이 제출되었습니다.', 'success')}
       />
     );
   })();
@@ -164,6 +168,7 @@ export function StudentPage() {
   return (
     <StudentShell sessionId={sessionId}>
       {liveContent}
+      <ToastStack toasts={toasts} />
     </StudentShell>
   );
 }

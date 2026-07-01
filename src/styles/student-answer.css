@@ -1,13 +1,10 @@
 /* 학생 답변 카드(/student) — 모바일 우선, 데스크톱에서도 폴리시된 카드 */
 
-/* 답변 카드가 있을 때만 학생 메인 영역을 넓히고 은은한 배경을 준다(다른 학생 화면엔 영향 없음). */
+/* 답변 카드가 있을 때 학생 메인 영역을 넓힌다(배경 tint 없이 평평하게). */
 .student-main:has(.studentAnswerCard) {
   max-width: 560px;
   padding-top: clamp(24px, 6vh, 56px);
   padding-bottom: 40px;
-  background:
-    radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.1), transparent 38%),
-    radial-gradient(circle at 88% 16%, rgba(147, 197, 253, 0.1), transparent 34%);
 }
 
 .studentAnswerShell {
@@ -24,52 +21,9 @@
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1);
 }
 
-/* ── 질문 메타 배지 ── */
-.studentQuestionMetaRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.studentMetaBadge {
-  min-height: 30px;
-  padding: 0 11px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 850;
-  white-space: nowrap;
-}
-
-.studentMetaBadge.isPrimary {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.studentMetaBadge.isOpen {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.studentMetaBadge.isClosed {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-.studentMetaBadge.isSubmitted {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
 /* ── 질문 제목/문장 ── */
 .studentQuestionText {
-  margin-top: 22px;
+  margin-top: 0;
 }
 
 .studentQuestionText h1 {
@@ -211,7 +165,6 @@
   margin-top: 24px;
 }
 
-.studentSubmittedNotice,
 .studentClosedNotice,
 .studentErrorNotice {
   margin: 0 0 12px;
@@ -220,12 +173,6 @@
   font-size: 13px;
   line-height: 1.45;
   font-weight: 750;
-}
-
-.studentSubmittedNotice {
-  border: 1px solid #bfdbfe;
-  background: #eff6ff;
-  color: #2563eb;
 }
 
 .studentClosedNotice {
@@ -282,19 +229,6 @@
   .studentAnswerCard {
     padding: 22px 18px;
     border-radius: 24px;
-  }
-
-  .studentQuestionMetaRow {
-    gap: 6px;
-  }
-
-  .studentMetaBadge {
-    min-height: 28px;
-    padding: 0 10px;
-  }
-
-  .studentQuestionText {
-    margin-top: 18px;
   }
 
   .studentQuestionText h1 {
