@@ -205,21 +205,7 @@ export function DisplayPage() {
   }
 
   return (
-    <AppShell
-      compact
-      actions={
-        <div className="hero-actions">
-          <Badge tone="success">실시간 연결</Badge>
-          <Badge>{sessionId}</Badge>
-          {session ? (
-            <Badge tone={session.showResults ? 'accent' : 'default'}>
-              {session.showResults ? '결과 공개 중' : '결과 비공개'}
-            </Badge>
-          ) : null}
-        </div>
-      }
-      title="발표 화면"
-    >
+    <AppShell compact title="발표 화면">
       <div className="stack stack--wide">{content}</div>
     </AppShell>
   );
