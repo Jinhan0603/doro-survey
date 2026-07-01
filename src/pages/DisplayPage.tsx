@@ -1,106 +1,248 @@
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
-import { Badge } from '../components/common/Badge';
-import { StatusSummary } from '../components/common/StatusSummary';
-import { AppShell } from '../components/layout/AppShell';
-import { AnswerWall } from '../components/display/AnswerWall';
-import { DisplayStage } from '../components/display/DisplayStage';
-import { ResultChart } from '../components/display/ResultChart';
+import { Lock, Users } from 'lucide-react';
+import type { QuestionDoc, ResultVisibility } from '../firebase/types';
 import { firebaseConfigStatus } from '../firebase/client';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useSessionId } from '../hooks/useSessionId';
+import { buildChoiceResults, getApprovedTextAnswers } from '../utils/stats';
 import {
-  previewChartData,
-  previewQuestions,
-  previewTextAnswers,
-} from '../data/previewQuestions';
-import { buildChoiceResults, buildStatusResults, getApprovedTextAnswers } from '../utils/stats';
-import { getQuestionInputType, getQuestionResultVisibility, isDisplayableQuestion } from '../utils/questionRuntime';
+  getQuestionChoices,
+  getQuestionInputType,
+  getQuestionResultVisibility,
+  getQuestionTypeLabel,
+  isDisplayableQuestion,
+} from '../utils/questionRuntime';
+import { previewQuestions } from '../data/previewQuestions';
+import '../styles/display-stage.css';
 
-type DisplayMode = 'choice' | 'text' | 'collecting';
+type ChoiceResult = { name: string; value: number };
+type TextAnswer = ReturnType<typeof getApprovedTextAnswers>[number];
 
-function DisplayPreview() {
-  const [mode, setMode] = useState<DisplayMode>('choice');
-  const choiceQuestion = previewQuestions[1];
-  const textQuestion = previewQuestions[2];
+// 발표 화면은 읽기 전용이다. 강사 조작 버튼·QR·링크·코드·원시 enum 값을 절대 노출하지 않는다.
 
-  const stage = useMemo(() => {
-    if (mode === 'text') {
-      return (
-        <DisplayStage
-          prompt={textQuestion.prompt}
-          questionLabel={`Q${String(textQuestion.order).padStart(2, '0')}`}
-          responseCount={previewTextAnswers.length}
-          title={textQuestion.title}
-        >
-          <AnswerWall answers={previewTextAnswers} />
-        </DisplayStage>
-      );
-    }
-
-    if (mode === 'collecting') {
-      return (
-        <Card className="collecting-stage" tone="muted">
-          <h2>{choiceQuestion.title}</h2>
-          <p>{choiceQuestion.prompt}</p>
-          <strong>답변 수집 중</strong>
-          <span>학생들이 답을 고르는 동안 결과는 숨겨집니다.</span>
-        </Card>
-      );
-    }
-
-    return (
-      <DisplayStage
-        prompt={choiceQuestion.prompt}
-        questionLabel={`Q${String(choiceQuestion.order).padStart(2, '0')}`}
-        responseCount={20}
-        title={choiceQuestion.title}
-      >
-        <ResultChart data={previewChartData} />
-      </DisplayStage>
-    );
-  }, [
-    choiceQuestion.order,
-    choiceQuestion.prompt,
-    choiceQuestion.title,
-    mode,
-    textQuestion.order,
-    textQuestion.prompt,
-    textQuestion.title,
-  ]);
-
-  const modeLabels: Record<DisplayMode, string> = {
-    choice: '객관식 결과',
-    text: '주관식 답변',
-    collecting: '수집 중',
-  };
-
+function DisplayQuestionHeader({
+  questionNumber,
+  typeLabel,
+  responseCount,
+  responseOpen,
+  resultVisible,
+}: {
+  questionNumber: string;
+  typeLabel: string;
+  responseCount: number;
+  responseOpen: boolean;
+  resultVisible: boolean;
+}) {
   return (
-    <AppShell
-      compact
-      actions={
-        <div className="hero-actions">
-          <Badge>미리보기 모드</Badge>
-          {(['choice', 'text', 'collecting'] as DisplayMode[]).map((m) => (
-            <Button
-              key={m}
-              size="sm"
-              variant={mode === m ? 'primary' : 'secondary'}
-              onClick={() => setMode(m)}
+    <header className="displayQuestionHeader">
+      <div className="displayQuestionMeta">
+        <span className="questionNumberBadge">{questionNumber}</span>
+        <span className="questionTypeBadge">{typeLabel}</span>
+      </div>
+      <div className="displayStatusGroup">
+        <span className="responseCountBadge">
+          <Users className="displayBadgeIcon" aria-hidden="true" />
+          응답 {responseCount}개
+        </span>
+        <span className={`responseStateBadge ${responseOpen ? 'isOpen' : 'isClosed'}`}>
+          <span className="responseStateDot" aria-hidden="true" />
+          {responseOpen ? '답변 수집 중' : '응답 마감'}
+        </span>
+        <span className={`resultStateBadge ${resultVisible ? 'isVisible' : 'isHidden'}`}>
+          {resultVisible ? null : <Lock className="displayBadgeIcon" aria-hidden="true" />}
+          {resultVisible ? '결과 공개' : '결과 비공개'}
+        </span>
+      </div>
+    </header>
+  );
+}
+
+function ChoicePreview({ choices }: { choices: string[] }) {
+  return (
+    <>
+      <div className="choicePreviewGrid">
+        {choices.map((choice, index) => (
+          <div className="choicePreviewCard" key={`${choice}-${index}`}>
+            <span>{index + 1}</span>
+            <strong>{choice}</strong>
+          </div>
+        ))}
+      </div>
+      <p className="displayMutedNotice">
+        <Lock className="displayBadgeIcon" aria-hidden="true" />
+        결과는 아직 공개되지 않았습니다.
+      </p>
+    </>
+  );
+}
+
+function ChoiceResultChart({ results, total }: { results: ChoiceResult[]; total: number }) {
+  return (
+    <div className="choiceResultList">
+      {results.map((item, index) => {
+        const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+        return (
+          <div className="choiceResultRow" key={`${item.name}-${index}`}>
+            <div className="choiceResultLabel">
+              <strong>{item.name}</strong>
+              <span>
+                {item.value}명 · {percent}%
+              </span>
+            </div>
+            <div
+              className="choiceResultBarTrack"
+              role="img"
+              aria-label={`${item.name}: ${item.value}명, ${percent}%`}
             >
-              {modeLabels[m]}
-            </Button>
-          ))}
-        </div>
-      }
-      title="발표 화면"
-    >
-      <div className="stack stack--wide">{stage}</div>
-    </AppShell>
+              <div className="choiceResultBar" style={{ width: `${percent}%` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SubjectiveWaiting({ responseCount }: { responseCount: number }) {
+  return (
+    <div className="subjectiveWaitingBox">
+      <strong>주관식 답변을 받고 있습니다.</strong>
+      <p>지금까지 {responseCount}개의 답변이 들어왔습니다.</p>
+      <p>결과는 아직 공개되지 않았습니다.</p>
+    </div>
+  );
+}
+
+function SubjectiveAnswerList({ answers }: { answers: TextAnswer[] }) {
+  if (answers.length === 0) {
+    return (
+      <div className="subjectiveWaitingBox">
+        <strong>공개된 답변이 없습니다.</strong>
+      </div>
+    );
+  }
+  return (
+    <div className="subjectiveAnswerGrid">
+      {answers.map((answer, index) => (
+        <article className="subjectiveAnswerCard" key={`${answer.nickname}-${index}`}>
+          {answer.answer}
+        </article>
+      ))}
+    </div>
+  );
+}
+
+type PresentationStageProps = {
+  title: string;
+  text: string;
+  questionNumber: string;
+  typeLabel: string;
+  responseCount: number;
+  responseOpen: boolean;
+  resultVisible: boolean;
+  isSubjective: boolean;
+  choices: string[];
+  choiceResults: ChoiceResult[];
+  textAnswers: TextAnswer[];
+};
+
+function PresentationStage({
+  title,
+  text,
+  questionNumber,
+  typeLabel,
+  responseCount,
+  responseOpen,
+  resultVisible,
+  isSubjective,
+  choices,
+  choiceResults,
+  textAnswers,
+}: PresentationStageProps) {
+  return (
+    <section className="displayStage">
+      <DisplayQuestionHeader
+        questionNumber={questionNumber}
+        typeLabel={typeLabel}
+        responseCount={responseCount}
+        responseOpen={responseOpen}
+        resultVisible={resultVisible}
+      />
+
+      <section className="displayQuestionText">
+        <h2>{title}</h2>
+        <p>{text}</p>
+      </section>
+
+      <section className="displayContentArea">
+        {!isSubjective && !resultVisible ? <ChoicePreview choices={choices} /> : null}
+        {!isSubjective && resultVisible ? (
+          <ChoiceResultChart results={choiceResults} total={responseCount} />
+        ) : null}
+        {isSubjective && !resultVisible ? <SubjectiveWaiting responseCount={responseCount} /> : null}
+        {isSubjective && resultVisible ? <SubjectiveAnswerList answers={textAnswers} /> : null}
+      </section>
+    </section>
+  );
+}
+
+function NoActiveQuestionState() {
+  return (
+    <section className="displayStage noActiveQuestionState">
+      <h2>진행 중인 질문이 없습니다.</h2>
+      <p>강사가 질문을 열면 이 화면에 표시됩니다.</p>
+    </section>
+  );
+}
+
+function NonDisplayableState({ visibility }: { visibility: ResultVisibility }) {
+  return (
+    <section className="displayStage noActiveQuestionState">
+      <h2>발표 화면에 표시되지 않는 질문입니다.</h2>
+      <p>
+        {visibility === 'teacher-only'
+          ? '이 질문 결과는 강사 화면에서만 집계됩니다.'
+          : '이 질문은 발표 화면 비노출로 설정되어 있습니다.'}
+      </p>
+    </section>
+  );
+}
+
+function DisplayShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="displayPage">
+      <div className="displayShell">
+        <header className="displayToolbar">
+          <h1>발표 화면</h1>
+        </header>
+        {children}
+      </div>
+    </main>
+  );
+}
+
+// Firebase 미설정 시 미리보기: 실제와 동일한 스테이지를 mock 질문으로 렌더한다.
+function DisplayPreview() {
+  const question = (previewQuestions[1] ?? previewQuestions[0]) as QuestionDoc;
+  return (
+    <DisplayShell>
+      <PresentationStage
+        title={question.title?.trim() || getQuestionTypeLabel(question)}
+        text={question.prompt?.trim() || '질문 문장이 없습니다.'}
+        questionNumber={`Q${String(question.order ?? 1).padStart(2, '0')}`}
+        typeLabel={getQuestionTypeLabel(question)}
+        responseCount={2}
+        responseOpen
+        resultVisible={false}
+        isSubjective={getQuestionInputType(question) === 'text'}
+        choices={getQuestionChoices(question)}
+        choiceResults={buildChoiceResults(question, [])}
+        textAnswers={[]}
+      />
+    </DisplayShell>
   );
 }
 
@@ -109,15 +251,13 @@ export function DisplayPage() {
   // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
   const { user } = usePresenterAuth();
   const hasTeacherAuth = Boolean(user) && Boolean(sessionId);
-  const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', {
+  const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', {
     enabled: hasTeacherAuth,
   });
-  // 단일-오픈 모델: 발표 화면은 지금 응답이 열린 그 질문을 따라간다.
-  const openQuestion =
-    questions.find((question) => (question.open ?? false) && Boolean(session?.accepting)) ?? null;
+  // 발표 화면은 현재 선택된 질문(activeQuestionId)을 수집→마감→결과 공개까지 이어서 보여준다.
   const { answers, error: answersError } = useAnswers(
     sessionId ?? '',
-    hasTeacherAuth ? openQuestion?.id : undefined,
+    hasTeacherAuth ? activeQuestion?.id : undefined,
   );
 
   if (!firebaseConfigStatus.isConfigured) {
@@ -126,93 +266,63 @@ export function DisplayPage() {
 
   if (!sessionId) {
     return (
-      <AppShell compact title="발표 화면">
-        <Card className="banner-card">
-          <p>발표할 설문을 먼저 선택하세요.</p>
-          <Link to="/sessions">
-            <Button size="sm">진행 중인 설문으로 이동</Button>
-          </Link>
-        </Card>
-      </AppShell>
+      <DisplayShell>
+        <section className="displayStage noActiveQuestionState">
+          <h2>발표할 설문이 선택되지 않았습니다.</h2>
+          <p>
+            <Link to="/sessions">진행 중인 설문으로 이동</Link>
+          </p>
+        </section>
+      </DisplayShell>
     );
   }
 
-  let content: ReactNode = null;
-
-  if (loading) {
-    content = null;
-  } else if (error || answersError) {
-    content = <Card className="banner-card banner-card--error">{error ?? answersError}</Card>;
-  } else if (!session || !openQuestion) {
-    content = (
-      <Card className="banner-card">
-        Admin에서 질문의 응답을 열면 이 화면에 자동으로 표시됩니다.
-      </Card>
-    );
-  } else if (!isDisplayableQuestion(openQuestion)) {
-    content = (
-      <Card className="collecting-stage" tone="muted">
-        <strong>발표 화면 비노출 질문</strong>
-        <span>
-          {getQuestionResultVisibility(openQuestion) === 'teacher-only'
-            ? '이 질문 결과는 강사 화면에서만 집계됩니다.'
-            : '이 질문 결과는 발표 화면에 표시되지 않습니다.'}
-        </span>
-      </Card>
-    );
-  } else if (!session.showResults) {
-    content = (
-      <Card className="collecting-stage" tone="muted">
-        <h2>{openQuestion.title}</h2>
-        <p>{openQuestion.prompt}</p>
-        <strong>답변 수집 중</strong>
-        <span>결과 공개를 누르면 그래프 또는 승인 답변이 나타납니다.</span>
-      </Card>
-    );
-  } else if (getQuestionInputType(openQuestion) === 'text') {
-    const approvedAnswers = getApprovedTextAnswers(answers);
-    content = (
-      <DisplayStage
-        prompt={openQuestion.prompt}
-        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
-        responseCount={approvedAnswers.length}
-        title={openQuestion.title}
-      >
-        <AnswerWall answers={approvedAnswers} />
-      </DisplayStage>
-    );
-  } else if (getQuestionInputType(openQuestion) === 'status') {
-    content = (
-      <DisplayStage
-        prompt={openQuestion.prompt}
-        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
-        responseCount={answers.length}
-        title={openQuestion.title}
-      >
-        <StatusSummary
-          items={buildStatusResults(openQuestion, answers).map((item) => ({
-            label: item.name,
-            value: item.value,
-          }))}
-        />
-      </DisplayStage>
-    );
-  } else {
-    content = (
-      <DisplayStage
-        prompt={openQuestion.prompt}
-        questionLabel={`Q${String(openQuestion.order).padStart(2, '0')}`}
-        responseCount={answers.length}
-        title={openQuestion.title}
-      >
-        <ResultChart data={buildChoiceResults(openQuestion, answers)} />
-      </DisplayStage>
-    );
-  }
-
-  return (
-    <AppShell compact title="발표 화면">
-      <div className="stack stack--wide">{content}</div>
-    </AppShell>
+  // 응답 열림/결과 공개 상태는 '지금 실제로 열린 그 질문'에 대해서만 유효하다(단일-오픈 모델).
+  const openQuestion =
+    questions.find((question) => (question.open ?? false) && Boolean(session?.accepting)) ?? null;
+  const isActiveTheOpenOne = Boolean(
+    activeQuestion && openQuestion && activeQuestion.id === openQuestion.id,
   );
+  const responseOpen = isActiveTheOpenOne;
+  const resultVisible =
+    isActiveTheOpenOne &&
+    Boolean(session?.showResults) &&
+    Boolean(activeQuestion && isDisplayableQuestion(activeQuestion));
+
+  let stage: ReactNode;
+  if (loading) {
+    stage = null;
+  } else if (error || answersError) {
+    stage = (
+      <section className="displayStage">
+        <p className="displayStageError">{error ?? answersError}</p>
+      </section>
+    );
+  } else if (!session || !activeQuestion) {
+    stage = <NoActiveQuestionState />;
+  } else if (!isDisplayableQuestion(activeQuestion)) {
+    stage = <NonDisplayableState visibility={getQuestionResultVisibility(activeQuestion)} />;
+  } else {
+    const index = Math.max(
+      0,
+      questions.findIndex((question) => question.id === activeQuestion.id),
+    );
+    stage = (
+      <PresentationStage
+        title={activeQuestion.title?.trim() || getQuestionTypeLabel(activeQuestion)}
+        text={activeQuestion.prompt?.trim() || '질문 문장이 없습니다.'}
+        questionNumber={`Q${String(index + 1).padStart(2, '0')}`}
+        typeLabel={getQuestionTypeLabel(activeQuestion)}
+        responseCount={answers.length}
+        responseOpen={responseOpen}
+        resultVisible={resultVisible}
+        isSubjective={getQuestionInputType(activeQuestion) === 'text'}
+        choices={getQuestionChoices(activeQuestion)}
+        choiceResults={buildChoiceResults(activeQuestion, answers)}
+        textAnswers={getApprovedTextAnswers(answers)}
+      />
+    );
+  }
+
+  return <DisplayShell>{stage}</DisplayShell>;
 }
