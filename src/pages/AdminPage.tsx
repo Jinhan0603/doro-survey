@@ -38,7 +38,7 @@ export function AdminPage() {
   const firestoreEnabled = Boolean(user) && Boolean(sessionId);
   const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
   const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
-  const { toasts, pushToast, dismissToast } = useToasts();
+  const { toasts, pushToast } = useToasts();
   const [busy, setBusy] = useState(false);
 
   if (!firebaseConfigStatus.isConfigured) {
@@ -314,7 +314,7 @@ export function AdminPage() {
           </Card>
         </div>
       </div>
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      <ToastStack toasts={toasts} />
     </AppShell>
   );
 }

@@ -275,7 +275,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { toasts, pushToast, dismissToast } = useToasts();
+  const { toasts, pushToast } = useToasts();
 
   const selected = sessions.find((session) => session.id === selectedId) ?? null;
   const { questions } = useQuestions(selected?.id ?? '', { enabled: Boolean(selected) });
@@ -408,7 +408,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
         </section>
       </div>
 
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+      <ToastStack toasts={toasts} />
     </main>
   );
 }
