@@ -9,6 +9,7 @@ import { StatusInsightCard } from '../components/admin/StatusInsightCard';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
+import { ToastStack } from '../components/common/Toast';
 import { AppShell } from '../components/layout/AppShell';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
@@ -20,6 +21,7 @@ import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
+import { useToasts } from '../hooks/useToasts';
 import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
 import {
   getQuestionInputType,
@@ -36,8 +38,7 @@ export function AdminPage() {
   const firestoreEnabled = Boolean(user) && Boolean(sessionId);
   const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
   const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const { toasts, pushToast, dismissToast } = useToasts();
   const [busy, setBusy] = useState(false);
 
   if (!firebaseConfigStatus.isConfigured) {
@@ -89,12 +90,10 @@ export function AdminPage() {
   const runAdminAction = async (action: () => Promise<void>, successMessage?: string) => {
     try {
       setBusy(true);
-      setActionError(null);
-      if (successMessage) setActionMessage(null);
       await action();
-      if (successMessage) setActionMessage(successMessage);
+      if (successMessage) pushToast(successMessage, 'success');
     } catch (nextError) {
-      setActionError(nextError instanceof Error ? nextError.message : '운영 작업 실행에 실패했습니다.');
+      pushToast(nextError instanceof Error ? nextError.message : '운영 작업 실행에 실패했습니다.', 'error');
     } finally {
       setBusy(false);
     }
@@ -108,7 +107,7 @@ export function AdminPage() {
     if (!confirmed) return;
     await runAdminAction(async () => {
       const count = await deleteAnswersForQuestion(sessionId, activeQuestion.id);
-      setActionMessage(`현재 질문 응답 ${count}개를 삭제했습니다.`);
+      pushToast(`현재 질문 응답 ${count}개를 삭제했습니다.`, 'success');
     });
   };
 
@@ -129,7 +128,7 @@ export function AdminPage() {
         showResults: false,
         activeQuestionId: displayQuestions[0]?.id,
       });
-      setActionMessage(`전체 응답 ${count}개를 삭제했습니다.`);
+      pushToast(`전체 응답 ${count}개를 삭제했습니다.`, 'success');
     });
   };
 
@@ -269,10 +268,6 @@ export function AdminPage() {
                 <p>{activeQuestion.prompt}</p>
               </>
             ) : null}
-            {actionMessage ? <div className="inline-message">{actionMessage}</div> : null}
-            {actionError ? (
-              <div className="inline-message inline-message--error">{actionError}</div>
-            ) : null}
           </Card>
 
           {activeQuestion && activeInputType === 'status' ? (
@@ -320,6 +315,7 @@ export function AdminPage() {
           </Card>
         </div>
       </div>
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </AppShell>
   );
 }
