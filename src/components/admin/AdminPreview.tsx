@@ -33,6 +33,7 @@ export function AdminPreview() {
           activeQuestionId={activeQuestionId}
           questions={previewQuestions}
           onSelect={setLocalActiveQuestion}
+          onToggleOpen={() => {}}
         />
 
         <div className="stack">

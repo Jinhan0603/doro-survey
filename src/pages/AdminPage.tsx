@@ -13,7 +13,7 @@ import { ToastStack } from '../components/common/Toast';
 import { AppShell } from '../components/layout/AppShell';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
-import { setActiveQuestionId, updateSession } from '../firebase/sessions';
+import { setActiveQuestionId, setQuestionOpen, updateSession } from '../firebase/sessions';
 import { type ResultVisibility } from '../firebase/types';
 import { Link } from 'react-router-dom';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -80,8 +80,8 @@ export function AdminPage() {
       ? '이 질문 결과는 Admin에서만 집계되며 Display에는 공개되지 않습니다.'
       : activeVisibility === 'hidden'
         ? '이 질문 결과는 Display에 표시되지 않습니다.'
-        : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.'
-    : '현재 질문의 응답 수집과 결과 공개 상태를 실시간으로 제어합니다.';
+        : '응답 열기/마감은 전체 마스터 스위치입니다. 질문별 열기/닫기는 왼쪽 질문 목록에서 제어합니다.'
+    : '응답 열기/마감은 전체 마스터 스위치입니다. 질문별 열기/닫기는 왼쪽 질문 목록에서 제어합니다.';
   const canManageAnswerDocs = (role ?? profile?.role) === 'admin';
 
   const buildStatusLabel = (value: boolean, onLabel: string, offLabel: string) =>
@@ -204,11 +204,18 @@ export function AdminPage() {
       <div className="page-grid page-grid--admin">
         <QuestionList
           activeQuestionId={session?.activeQuestionId ?? displayQuestions[0]?.id ?? ''}
+          disabled={busy}
           questions={displayQuestions}
           onSelect={(questionId) => {
             void runAdminAction(
               () => setActiveQuestionId(sessionId, questionId),
               `현재 질문을 ${questionId}로 전환했습니다.`,
+            );
+          }}
+          onToggleOpen={(questionId, nextOpen) => {
+            void runAdminAction(
+              () => setQuestionOpen(sessionId, questionId, nextOpen),
+              `${questionId} 질문을 ${nextOpen ? '열었습니다' : '닫았습니다'}.`,
             );
           }}
         />
