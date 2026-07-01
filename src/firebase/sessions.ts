@@ -344,3 +344,103 @@ export async function createCustomQuestionSession({
 
   await batch.commit();
 }
+
+/** 편집 시 질문 draft. questionId가 있으면 기존 질문(응답 보존), 없으면 새 질문. */
+export type EditCustomSessionQuestionInput = CustomSessionQuestionInput & {
+  questionId?: string;
+};
+
+type UpdateCustomSessionInput = {
+  sessionId: string;
+  title: string;
+  questions: EditCustomSessionQuestionInput[];
+};
+
+/**
+ * 기존 세션의 제목/질문을 수정한다. 핵심 원칙:
+ * - questionId가 있는 draft는 **그 doc ID를 그대로 재사용**한다. 질문 doc를 덮어써도
+ *   하위 answers 서브컬렉션은 삭제되지 않으므로 기존 응답이 보존된다.
+ * - questionId가 없는 draft는 기존 ID와 충돌하지 않는 새 q번호를 할당한다.
+ * - 목록에 없는 기존 질문은 **삭제하지 않는다**(응답 유실 방지). 삭제는 이 함수의 책임이 아니다.
+ */
+export async function updateCustomQuestionSession({
+  sessionId,
+  title,
+  questions,
+}: UpdateCustomSessionInput): Promise<void> {
+  const database = requireDb();
+  const sessionRef = getSessionRef(sessionId);
+  const normalizedTitle = title.trim();
+
+  if (!normalizedTitle) {
+    throw new Error('세션 제목을 입력해주세요.');
+  }
+
+  if (questions.length === 0) {
+    throw new Error('질문을 하나 이상 입력해주세요.');
+  }
+
+  if (questions.length > MAX_CUSTOM_QUESTIONS) {
+    throw new Error(`질문은 한 세션에 최대 ${MAX_CUSTOM_QUESTIONS}개까지 만들 수 있습니다.`);
+  }
+
+  const existingSession = await getDoc(sessionRef);
+  if (!existingSession.exists()) {
+    throw new Error(`세션을 찾을 수 없습니다: ${sessionId}`);
+  }
+
+  // 기존 질문 ID는 그대로 예약해 두고, 새 질문은 겹치지 않는 q번호를 할당한다.
+  const reservedIds = new Set(
+    questions
+      .map((question) => question.questionId?.trim())
+      .filter((id): id is string => Boolean(id)),
+  );
+  let counter = 0;
+  const allocateNewId = () => {
+    let candidate: string;
+    do {
+      counter += 1;
+      candidate = `q${String(counter).padStart(2, '0')}`;
+    } while (reservedIds.has(candidate));
+    reservedIds.add(candidate);
+    return candidate;
+  };
+
+  const normalizedQuestions = questions.map((question, index) => {
+    const normalized = normalizeCustomQuestion(question, index);
+    const questionId = question.questionId?.trim() || allocateNewId();
+    return { ...normalized, id: questionId };
+  });
+
+  // 기존 activeQuestionId가 여전히 유효하면 유지, 아니면 첫 질문으로 되돌린다.
+  const previousActiveId = (existingSession.data() as SessionDoc).activeQuestionId;
+  const activeQuestionId =
+    previousActiveId && normalizedQuestions.some((q) => q.id === previousActiveId)
+      ? previousActiveId
+      : normalizedQuestions[0]?.id ?? null;
+
+  const batch = writeBatch(database);
+  batch.set(
+    sessionRef,
+    {
+      title: normalizedTitle,
+      activeQuestionId,
+      currentPhase: normalizedQuestions[0]?.phase ?? null,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  normalizedQuestions.forEach((question) => {
+    batch.set(
+      getQuestionRef(sessionId, question.id),
+      {
+        ...question,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  });
+
+  await batch.commit();
+}
