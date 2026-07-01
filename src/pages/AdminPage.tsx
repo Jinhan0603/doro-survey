@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { ChevronLeft, Copy, ExternalLink, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { AdminPreview } from '../components/admin/AdminPreview';
 import { Button } from '../components/common/Button';
@@ -215,6 +215,10 @@ export function AdminPage() {
       <div className="adminLiveShell">
         <header className="adminLiveToolbar">
           <div className="adminLiveTitleBlock">
+            <Link to="/sessions" className="adminBackLink">
+              <ChevronLeft size={16} />
+              진행 중인 설문 목록
+            </Link>
             <h1>실시간 운영</h1>
             <p>질문을 열고 닫고, 학생 응답과 결과 공개를 관리합니다.</p>
           </div>

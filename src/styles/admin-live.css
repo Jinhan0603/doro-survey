@@ -38,6 +38,22 @@
   gap: 16px;
 }
 
+.adminBackLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 6px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.adminBackLink:hover {
+  color: #2563eb;
+}
+
 .adminLiveToolbar h1 {
   margin: 0;
   color: #111827;
@@ -626,8 +642,11 @@
 
 .adminRightRail .studentQrBox canvas,
 .adminRightRail .studentQrBox svg {
-  max-width: 152px;
-  max-height: 152px;
+  /* SVG(width/height 속성)가 아니라 CSS로 크기를 고정해야, 화면 전환 후에도
+     QR이 viewBox 단위로 쪼그라들지 않고 항상 같은 크기로 렌더된다. */
+  width: 152px;
+  height: 152px;
+  display: block;
 }
 
 .adminRightRail .studentLinkField {
