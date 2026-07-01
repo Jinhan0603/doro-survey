@@ -144,7 +144,6 @@ function SessionDetail({
         <section className="studentEntryCard">
           <header className="studentEntryHeader">
             <h3>학생 입장</h3>
-            <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
           </header>
 
           <div className="studentEntryContent">
