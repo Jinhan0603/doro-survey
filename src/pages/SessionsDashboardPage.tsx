@@ -142,10 +142,6 @@ function SessionDetail({
 
       <div className="sessionDetailBody">
         <section className="studentEntryCard">
-          <header className="studentEntryHeader">
-            <h3>학생 입장</h3>
-          </header>
-
           <div className="studentEntryContent">
             <div className="studentQrBox" aria-label="학생 입장 QR 코드">
               <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
