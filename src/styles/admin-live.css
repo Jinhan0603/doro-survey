@@ -1,8 +1,16 @@
 /* Admin 실시간 운영(/admin) 3열 대시보드 */
 
+:root {
+  --admin-shell-max-width: 1440px;
+  --admin-left-width: 300px;
+  --admin-right-width: 360px;
+  --admin-gap: 18px;
+  --admin-control-height: 156px;
+}
+
 .adminLivePage {
   height: calc(100dvh - var(--app-header-height, 72px));
-  padding: 24px;
+  padding: 24px 32px 28px;
   overflow: hidden;
   background:
     radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.12), transparent 34%),
@@ -12,7 +20,7 @@
 
 .adminLiveShell {
   width: 100%;
-  max-width: 1240px;
+  max-width: var(--admin-shell-max-width);
   height: 100%;
   min-height: 0;
   margin: 0 auto;
@@ -52,8 +60,11 @@
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 300px;
-  gap: 16px;
+  grid-template-columns:
+    var(--admin-left-width)
+    minmax(0, 1fr)
+    var(--admin-right-width);
+  gap: var(--admin-gap);
   overflow: hidden;
 }
 
@@ -278,43 +289,24 @@
 .liveResponsesTable {
   width: 100%;
   table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 6px;
+  border-collapse: collapse;
 }
 
 .liveResponsesTable th {
-  height: 32px;
-  padding: 0 10px 4px;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e5eaf2;
   color: #6b7280;
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 1;
   font-weight: 850;
   text-align: left;
   white-space: nowrap;
 }
 
-.liveResponsesTable th:nth-child(1) {
-  width: 22%;
-}
-
-.liveResponsesTable th:nth-child(2) {
-  width: 42%;
-}
-
-.liveResponsesTable th:nth-child(3) {
-  width: 18%;
-}
-
-.liveResponsesTable th:nth-child(4) {
-  width: 18%;
-  text-align: right;
-}
-
 .liveResponsesTable td {
-  height: 44px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border-top: 1px solid #eef2f7;
+  height: 40px;
+  padding: 7px 12px;
   border-bottom: 1px solid #eef2f7;
   color: #111827;
   font-size: 13px;
@@ -323,22 +315,30 @@
   vertical-align: middle;
 }
 
-.liveResponsesTable td:first-child {
-  border-left: 1px solid #eef2f7;
-  border-radius: 12px 0 0 12px;
+.liveResponsesTable th:nth-child(1),
+.liveResponsesTable td:nth-child(1) {
+  width: 22%;
 }
 
-.liveResponsesTable td:last-child {
-  border-right: 1px solid #eef2f7;
-  border-radius: 0 12px 12px 0;
-  text-align: right;
-  color: #4b5563;
-  font-variant-numeric: tabular-nums;
-}
-
-.liveResponsesTable td:nth-child(1),
+.liveResponsesTable th:nth-child(2),
 .liveResponsesTable td:nth-child(2) {
+  width: auto;
+}
+
+.liveResponsesTable th:nth-child(3),
+.liveResponsesTable td:nth-child(3) {
+  width: 110px;
+}
+
+.liveResponsesTable th:nth-child(4),
+.liveResponsesTable td:nth-child(4) {
+  width: 86px;
+}
+
+.cellText {
+  display: block;
   overflow: hidden;
+  color: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -388,13 +388,13 @@
 
 /* 컴팩트 현재 질문 운영 */
 .compactQuestionControlCard {
-  flex: 0 0 172px;
-  min-height: 172px;
+  flex: 0 0 var(--admin-control-height);
+  min-height: var(--admin-control-height);
   padding: 18px 20px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  grid-template-rows: auto auto;
-  gap: 14px 18px;
+  grid-template-columns: minmax(0, 1fr) 230px 210px;
+  gap: 16px;
+  align-items: center;
   border: 1px solid #dbe3ef;
   border-radius: 24px;
   background: #ffffff;
@@ -414,11 +414,7 @@
   letter-spacing: -0.01em;
 }
 
-.compactQuestionTitleRow {
-  min-width: 0;
-}
-
-.compactQuestionTitleRow strong {
+.compactQuestionInfo strong {
   display: block;
   color: #111827;
   font-size: 17px;
@@ -427,26 +423,25 @@
   letter-spacing: -0.025em;
 }
 
-.compactQuestionTitleRow span {
-  margin-top: 5px;
+.compactQuestionInfo span {
+  margin-top: 6px;
   display: block;
   overflow: hidden;
   color: #4b5563;
   font-size: 14px;
   line-height: 1.45;
-  font-weight: 600;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.compactStateRow {
+.compactStateColumn {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, 42px);
   gap: 8px;
 }
 
 .compactStateItem {
-  min-height: 40px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -469,6 +464,7 @@
   font-size: 13px;
   line-height: 1.2;
   font-weight: 850;
+  white-space: nowrap;
 }
 
 .stateGreen {
@@ -483,17 +479,16 @@
   color: #64748b !important;
 }
 
-.compactActionRow {
-  grid-column: 1 / -1;
+.compactActionColumn {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-rows: repeat(2, 44px);
+  gap: 8px;
 }
 
 .primaryOperationButton,
 .secondaryOperationButton {
-  height: 42px;
-  padding: 0 16px;
+  height: 44px;
+  padding: 0 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -580,8 +575,10 @@
 }
 
 .studentQrBox {
-  margin-top: 16px;
-  height: 166px;
+  width: 194px;
+  height: 194px;
+  margin: 18px auto 0;
+  padding: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,12 +589,12 @@
 
 .studentQrBox canvas,
 .studentQrBox svg {
-  max-width: 132px;
-  max-height: 132px;
+  max-width: 152px;
+  max-height: 152px;
 }
 
 .studentLinkField {
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .studentLinkField label {
@@ -609,22 +606,29 @@
   font-weight: 850;
 }
 
-.studentLinkField input {
+/* URL은 한 줄로 자르지 않고 두 줄까지 줄바꿈해 전체가 보이도록 한다. */
+.studentJoinUrlTextarea {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  display: block;
   border: 1px solid #d4dbe8;
   border-radius: 12px;
   background: #f8fafc;
   color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 1.35;
   font-weight: 700;
+  white-space: normal;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  resize: none;
   outline: none;
-  text-overflow: ellipsis;
 }
 
-.studentLinkField input:focus {
+.studentJoinUrlTextarea:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
@@ -785,50 +789,60 @@
 
 /* 내부 스크롤바 */
 .questionListScroll::-webkit-scrollbar,
-.liveResponsesTableWrap::-webkit-scrollbar {
+.liveResponsesTableWrap::-webkit-scrollbar,
+.adminRightRail::-webkit-scrollbar {
   width: 8px;
 }
 
 .questionListScroll::-webkit-scrollbar-track,
-.liveResponsesTableWrap::-webkit-scrollbar-track {
+.liveResponsesTableWrap::-webkit-scrollbar-track,
+.adminRightRail::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .questionListScroll::-webkit-scrollbar-thumb,
-.liveResponsesTableWrap::-webkit-scrollbar-thumb {
+.liveResponsesTableWrap::-webkit-scrollbar-thumb,
+.adminRightRail::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
 }
 
 .questionListScroll::-webkit-scrollbar-thumb:hover,
-.liveResponsesTableWrap::-webkit-scrollbar-thumb:hover {
+.liveResponsesTableWrap::-webkit-scrollbar-thumb:hover,
+.adminRightRail::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 .questionListScroll,
-.liveResponsesTableWrap {
+.liveResponsesTableWrap,
+.adminRightRail {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* 반응형 */
-@media (max-width: 1080px) {
-  .adminLiveWorkspace {
-    grid-template-columns: 250px minmax(0, 1fr) 280px;
-  }
-
-  .compactQuestionControlCard {
-    grid-template-columns: 1fr;
-    flex-basis: 214px;
-    min-height: 214px;
-  }
-
-  .compactActionRow {
-    grid-column: auto;
+/* 세로 공간이 부족하면 우측 레일만 내부 스크롤을 허용한다. */
+@media (max-height: 760px) {
+  .adminRightRail {
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
-@media (max-width: 840px) {
+/* 반응형 */
+@media (max-width: 1280px) {
+  :root {
+    --admin-shell-max-width: 1180px;
+    --admin-left-width: 270px;
+    --admin-right-width: 330px;
+    --admin-gap: 14px;
+  }
+
+  .compactQuestionControlCard {
+    grid-template-columns: minmax(0, 1fr) 210px 190px;
+  }
+}
+
+@media (max-width: 980px) {
   .adminLivePage {
     height: auto;
     min-height: calc(100dvh - var(--app-header-height, 72px));
@@ -857,7 +871,13 @@
   }
 
   .compactQuestionControlCard {
-    flex-basis: auto;
+    flex: 0 0 auto;
     min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .studentQrBox {
+    width: 100%;
+    max-width: 220px;
   }
 }

@@ -273,12 +273,22 @@ export function AdminPage() {
                     <tbody>
                       {answers.map((answer) => (
                         <tr key={answer.uid}>
-                          <td>{answer.nickname || '익명'}</td>
-                          <td>{getAnswerSummary(activeQuestion, answer) || '-'}</td>
+                          <td>
+                            <span className="cellText">{answer.nickname || '익명'}</span>
+                          </td>
+                          <td>
+                            <span className="cellText">
+                              {getAnswerSummary(activeQuestion, answer) || '-'}
+                            </span>
+                          </td>
                           <td>
                             <span className="countedBadge">집계됨</span>
                           </td>
-                          <td>{formatTimestamp(answer.updatedAt ?? answer.createdAt)}</td>
+                          <td>
+                            <span className="cellText">
+                              {formatTimestamp(answer.updatedAt ?? answer.createdAt)}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -295,16 +305,14 @@ export function AdminPage() {
             <section className="compactQuestionControlCard">
               <div className="compactQuestionInfo">
                 <p className="sectionEyebrow">현재 질문 운영</p>
-                <div className="compactQuestionTitleRow">
-                  <strong>
-                    {currentQuestionNumber}
-                    {currentTypeLabel ? ` · ${currentTypeLabel}` : ''}
-                  </strong>
-                  <span>{currentText}</span>
-                </div>
+                <strong>
+                  {currentQuestionNumber}
+                  {currentTypeLabel ? ` · ${currentTypeLabel}` : ''}
+                </strong>
+                <span>{currentText}</span>
               </div>
 
-              <div className="compactStateRow">
+              <div className="compactStateColumn">
                 <div className="compactStateItem">
                   <span>응답 상태</span>
                   <strong className={isResponseOpen ? 'stateGreen' : 'stateGray'}>
@@ -319,7 +327,7 @@ export function AdminPage() {
                 </div>
               </div>
 
-              <div className="compactActionRow">
+              <div className="compactActionColumn">
                 <button
                   type="button"
                   className="primaryOperationButton"
@@ -352,18 +360,19 @@ export function AdminPage() {
           <aside className="adminRightRail">
             <section className="studentEntryCard">
               <h2>학생 입장</h2>
-              <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
 
               <div className="studentQrBox" aria-label="학생 입장 QR 코드">
-                <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
+                <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={152} value={studentJoinUrl} />
               </div>
 
               <div className="studentLinkField">
                 <label htmlFor="studentJoinUrl">학생 입장 링크</label>
-                <input
+                <textarea
                   id="studentJoinUrl"
+                  className="studentJoinUrlTextarea"
                   value={studentJoinUrl}
                   readOnly
+                  rows={2}
                   onFocus={(event) => event.currentTarget.select()}
                 />
               </div>
