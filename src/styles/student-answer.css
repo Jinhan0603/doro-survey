@@ -1,0 +1,321 @@
+/* 학생 답변 카드(/student) — 모바일 우선, 데스크톱에서도 폴리시된 카드 */
+
+/* 답변 카드가 있을 때만 학생 메인 영역을 넓히고 은은한 배경을 준다(다른 학생 화면엔 영향 없음). */
+.student-main:has(.studentAnswerCard) {
+  max-width: 560px;
+  padding-top: clamp(24px, 6vh, 56px);
+  padding-bottom: 40px;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.1), transparent 38%),
+    radial-gradient(circle at 88% 16%, rgba(147, 197, 253, 0.1), transparent 34%);
+}
+
+.studentAnswerShell {
+  width: 100%;
+}
+
+.studentAnswerCard {
+  position: relative;
+  width: 100%;
+  padding: 30px;
+  border: 1px solid #dbe3ef;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1);
+}
+
+/* ── 질문 메타 배지 ── */
+.studentQuestionMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.studentMetaBadge {
+  min-height: 30px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.studentMetaBadge.isPrimary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.studentMetaBadge.isOpen {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.studentMetaBadge.isClosed {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.studentMetaBadge.isSubmitted {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* ── 질문 제목/문장 ── */
+.studentQuestionText {
+  margin-top: 22px;
+}
+
+.studentQuestionText h1 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1.14;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.studentQuestionText p {
+  margin: 12px 0 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 650;
+}
+
+/* ── 객관식 선택지 ── */
+.studentOptionList {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.studentOptionButton {
+  width: 100%;
+  min-height: 60px;
+  padding: 13px 17px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 13px;
+  align-items: center;
+  border: 1px solid #d4dbe8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111827;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.studentOptionButton:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.studentOptionButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.studentOptionButton.isSelected {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+}
+
+.studentOptionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.studentOptionIndicator {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.6px solid #cbd5e1;
+  border-radius: 999px;
+  color: inherit;
+}
+
+.studentOptionButton.isSelected .studentOptionIndicator {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.86);
+}
+
+.studentOptionIndicator svg {
+  width: 17px;
+  height: 17px;
+}
+
+.studentOptionText {
+  min-width: 0;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+/* ── 주관식 ── */
+.studentTextAnswerLabel {
+  display: block;
+  margin-top: 26px;
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.studentTextAnswer {
+  width: 100%;
+  min-height: 150px;
+  padding: 16px;
+  border: 1px solid #d4dbe8;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 650;
+  resize: vertical;
+  outline: none;
+}
+
+.studentTextAnswer:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.studentTextAnswer:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+}
+
+/* ── 제출 영역 ── */
+.studentSubmitArea {
+  margin-top: 24px;
+}
+
+.studentSubmittedNotice,
+.studentClosedNotice,
+.studentErrorNotice {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 750;
+}
+
+.studentSubmittedNotice {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.studentClosedNotice {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.studentErrorNotice {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.studentSubmitButton {
+  width: 100%;
+  height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.studentSubmitButton:hover:not(:disabled) {
+  background: #0b7ff3;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);
+}
+
+.studentSubmitButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.studentSubmitButton:disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ── 모바일 ── */
+@media (max-width: 640px) {
+  .student-main:has(.studentAnswerCard) {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .studentAnswerCard {
+    padding: 22px 18px;
+    border-radius: 24px;
+  }
+
+  .studentQuestionMetaRow {
+    gap: 6px;
+  }
+
+  .studentMetaBadge {
+    min-height: 28px;
+    padding: 0 10px;
+  }
+
+  .studentQuestionText {
+    margin-top: 18px;
+  }
+
+  .studentQuestionText h1 {
+    font-size: 28px;
+  }
+
+  .studentQuestionText p {
+    font-size: 14px;
+  }
+
+  .studentOptionList {
+    margin-top: 20px;
+  }
+
+  .studentOptionButton {
+    min-height: 58px;
+    padding: 12px 14px;
+    border-radius: 18px;
+  }
+
+  .studentSubmitButton {
+    height: 54px;
+  }
+}

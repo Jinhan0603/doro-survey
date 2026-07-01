@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { upsertAnswer } from '../../firebase/answers';
 import { type AnswerDoc, type QuestionDoc } from '../../firebase/types';
 import { normalizeNickname, normalizeTextAnswer } from '../../utils/sanitize';
@@ -9,25 +9,27 @@ import {
   getQuestionInputType,
   resolveChoiceIdByText,
 } from '../../utils/questionRuntime';
-import { Button } from '../common/Button';
-import { ChoiceQuestion } from '../survey/ChoiceQuestion';
-import { MultiQuestion } from '../survey/MultiQuestion';
-import { QuestionCard } from '../survey/QuestionCard';
-import { TextQuestion } from '../survey/TextQuestion';
-import { SubmitSuccess } from './SubmitSuccess';
+import '../../styles/student-answer.css';
 
-type SubmitState = 'idle' | 'submitting' | 'success';
+type SubmitState = 'idle' | 'submitting';
 
-function buildQuestionCard(question: QuestionDoc, children: ReactNode, footer: ReactNode) {
+function CheckIcon({ className }: { className?: string }) {
   return (
-    <QuestionCard
-      footer={footer}
-      prompt={question.prompt}
-      stepLabel={`질문 ${String(question.order).padStart(2, '0')}`}
-      title={question.title}
+    <svg
+      className={className}
+      width="1em"
+      height="1em"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
     >
-      {children}
-    </QuestionCard>
+      <path d="m5 12 4 4L19 6" />
+    </svg>
   );
 }
 
@@ -68,13 +70,49 @@ export function LiveQuestionForm({
   const [textDraft, setTextDraft] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
   const submittingRef = useRef(false);
+
   const inputType = getQuestionInputType(question);
   const choices = getQuestionChoices(question);
+  const isSubjective = inputType === 'text';
+  const isChoice = !isSubjective;
+  const allowsMultiple = inputType === 'multi';
+
   const selectedChoice = choiceDraft ?? (existingAnswer ? getAnswerValue(existingAnswer) : '');
   const selectedChoices = multiDraft ?? (existingAnswer ? getAnswerValues(existingAnswer) : []);
   const textValue = textDraft ?? existingAnswer?.answerText ?? '';
+
+  const isSubmitting = submitState === 'submitting';
+  const hasAnswer = Boolean(existingAnswer) || justSubmitted;
+
+  const questionNumberLabel = `Q${String(question.order ?? 1).padStart(2, '0')}`;
+  const typeLabel = isSubjective ? '주관식' : '객관식';
+  const selectionModeLabel = allowsMultiple ? '복수 선택' : '단일 선택';
+  const submitButtonLabel = hasAnswer ? '답변 다시 제출하기' : '답변 제출하기';
+
+  const canSubmit =
+    !isSubmitting &&
+    (isChoice
+      ? allowsMultiple
+        ? selectedChoices.length > 0
+        : Boolean(selectedChoice)
+      : textValue.trim().length > 0);
+
+  const isOptionSelected = (choice: string) =>
+    allowsMultiple ? selectedChoices.includes(choice) : choice === selectedChoice;
+
+  const toggleOption = (choice: string) => {
+    setSubmitError(null);
+    if (!allowsMultiple) {
+      setChoiceDraft(choice);
+      return;
+    }
+    setMultiDraft((current) => {
+      const base = current ?? selectedChoices;
+      return base.includes(choice) ? base.filter((item) => item !== choice) : [...base, choice];
+    });
+  };
 
   const handleSubmit = async () => {
     if (submittingRef.current) return;
@@ -93,7 +131,7 @@ export function LiveQuestionForm({
       if (isSingleSelectInputType(inputType)) {
         const normalizedValue = selectedChoice.trim();
         if (!normalizedValue) {
-          setSubmitError('답변을 입력하거나 선택해주세요.');
+          setSubmitError('답변을 선택해주세요.');
           setSubmitState('idle');
           return;
         }
@@ -133,7 +171,7 @@ export function LiveQuestionForm({
       } else {
         const normalizedValue = normalizeTextAnswer(textValue, question.maxLength || 300);
         if (!normalizedValue) {
-          setSubmitError('답변을 입력하거나 선택해주세요.');
+          setSubmitError('답변을 입력해주세요.');
           setSubmitState('idle');
           return;
         }
@@ -149,8 +187,8 @@ export function LiveQuestionForm({
         });
       }
 
-      setSubmitState('success');
-      setShowSuccess(true);
+      setSubmitState('idle');
+      setJustSubmitted(true);
     } catch (nextError) {
       setSubmitState('idle');
       setSubmitError(formatSubmitError(nextError));
@@ -159,100 +197,76 @@ export function LiveQuestionForm({
     }
   };
 
-  if (showSuccess) {
-    return <SubmitSuccess onEdit={() => setShowSuccess(false)} />;
-  }
+  return (
+    <div className="studentAnswerShell">
+      <div className="studentAnswerCard">
+        <header className="studentQuestionMetaRow">
+          <span className="studentMetaBadge isPrimary">{questionNumberLabel}</span>
+          <span className="studentMetaBadge">{typeLabel}</span>
+          {isChoice ? <span className="studentMetaBadge">{selectionModeLabel}</span> : null}
+          <span className="studentMetaBadge isOpen">응답 열림</span>
+          {hasAnswer ? <span className="studentMetaBadge isSubmitted">제출 완료</span> : null}
+        </header>
 
-  const isSubmitting = submitState === 'submitting';
-  const hasAnswer = Boolean(existingAnswer);
+        <section className="studentQuestionText">
+          <h1>{question.title}</h1>
+          {question.prompt ? <p>{question.prompt}</p> : null}
+        </section>
 
-  const footer = (
-    <>
-      {submitError ? (
-        <div className="student-error">{submitError}</div>
-      ) : null}
-      <Button
-        fullWidth
-        disabled={isSubmitting || (
-          isSingleSelectInputType(inputType)
-            ? !selectedChoice
-            : inputType === 'multi'
-              ? selectedChoices.length === 0
-              : !textValue.trim()
+        {isChoice ? (
+          <div className="studentOptionList">
+            {choices.map((choice) => {
+              const selected = isOptionSelected(choice);
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  aria-pressed={selected}
+                  className={`studentOptionButton ${selected ? 'isSelected' : ''}`}
+                  onClick={() => toggleOption(choice)}
+                >
+                  <span className="studentOptionIndicator">{selected ? <CheckIcon /> : null}</span>
+                  <span className="studentOptionText">{choice}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <label className="studentTextAnswerLabel" htmlFor="studentTextAnswer">
+              답변
+            </label>
+            <textarea
+              id="studentTextAnswer"
+              className="studentTextAnswer"
+              value={textValue}
+              maxLength={question.maxLength || 300}
+              placeholder="답변을 입력하세요."
+              onChange={(event) => {
+                setSubmitError(null);
+                setTextDraft(event.target.value);
+              }}
+            />
+          </>
         )}
-        size="lg"
-        onClick={handleSubmit}
-      >
-        {hasAnswer ? '답변 다시 제출하기' : '이 답변 제출하기'}
-      </Button>
-    </>
-  );
 
-  if (inputType === 'choice') {
-    return buildQuestionCard(
-      question,
-      <ChoiceQuestion
-        choices={choices}
-        selectedChoice={selectedChoice}
-        onSelect={(value) => {
-          setSubmitError(null);
-          setSubmitState('idle');
-          setChoiceDraft(value);
-        }}
-      />,
-      footer,
-    );
-  }
-
-  if (inputType === 'multi') {
-    return buildQuestionCard(
-      question,
-      <MultiQuestion
-        choices={choices}
-        selectedChoices={selectedChoices}
-        onToggle={(value) => {
-          setSubmitError(null);
-          setSubmitState('idle');
-          setMultiDraft((current) => {
-            const base = current ?? selectedChoices;
-            return base.includes(value)
-              ? base.filter((item) => item !== value)
-              : [...base, value];
-          });
-        }}
-      />,
-      footer,
-    );
-  }
-
-  if (inputType === 'scale' || inputType === 'status') {
-    return buildQuestionCard(
-      question,
-      <ChoiceQuestion
-        choices={choices}
-        layout="compact"
-        selectedChoice={selectedChoice}
-        onSelect={(value) => {
-          setSubmitError(null);
-          setSubmitState('idle');
-          setChoiceDraft(value);
-        }}
-      />,
-      footer,
-    );
-  }
-
-  return buildQuestionCard(
-    question,
-    <TextQuestion
-      maxLength={question.maxLength || 300}
-      value={textValue}
-      onChange={(value) => {
-        setSubmitError(null);
-        setSubmitState('idle');
-        setTextDraft(value);
-      }}
-    />,
-    footer,
+        <footer className="studentSubmitArea">
+          {submitError ? <p className="studentErrorNotice">{submitError}</p> : null}
+          {hasAnswer && !submitError ? (
+            <p className="studentSubmittedNotice">
+              답변이 제출되었습니다. 선택을 바꾸고 다시 제출할 수 있습니다.
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="studentSubmitButton"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            {submitButtonLabel}
+          </button>
+        </footer>
+      </div>
+    </div>
   );
 }
