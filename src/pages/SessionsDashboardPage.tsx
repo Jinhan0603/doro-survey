@@ -141,42 +141,42 @@ function SessionDetail({
       </header>
 
       <div className="sessionDetailBody">
+        <section className="studentEntryCard">
+          <header className="studentEntryHeader">
+            <h3>학생 입장</h3>
+            <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
+          </header>
+
+          <div className="studentEntryContent">
+            <div className="studentQrBox" aria-label="학생 입장 QR 코드">
+              <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
+            </div>
+
+            <div className="studentLinkArea">
+              <label htmlFor="studentJoinUrl">학생 입장 링크</label>
+              <input
+                id="studentJoinUrl"
+                value={studentJoinUrl}
+                readOnly
+                onFocus={(event) => event.currentTarget.select()}
+              />
+
+              <div className="studentLinkActions">
+                <button type="button" className="linkActionButton" onClick={onCopyLink}>
+                  <Copy size={16} />
+                  링크 복사
+                </button>
+                <button type="button" className="linkActionButton" onClick={onOpenStudent}>
+                  <ExternalLink size={16} />
+                  학생 화면 열기
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="sessionDetailGrid">
           <div className="sessionDetailMain">
-            <section className="studentEntryCard">
-              <header className="studentEntryHeader">
-                <h3>학생 입장</h3>
-                <p>학생은 QR을 스캔하거나 링크를 열어 입장합니다.</p>
-              </header>
-
-              <div className="studentEntryContent">
-                <div className="studentQrBox" aria-label="학생 입장 QR 코드">
-                  <QRCodeSVG bgColor="#f8fafc" fgColor="#161513" includeMargin size={132} value={studentJoinUrl} />
-                </div>
-
-                <div className="studentLinkArea">
-                  <label htmlFor="studentJoinUrl">학생 입장 링크</label>
-                  <input
-                    id="studentJoinUrl"
-                    value={studentJoinUrl}
-                    readOnly
-                    onFocus={(event) => event.currentTarget.select()}
-                  />
-
-                  <div className="studentLinkActions">
-                    <button type="button" className="linkActionButton" onClick={onCopyLink}>
-                      <Copy size={16} />
-                      링크 복사
-                    </button>
-                    <button type="button" className="linkActionButton" onClick={onOpenStudent}>
-                      <ExternalLink size={16} />
-                      학생 화면 열기
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
             <section className="questionPreviewSection">
               <div className="sectionTitleRow">
                 <h3>질문 미리보기</h3>

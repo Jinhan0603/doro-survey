@@ -383,6 +383,9 @@
   flex: 1 1 auto;
   min-height: 0;
   padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
