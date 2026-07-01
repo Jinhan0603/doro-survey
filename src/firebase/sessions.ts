@@ -320,12 +320,22 @@ export async function createCustomQuestionSession({
   normalizedQuestions.forEach((question) => {
     batch.set(getQuestionRef(sessionId, question.id), {
       ...question,
+      // 새 질문은 닫힌 상태로 생성 — 강사가 Admin에서 질문별로 연다.
+      open: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
   });
 
   await batch.commit();
+}
+
+/** 질문 단위 오픈 상태를 토글한다(학생 답변 게이트). 세션 accepting과 AND로 걸린다. */
+export async function setQuestionOpen(sessionId: string, questionId: string, open: boolean) {
+  await updateDoc(getQuestionRef(sessionId, questionId), {
+    open,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 /** 편집 시 질문 draft. questionId가 있으면 기존 질문(응답 보존), 없으면 새 질문. */

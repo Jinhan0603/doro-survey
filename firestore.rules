@@ -111,6 +111,10 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/sessions/$(sessionId));
     }
 
+    function questionDoc(sessionId, questionId) {
+      return get(/databases/$(database)/documents/sessions/$(sessionId)/questions/$(questionId));
+    }
+
     function isSessionOwner(sessionId) {
       return isPresenter()
         && exists(/databases/$(database)/documents/sessions/$(sessionId))
@@ -186,10 +190,13 @@ service cloud.firestore {
         ));
     }
 
+    // 학생 답변 게이트: 세션 전체 마스터 스위치(accepting)와 질문 단위 오픈(open)이 모두 true여야 한다.
+    // 여러 질문을 동시에 열 수 있으므로 activeQuestionId에는 더 이상 묶지 않는다.
     function sessionAcceptsStudentAnswer(sessionId, questionId) {
       return exists(/databases/$(database)/documents/sessions/$(sessionId))
         && sessionDoc(sessionId).data.accepting == true
-        && sessionDoc(sessionId).data.activeQuestionId == questionId;
+        && exists(/databases/$(database)/documents/sessions/$(sessionId)/questions/$(questionId))
+        && questionDoc(sessionId, questionId).data.get('open', false) == true;
     }
 
     function studentCreatesAnswer(sessionId, questionId, uid) {

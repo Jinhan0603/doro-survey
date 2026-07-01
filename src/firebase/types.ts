@@ -32,6 +32,9 @@ export type QuestionDoc = {
   choiceIds?: string[] | null;
   maxLength: number;
   visible: boolean;
+  // 학생이 이 질문에 답변할 수 있는지(질문 단위 오픈). 여러 질문을 동시에 열 수 있다.
+  // 레거시 문서엔 없을 수 있으며, 없으면 닫힘(false)으로 취급한다.
+  open?: boolean;
   // V2 optional fields — existing V1 docs without these still work
   phase?: LessonPhase | null;
   interactionType?: InteractionType | null;
