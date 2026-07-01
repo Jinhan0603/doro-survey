@@ -68,7 +68,8 @@ export function AdminPage() {
 
   const studentUrl = buildAppUrl('/student', sessionId);
   const selectedSeedQuestionSet = getSeedQuestionSet(seedQuestionSetId);
-  const displayQuestions = questions.length > 0 ? questions : selectedSeedQuestionSet.questions;
+  // 실데이터(questions)만 표시한다. 로딩 중 seed(mock)로 채우면 실데이터 연동 시 값이 튀므로 폴백하지 않는다.
+  const displayQuestions = questions;
   const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
   const hiddenCount = answers.filter((a) => a.hidden).length;
   const activeInputType = activeQuestion ? getQuestionInputType(activeQuestion) : null;
