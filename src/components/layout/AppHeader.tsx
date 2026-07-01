@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LogOut, Menu, User } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { navItems } from '../../data/homeContent';
 import { usePresenterAuth } from '../../auth/AuthProvider';
 import { BrandLogo } from '../home/ui/BrandLogo';
@@ -12,6 +12,7 @@ import { BrandLogo } from '../home/ui/BrandLogo';
  */
 export function AppHeader() {
   const { logout } = usePresenterAuth();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
@@ -47,16 +48,22 @@ export function AppHeader() {
         </Link>
 
         <nav className="dh-nav" aria-label="주요 메뉴">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) => (isActive ? 'dh-nav--active' : undefined)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            // 세션 하위 화면(진행/결과 화면)에서도 상위 탭을 active로 유지한다.
+            const aliasActive = item.matchPaths?.some(
+              (path) => pathname === path || pathname.startsWith(`${path}/`),
+            );
+            return (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) => (isActive || aliasActive ? 'dh-nav--active' : undefined)}
+              >
+                {item.label}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
