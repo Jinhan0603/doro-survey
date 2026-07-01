@@ -13,17 +13,15 @@ import { AppShell } from '../components/layout/AppShell';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
 import { setActiveQuestionId, updateSession } from '../firebase/sessions';
-import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
+import { type ResultVisibility } from '../firebase/types';
 import { Link } from 'react-router-dom';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
-import { downloadCsv } from '../utils/csv';
 import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
 import {
-  getDisplayAnswer,
   getQuestionInputType,
   getQuestionResultVisibility,
   isModeratedQuestion,
@@ -105,7 +103,7 @@ export function AdminPage() {
   const handleResetQuestion = async () => {
     if (!activeQuestion) return;
     const confirmed = window.confirm(
-      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n설문 전에 CSV를 먼저 다운로드하는 것을 권장합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
+      `"${activeQuestion.title}" 질문의 응답을 모두 삭제합니다.\n\n삭제 후에는 되돌릴 수 없습니다. 계속하시겠습니까?`,
     );
     if (!confirmed) return;
     await runAdminAction(async () => {
@@ -133,23 +131,6 @@ export function AdminPage() {
       });
       setActionMessage(`전체 응답 ${count}개를 삭제했습니다.`);
     });
-  };
-
-  const handleExportCsv = (question: QuestionDoc) => {
-    downloadCsv(
-      `${sessionId}-${question.id}-answers.csv`,
-      ['uid', 'nickname', 'type', 'inputType', 'answer', 'displayAnswer', 'approved', 'hidden'],
-      answers.map((a) => [
-        a.uid,
-        a.nickname,
-        question.type,
-        getQuestionInputType(question),
-        a.answer ?? a.answerText ?? a.answerValue ?? a.answerValues?.join(' | ') ?? '',
-        getDisplayAnswer(a),
-        a.approved,
-        a.hidden,
-      ]),
-    );
   };
 
   const answerRows = activeQuestion
@@ -291,18 +272,6 @@ export function AdminPage() {
             {actionMessage ? <div className="inline-message">{actionMessage}</div> : null}
             {actionError ? (
               <div className="inline-message inline-message--error">{actionError}</div>
-            ) : null}
-            {activeQuestion ? (
-              <div className="hero-actions">
-                <Button
-                  disabled={busy}
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleExportCsv(activeQuestion)}
-                >
-                  CSV 다운로드
-                </Button>
-              </div>
             ) : null}
           </Card>
 
