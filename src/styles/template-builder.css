@@ -364,17 +364,35 @@
 .templateDetailContentGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 26px;
-  align-items: start;
+  grid-template-areas:
+    'desc summary'
+    'tools questions';
+  gap: 24px 26px;
+  align-items: stretch;
 }
 
-.templateDetailMainColumn,
-.templateDetailAsideColumn {
+/* 설명(desc)은 요약 정보(summary)와 같은 행 → 높이가 자동으로 일치하고,
+   그 결과 사용 툴(tools)과 질문 미리보기(questions)의 상단 y가 정렬된다. */
+.detailSection--desc {
+  grid-area: desc;
+}
+
+.detailSection--summary {
+  grid-area: summary;
+}
+
+.detailSection--tools {
+  grid-area: tools;
+}
+
+.detailSection--questions {
+  grid-area: questions;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-}
-
-.detailSection + .detailSection {
-  margin-top: 24px;
 }
 
 .detailSection h3 {
@@ -405,6 +423,7 @@
 }
 
 .descriptionBox {
+  flex: 1 1 auto;
   min-height: 150px;
   padding: 18px 20px;
   border: 1px solid #dbe3ef;
@@ -678,6 +697,7 @@
 @media (max-width: 1040px) {
   .templateDetailContentGrid {
     grid-template-columns: 1fr;
+    grid-template-areas: none;
   }
 
   .templateDetailHeader {

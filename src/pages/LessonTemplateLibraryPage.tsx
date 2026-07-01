@@ -11,7 +11,6 @@ import {
   LayoutTemplate,
   List,
   PencilLine,
-  Target,
   User,
 } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -109,103 +108,98 @@ function TemplateDetail({
 
       <div className="templateDetailBody">
         <div className="templateDetailContentGrid">
-          <div className="templateDetailMainColumn">
-            <section className="detailSection">
-              <h3>설명</h3>
-              {description ? (
-                <div className="descriptionBox">{description}</div>
-              ) : (
-                <div className="emptyInfoBox">설명이 없습니다.</div>
-              )}
-            </section>
+          <section className="detailSection detailSection--desc">
+            <h3>설명</h3>
+            {description ? (
+              <div className="descriptionBox">{description}</div>
+            ) : (
+              <div className="emptyInfoBox">설명이 없습니다.</div>
+            )}
+          </section>
 
-            <section className="detailSection">
-              <h3>사용 툴</h3>
-              {toolList.length > 0 ? (
-                <div className="toolChipList">
-                  {toolList.map((tool) => (
-                    <span key={tool} className="toolChip">
-                      {tool}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="emptyInfoBox">미입력</div>
-              )}
-            </section>
-          </div>
-
-          <aside className="templateDetailAsideColumn">
-            <section className="detailSection">
-              <h3>요약 정보</h3>
-              <dl className="templateSummaryGrid">
-                <div className="summaryTile">
-                  <dt>
-                    <Globe size={18} aria-hidden="true" />
-                    공개 범위
-                  </dt>
-                  <dd>{visibilityLabel}</dd>
-                </div>
-                <div className="summaryTile">
-                  <dt>
-                    <BookOpen size={18} aria-hidden="true" />
-                    과목 유형
-                  </dt>
-                  <dd>{subjectType || '미입력'}</dd>
-                </div>
-                <div className="summaryTile">
-                  <dt>
-                    <GraduationCap size={18} aria-hidden="true" />
-                    대상 학년
-                  </dt>
-                  <dd>{targetGrade || '미입력'}</dd>
-                </div>
-                <div className="summaryTile">
-                  <dt>
-                    <FileText size={18} aria-hidden="true" />
-                    질문 수
-                  </dt>
-                  <dd>{questionCount}개</dd>
-                </div>
-              </dl>
-            </section>
-
-            <section className="detailSection">
-              <div className="detailSectionHeader">
-                <h3>질문 미리보기</h3>
-                <span>{questionCount}개</span>
+          <section className="detailSection detailSection--summary">
+            <h3>요약 정보</h3>
+            <dl className="templateSummaryGrid">
+              <div className="summaryTile">
+                <dt>
+                  <Globe size={18} aria-hidden="true" />
+                  공개 범위
+                </dt>
+                <dd>{visibilityLabel}</dd>
               </div>
-              {interactions.length > 0 ? (
-                <div className="questionPreviewList">
-                  {interactions.map((interaction, index) => (
-                    <article key={interaction.id} className="questionPreviewCard">
-                      <span className="questionNumberBadge">
-                        Q{String(index + 1).padStart(2, '0')}
+              <div className="summaryTile">
+                <dt>
+                  <BookOpen size={18} aria-hidden="true" />
+                  과목 유형
+                </dt>
+                <dd>{subjectType || '미입력'}</dd>
+              </div>
+              <div className="summaryTile">
+                <dt>
+                  <GraduationCap size={18} aria-hidden="true" />
+                  대상 학년
+                </dt>
+                <dd>{targetGrade || '미입력'}</dd>
+              </div>
+              <div className="summaryTile">
+                <dt>
+                  <FileText size={18} aria-hidden="true" />
+                  질문 수
+                </dt>
+                <dd>{questionCount}개</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="detailSection detailSection--tools">
+            <h3>사용 툴</h3>
+            {toolList.length > 0 ? (
+              <div className="toolChipList">
+                {toolList.map((tool) => (
+                  <span key={tool} className="toolChip">
+                    {tool}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="emptyInfoBox">미입력</div>
+            )}
+          </section>
+
+          <section className="detailSection detailSection--questions">
+            <div className="detailSectionHeader">
+              <h3>질문 미리보기</h3>
+              <span>{questionCount}개</span>
+            </div>
+            {interactions.length > 0 ? (
+              <div className="questionPreviewList">
+                {interactions.map((interaction, index) => (
+                  <article key={interaction.id} className="questionPreviewCard">
+                    <span className="questionNumberBadge">
+                      Q{String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="questionPreviewContent">
+                      <strong>{interaction.title || `질문 ${index + 1}`}</strong>
+                      <span>
+                        {getInteractionTypeLabel(interaction.inputType)}
+                        {' · '}
+                        {getInteractionVisibilityLabel(interaction.visibility)}
+                        {' · '}
+                        선택지 {interaction.choices?.length ?? 0}개
                       </span>
-                      <span className="questionPreviewContent">
-                        <strong>{interaction.title || `질문 ${index + 1}`}</strong>
-                        <span>
-                          {getInteractionTypeLabel(interaction.inputType)}
-                          {' · '}
-                          {getInteractionVisibilityLabel(interaction.visibility)}
-                          {' · '}
-                          선택지 {interaction.choices?.length ?? 0}개
-                        </span>
-                      </span>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="emptyInfoBox">등록된 질문이 없습니다.</div>
-              )}
-            </section>
-          </aside>
+                    </span>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="emptyInfoBox">등록된 질문이 없습니다.</div>
+            )}
+          </section>
         </div>
       </div>
 
       <footer className="templateDetailFooter">
         <Link className="primaryUseTemplateButton" to={`/custom-session?template=${template.id}`}>
-          <Target size={18} aria-hidden="true" />
           템플릿으로 설문 제작
         </Link>
       </footer>
