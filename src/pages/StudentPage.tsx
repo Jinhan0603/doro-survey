@@ -145,12 +145,25 @@ export function StudentPage() {
       );
     }
 
-    // 목록 뷰: 전체 질문을 펼쳐 보여주고, 열린 질문만 눌러 답변한다.
+    // 목록 뷰: 지금 응답 수집 중(질문 open && 세션 accepting)인 질문만 동적으로 보여준다.
+    // 강사가 응답을 마감하면 해당 질문은 목록에서 사라진다.
+    const accepting = session.accepting ?? false;
+    const openQuestions = questions.filter((question) => (question.open ?? false) && accepting);
+
+    if (openQuestions.length === 0) {
+      return (
+        <WaitingState
+          description="강사님이 질문을 열면 이곳에 자동으로 표시됩니다."
+          title="지금 열린 질문이 없습니다"
+        />
+      );
+    }
+
     return (
       <StudentQuestionList
-        accepting={session.accepting ?? false}
+        accepting={accepting}
         ownAnswers={ownAnswers}
-        questions={questions}
+        questions={openQuestions}
         onSelect={(questionId) => setSelectedQuestionId(questionId)}
       />
     );

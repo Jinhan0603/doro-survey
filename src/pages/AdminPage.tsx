@@ -13,7 +13,7 @@ import {
   deleteAnswersForSession,
 } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
-import { setActiveQuestionId, setQuestionOpen, updateSession } from '../firebase/sessions';
+import { setQuestionOpen, updateSession } from '../firebase/sessions';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
@@ -113,7 +113,11 @@ export function AdminPage() {
   };
 
   const handleSelectQuestion = (questionId: string) => {
-    void runAdminAction(() => setActiveQuestionId(sessionId, questionId));
+    if (questionId === activeQuestion?.id) return;
+    // 다른 질문으로 전환하면 결과 공개를 초기화한다 — 한 번에 한 질문만 결과 공개 상태를 유지한다.
+    void runAdminAction(() =>
+      updateSession(sessionId, { activeQuestionId: questionId, showResults: false }),
+    );
   };
 
   const handleToggleResponseCollection = () => {
