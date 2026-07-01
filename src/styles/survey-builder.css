@@ -18,6 +18,13 @@
     #f8fafc;
 }
 
+/* 뒤로가기 링크를 제목과 같은 1160px 컨테이너에 정렬(제목 위 좌측). 링크 클릭 영역은 그대로 유지. */
+.surveyBackLinkRow {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
 .surveyPageTitle {
   width: 100%;
   max-width: 1160px;

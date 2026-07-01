@@ -153,7 +153,9 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
     const notFound = !editLoading && !editingSession;
     return (
       <main className="surveyCreatePage">
+        <div className="surveyBackLinkRow">
         <BackLink to="/sessions" label="진행 중인 설문" />
+      </div>
         <h1 className="surveyPageTitle">설문 편집</h1>
         <section className="surveyBuilderPanel">
           <div className="builderPanelScrollBody">
@@ -175,7 +177,9 @@ function CustomQuestionSessionContent({ ownerUid }: { ownerUid: string }) {
 
   return (
     <main className="surveyCreatePage">
-      <BackLink to="/sessions" label="진행 중인 설문" />
+      <div className="surveyBackLinkRow">
+        <BackLink to="/sessions" label="진행 중인 설문" />
+      </div>
       <h1 className="surveyPageTitle">{isEditMode ? '설문 편집' : '설문 만들기'}</h1>
       <section className="surveyBuilderPanel">
         <header className="builderPanelHeader">
