@@ -271,7 +271,6 @@ export function AdminPage() {
                       <tr>
                         <th>닉네임</th>
                         <th>답변</th>
-                        <th>상태</th>
                         <th>시간</th>
                       </tr>
                     </thead>
@@ -285,9 +284,6 @@ export function AdminPage() {
                             <span className="cellText">
                               {getAnswerSummary(activeQuestion, answer) || '-'}
                             </span>
-                          </td>
-                          <td>
-                            <span className="countedBadge">집계됨</span>
                           </td>
                           <td>
                             <span className="cellText">
