@@ -11,6 +11,9 @@ export type SessionDoc = {
   activeQuestionId: string | null;
   accepting: boolean;
   showResults: boolean;
+  // 설문 전체 종료(잠금) 상태. accepting(질문 열림)과 분리된 세션 마스터 스위치.
+  // closed=true면 실시간 운영이 잠기고 학생도 답변 불가. '수집 재개'로 해제한다.
+  closed?: boolean;
   // 결과가 공개된 질문 id. showResults와 함께 '어느 질문의 결과가 공개 중인지'를 식별한다.
   // 응답 마감(open=false)된 질문도 결과 공개가 가능하도록, 공개 대상은 open 상태와 분리한다.
   // 없거나 activeQuestionId와 다르면 그 질문은 결과 비공개로 취급한다.

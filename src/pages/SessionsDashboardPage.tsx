@@ -25,7 +25,12 @@ import { useQuestions } from '../hooks/useQuestions';
 import { useToasts } from '../hooks/useToasts';
 import { ToastStack } from '../components/common/Toast';
 import { countAnswersForQuestions } from '../firebase/answers';
-import { deleteSessionCascade, updateSession, type SessionSummary } from '../firebase/sessions';
+import {
+  closeSession,
+  deleteSessionCascade,
+  reopenSession,
+  type SessionSummary,
+} from '../firebase/sessions';
 import type { QuestionDoc } from '../firebase/types';
 import { getQuestionResultVisibility, getQuestionTypeLabel } from '../utils/questionRuntime';
 import { buildAppUrl } from '../utils/urls';
@@ -96,7 +101,9 @@ function SessionDetail({
 }) {
   const surveyTitle = session.title?.trim() || '제목 없는 설문';
   const isCollecting = session.accepting;
-  const statusLabel = isCollecting ? '응답 수집 중' : '마감됨';
+  // 세션 상단 상태/버튼은 종료(closed) 여부를 따른다(질문 열림 accepting과 분리).
+  const isClosed = session.closed;
+  const statusLabel = isClosed ? '종료됨' : '진행 중';
   const createdAtLabel = formatCreatedFull(session.createdAt);
   const createdShort = formatCreatedShort(session.createdAt);
   const questionCount = questions.length;
@@ -117,7 +124,7 @@ function SessionDetail({
           <h2>{surveyTitle}</h2>
 
           <div className="sessionDetailBadges">
-            <span className={isCollecting ? 'statusBadge isCollecting' : 'statusBadge isClosed'}>
+            <span className={!isClosed ? 'statusBadge isCollecting' : 'statusBadge isClosed'}>
               <Clock size={15} />
               {statusLabel}
             </span>
@@ -132,12 +139,12 @@ function SessionDetail({
         <div className="sessionHeaderActions">
           <button
             type="button"
-            className={`detailToggleButton ${isCollecting ? 'isClose' : 'isOpen'}`}
+            className={`detailToggleButton ${!isClosed ? 'isClose' : 'isOpen'}`}
             disabled={toggling}
             onClick={onToggleAccepting}
           >
-            {isCollecting ? <Lock size={16} /> : <Unlock size={16} />}
-            {isCollecting ? '종료하기' : '수집 재개'}
+            {!isClosed ? <Lock size={16} /> : <Unlock size={16} />}
+            {!isClosed ? '종료하기' : '수집 재개'}
           </button>
           <button type="button" className="detailSecondaryButton" onClick={onEdit}>
             <Pencil size={17} />
@@ -351,11 +358,13 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const handleToggleAccepting = async (session: SessionSummary) => {
     try {
       setTogglingId(session.id);
-      await updateSession(session.id, { accepting: !session.accepting });
-      pushToast(
-        session.accepting ? '응답을 마감했습니다.' : '응답 수집을 재개했습니다.',
-        'success',
-      );
+      if (session.closed) {
+        await reopenSession(session.id);
+        pushToast('설문을 다시 열었습니다. 실시간 운영에서 질문을 여세요.', 'success');
+      } else {
+        await closeSession(session.id, questions.map((question) => question.id));
+        pushToast('설문을 종료했습니다.', 'success');
+      }
     } catch (err) {
       pushToast(err instanceof Error ? err.message : '상태 변경에 실패했습니다.', 'error');
     } finally {
@@ -405,8 +414,8 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               ) : (
                 sessions.map((session) => {
                   const isSelected = session.id === selectedId;
-                  const isCollecting = session.accepting;
-                  const statusLabel = isCollecting ? '응답 수집 중' : '마감됨';
+                  const isClosed = session.closed;
+                  const statusLabel = isClosed ? '종료됨' : '진행 중';
                   return (
                     <button
                       key={session.id}
@@ -420,7 +429,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
                       <span className="sessionListText">
                         <strong>{session.title?.trim() || '제목 없는 설문'}</strong>
                         <span>
-                          <span className={`inlineStatusDot ${isCollecting ? '' : 'isClosed'}`} />
+                          <span className={`inlineStatusDot ${!isClosed ? '' : 'isClosed'}`} />
                           {statusLabel} · {formatCreatedFull(session.createdAt)}
                         </span>
                       </span>

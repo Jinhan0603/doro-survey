@@ -88,6 +88,14 @@
   flex: 0 0 auto;
 }
 
+/* 종료된 설문 안내 배너(경고 톤) — 실시간 운영 잠금 상태를 알린다. */
+.adminClosedNotice {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  font-weight: 700;
+}
+
 /* 좌: 질문 목록 */
 .adminQuestionPanel {
   min-width: 0;

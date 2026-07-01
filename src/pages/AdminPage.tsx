@@ -103,6 +103,8 @@ export function AdminPage() {
 
   const studentJoinUrl = buildAppUrl('/student', sessionId);
   const canManageAnswerDocs = (role ?? profile?.role) === 'admin';
+  // 설문이 종료(closed)되면 실시간 운영을 잠근다(진행 중인 설문에서 '수집 재개' 필요).
+  const isSessionClosed = Boolean(session?.closed);
 
   const currentIndex = Math.max(
     0,
@@ -158,7 +160,7 @@ export function AdminPage() {
   };
 
   const handleToggleResponseCollection = () => {
-    if (!activeQuestion) return;
+    if (!activeQuestion || isSessionClosed) return;
     if (isResponseOpen) {
       void runAdminAction(
         () => closeQuestion(sessionId, activeQuestion.id),
@@ -175,7 +177,7 @@ export function AdminPage() {
   };
 
   const handleToggleResultVisibility = () => {
-    if (!activeQuestion || !canPublishResult) return;
+    if (!activeQuestion || !canPublishResult || isSessionClosed) return;
     if (isResultVisible) {
       void runAdminAction(
         () => unpublishQuestionResult(sessionId),
@@ -245,6 +247,11 @@ export function AdminPage() {
         {error ? <div className="inline-message inline-message--error adminLiveError">{error}</div> : null}
         {answersError ? (
           <div className="inline-message inline-message--error adminLiveError">{answersError}</div>
+        ) : null}
+        {isSessionClosed ? (
+          <div className="inline-message adminLiveError adminClosedNotice">
+            이 설문은 종료되었습니다. 다시 운영하려면 진행 중인 설문에서 &lsquo;수집 재개&rsquo;를 눌러주세요.
+          </div>
         ) : null}
 
         <section className="adminLiveWorkspace">
@@ -384,7 +391,7 @@ export function AdminPage() {
                 <button
                   type="button"
                   className={`primaryOperationButton ${isResponseOpen ? 'isClose' : ''}`}
-                  disabled={busy || !activeQuestion}
+                  disabled={busy || !activeQuestion || isSessionClosed}
                   onClick={handleToggleResponseCollection}
                 >
                   {isResponseOpen ? '응답 마감하기' : '응답 열기'}
@@ -392,13 +399,15 @@ export function AdminPage() {
                 <button
                   type="button"
                   className="secondaryOperationButton"
-                  disabled={busy || !activeQuestion || !canPublishResult}
+                  disabled={busy || !activeQuestion || !canPublishResult || isSessionClosed}
                   title={
-                    !activeQuestion
-                      ? undefined
-                      : !canPublishResult
-                        ? '이 질문은 결과를 공개할 수 없는 설정입니다.'
-                        : undefined
+                    isSessionClosed
+                      ? '종료된 설문입니다. 수집 재개 후 사용할 수 있습니다.'
+                      : !activeQuestion
+                        ? undefined
+                        : !canPublishResult
+                          ? '이 질문은 결과를 공개할 수 없는 설정입니다.'
+                          : undefined
                   }
                   onClick={handleToggleResultVisibility}
                 >

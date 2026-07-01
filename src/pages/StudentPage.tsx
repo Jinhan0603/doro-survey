@@ -114,6 +114,16 @@ export function StudentPage() {
       );
     }
 
+    // 설문이 종료되면 학생 화면도 참여를 마감한다.
+    if (session.closed) {
+      return (
+        <WaitingState
+          description="참여해 주셔서 감사합니다."
+          title="설문이 종료되었습니다"
+        />
+      );
+    }
+
     if (questions.length === 0) {
       return (
         <WaitingState

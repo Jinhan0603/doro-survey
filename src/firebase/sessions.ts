@@ -33,6 +33,7 @@ export type SessionSummary = {
   title: string;
   accepting: boolean;
   showResults: boolean;
+  closed: boolean;
   activeQuestionId: string | null;
   createdAt?: Timestamp | null;
 };
@@ -60,6 +61,7 @@ export function subscribeMySessions(
             title: data.title,
             accepting: data.accepting,
             showResults: data.showResults,
+            closed: data.closed ?? false,
             activeQuestionId: data.activeQuestionId,
             createdAt: data.createdAt ?? null,
           };
@@ -101,7 +103,10 @@ export function subscribeSession(
 export async function updateSession(
   sessionId: string,
   patch: Partial<
-    Pick<SessionDoc, 'activeQuestionId' | 'accepting' | 'showResults' | 'resultQuestionId' | 'title'>
+    Pick<
+      SessionDoc,
+      'activeQuestionId' | 'accepting' | 'showResults' | 'resultQuestionId' | 'closed' | 'title'
+    >
   >,
 ) {
   await updateDoc(getSessionRef(sessionId), {
@@ -403,6 +408,33 @@ export async function publishQuestionResult(
 /** 결과 공개를 해제한다(상태 없음으로 되돌림). */
 export async function unpublishQuestionResult(sessionId: string) {
   await updateSession(sessionId, { showResults: false, resultQuestionId: null });
+}
+
+/**
+ * 설문 전체 종료(잠금). 모든 질문 응답을 닫고 결과 공개를 해제한 뒤 세션을 closed 상태로 만든다.
+ * closed는 accepting(질문 열림)과 분리된 마스터 스위치라, 종료 중에는 실시간 운영이 잠긴다.
+ */
+export async function closeSession(sessionId: string, allQuestionIds: string[]) {
+  const batch = writeBatch(requireDb());
+  allQuestionIds.forEach((id) => {
+    batch.update(getQuestionRef(sessionId, id), {
+      open: false,
+      updatedAt: serverTimestamp(),
+    });
+  });
+  batch.update(getSessionRef(sessionId), {
+    closed: true,
+    accepting: false,
+    showResults: false,
+    resultQuestionId: null,
+    updatedAt: serverTimestamp(),
+  });
+  await batch.commit();
+}
+
+/** 종료된 설문을 다시 운영 가능 상태로 되돌린다(질문은 강사가 실시간 운영에서 다시 연다). */
+export async function reopenSession(sessionId: string) {
+  await updateSession(sessionId, { closed: false });
 }
 
 /** 현재 열린 질문을 닫는다. 질문 open=false, 세션 accepting=false, 결과 비공개로 리셋. */
