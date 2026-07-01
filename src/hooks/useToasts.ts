@@ -20,7 +20,10 @@ export function useToasts(duration = 3200) {
     (message: string, tone: ToastTone = 'info') => {
       idRef.current += 1;
       const id = idRef.current;
-      setToasts((current) => [...current, { id, message, tone }]);
+      // 토스트는 쌓지 않는다. 기존 토스트/타이머를 정리하고 새 토스트 하나만 표시한다.
+      timers.current.forEach((timer) => clearTimeout(timer));
+      timers.current.clear();
+      setToasts([{ id, message, tone }]);
       const timer = setTimeout(() => dismissToast(id), duration);
       timers.current.set(id, timer);
     },
