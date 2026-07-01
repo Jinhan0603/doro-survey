@@ -15,8 +15,7 @@ import {
   type Timestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { seedQuestions } from '../data/seedQuestions';
-import { defaultSessionId, requireDb } from './client';
+import { requireDb } from './client';
 import type {
   InteractionPurpose,
   InteractionType,
@@ -26,8 +25,6 @@ import type {
   SeedQuestion,
   SessionDoc,
 } from './types';
-
-export const DEFAULT_SESSION_TITLE = 'DORO 기술 실습 수업';
 
 /** A session document plus its document id, for list/dashboard views. */
 export type SessionSummary = {
@@ -131,49 +128,6 @@ export async function deleteSessionCascade(sessionId: string): Promise<void> {
   }
 
   await deleteDoc(getSessionRef(sessionId));
-}
-
-export async function seedSession(
-  sessionId = defaultSessionId,
-  title = DEFAULT_SESSION_TITLE,
-  questions: SeedQuestion[] = seedQuestions,
-  owner?: {
-    uid?: string;
-    organizationId?: string;
-  },
-) {
-  const database = requireDb();
-  const batch = writeBatch(database);
-  const activeQuestionId = questions[0]?.id ?? null;
-
-  batch.set(
-    getSessionRef(sessionId),
-    {
-      title,
-      activeQuestionId,
-      accepting: false,
-      showResults: false,
-      ownerUid: owner?.uid ?? null,
-      organizationId: owner?.organizationId ?? null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
-
-  questions.forEach((question) => {
-    batch.set(
-      getQuestionRef(sessionId, question.id),
-      {
-        ...question,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
-  });
-
-  await batch.commit();
 }
 
 export type CustomSessionQuestionInput = {

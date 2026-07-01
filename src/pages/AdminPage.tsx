@@ -12,7 +12,7 @@ import { Card } from '../components/common/Card';
 import { AppShell } from '../components/layout/AppShell';
 import { deleteAnswersForQuestion, deleteAnswersForSession, updateAnswerModeration } from '../firebase/answers';
 import { firebaseConfigStatus } from '../firebase/client';
-import { seedSession, setActiveQuestionId, updateSession } from '../firebase/sessions';
+import { setActiveQuestionId, updateSession } from '../firebase/sessions';
 import { type QuestionDoc, type ResultVisibility } from '../firebase/types';
 import { Link } from 'react-router-dom';
 import { usePresenterAuth } from '../auth/AuthProvider';
@@ -20,12 +20,6 @@ import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useSessionId } from '../hooks/useSessionId';
-import {
-  defaultSeedQuestionSetId,
-  getSeedQuestionSet,
-  seedQuestionSets,
-  type SeedQuestionSetId,
-} from '../data/seedQuestionSets';
 import { downloadCsv } from '../utils/csv';
 import { buildStatusResults, formatTimestamp, getAnswerSummary } from '../utils/stats';
 import {
@@ -39,14 +33,13 @@ import { buildAppUrl } from '../utils/urls';
 export function AdminPage() {
   const sessionId = useSessionId();
   // Auth is guaranteed by AuthGate (DoroGate SSO) before this page renders.
-  const { user, role, logout } = usePresenterAuth();
+  const { user, role } = usePresenterAuth();
   const { profile } = useUserProfile(user?.uid);
   const firestoreEnabled = Boolean(user) && Boolean(sessionId);
   const { session, questions, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
   const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [seedQuestionSetId, setSeedQuestionSetId] = useState<SeedQuestionSetId>(defaultSeedQuestionSetId);
   const [busy, setBusy] = useState(false);
 
   if (!firebaseConfigStatus.isConfigured) {
@@ -67,8 +60,7 @@ export function AdminPage() {
   }
 
   const studentUrl = buildAppUrl('/student', sessionId);
-  const selectedSeedQuestionSet = getSeedQuestionSet(seedQuestionSetId);
-  // 실데이터(questions)만 표시한다. 로딩 중 seed(mock)로 채우면 실데이터 연동 시 값이 튀므로 폴백하지 않는다.
+  // 실데이터(questions)만 표시한다. 로딩 중 mock 질문으로 채우면 실데이터 연동 시 값이 튀므로 폴백하지 않는다.
   const displayQuestions = questions;
   const approvedCount = answers.filter((a) => a.approved && !a.hidden).length;
   const hiddenCount = answers.filter((a) => a.hidden).length;
@@ -108,23 +100,6 @@ export function AdminPage() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const handleSeed = async () => {
-    const confirmed =
-      questions.length === 0 ||
-      window.confirm(
-        `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 현재 세션에 업로드합니다.\n\n같은 ID(q01~q12)의 기존 질문은 덮어씁니다. 기존 응답은 자동 삭제되지 않으므로, 설문 전 전환이면 먼저 전체 응답 초기화를 권장합니다.\n\n계속하시겠습니까?`,
-      );
-    if (!confirmed) return;
-
-    await runAdminAction(
-      () => seedSession(sessionId, selectedSeedQuestionSet.sessionTitle, selectedSeedQuestionSet.questions, {
-        uid: user?.uid,
-        organizationId: profile?.organizationId ?? 'dorossaem',
-      }),
-      `${selectedSeedQuestionSet.label} ${selectedSeedQuestionSet.questions.length}개를 Firestore에 업로드했습니다.`,
-    );
   };
 
   const handleResetQuestion = async () => {
@@ -244,32 +219,6 @@ export function AdminPage() {
   return (
     <AppShell
       compact
-      actions={
-        <div className="hero-actions">
-          <Badge tone="success">로그인 완료</Badge>
-          <label className="seed-set-picker">
-            <span>Seed</span>
-            <select
-              className="select-sm"
-              disabled={busy}
-              value={seedQuestionSetId}
-              onChange={(event) => setSeedQuestionSetId(event.target.value as SeedQuestionSetId)}
-            >
-              {seedQuestionSets.map((set) => (
-                <option key={set.id} value={set.id}>
-                  {set.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Button disabled={busy} size="sm" variant="secondary" onClick={handleSeed}>
-            선택 질문 seed
-          </Button>
-          <Button disabled={busy} size="sm" variant="ghost" onClick={() => void logout()}>
-            로그아웃
-          </Button>
-        </div>
-      }
       title="Admin 운영 화면"
     >
       <div className="page-grid page-grid--admin">
@@ -332,7 +281,7 @@ export function AdminPage() {
             </div>
             {error ? <div className="inline-message inline-message--error">{error}</div> : null}
             {answersError ? <div className="inline-message inline-message--error">{answersError}</div> : null}
-            {!activeQuestion && !loading ? <p>기본 질문 seed 후 질문을 선택해주세요.</p> : null}
+            {!activeQuestion && !loading ? <p>진행할 질문이 없습니다. 질문 목록에서 질문을 선택해주세요.</p> : null}
             {activeQuestion ? (
               <>
                 <strong>{activeQuestion.title}</strong>
