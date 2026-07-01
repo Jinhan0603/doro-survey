@@ -31,14 +31,31 @@ export function AdminPage() {
   const { user, role } = usePresenterAuth();
   const { profile } = useUserProfile(user?.uid);
   const firestoreEnabled = Boolean(user) && Boolean(sessionId);
-  const { session, questions, activeQuestion, error } = useActiveQuestion(sessionId ?? '', {
-    enabled: firestoreEnabled,
-  });
+  const { session, questions, activeQuestion: serverActiveQuestion, error } = useActiveQuestion(
+    sessionId ?? '',
+    { enabled: firestoreEnabled },
+  );
+  // 질문 선택은 서버 왕복을 기다리며 막지 않는다. 클릭 즉시 로컬 override로 전환하고,
+  // 서버 activeQuestionId 쓰기는 fire-and-forget로 보낸다(handleSelectQuestion 참고).
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const effectiveQuestionId =
+    selectedQuestionId && questions.some((question) => question.id === selectedQuestionId)
+      ? selectedQuestionId
+      : serverActiveQuestion?.id ?? null;
+  const activeQuestion =
+    questions.find((question) => question.id === effectiveQuestionId) ?? serverActiveQuestion ?? null;
   const { answers, error: answersError } = useAnswers(sessionId ?? '', activeQuestion?.id);
   const { toasts, pushToast } = useToasts();
   const [busy, setBusy] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+
+  // 서버가 내 선택을 반영하면 로컬 override를 해제해 다시 서버 상태를 따른다.
+  useEffect(() => {
+    if (selectedQuestionId && serverActiveQuestion?.id === selectedQuestionId) {
+      setSelectedQuestionId(null);
+    }
+  }, [serverActiveQuestion?.id, selectedQuestionId]);
 
   // 좌측 목록의 질문별 응답 수를 count 집계로 채운다(활성 질문은 실시간 answers로 대체).
   const questionIdsKey = questions.map((question) => question.id).join(',');
@@ -121,8 +138,13 @@ export function AdminPage() {
 
   const handleSelectQuestion = (questionId: string) => {
     if (questionId === activeQuestion?.id) return;
-    // 목록에서 질문을 고르는 건 '보기/조작 대상' 전환일 뿐, 열림/결과 공개 상태는 건드리지 않는다.
-    void runAdminAction(() => updateSession(sessionId, { activeQuestionId: questionId }));
+    // 즉시 로컬 전환(막지 않음). 이전 질문의 응답 구독은 activeQuestion 변경으로 자동 해제된다.
+    // 목록 선택은 '보기/조작 대상' 전환일 뿐이라 열림/결과 공개 상태는 건드리지 않는다.
+    setSelectedQuestionId(questionId);
+    // activeQuestionId 서버 반영은 fire-and-forget: Display가 따라오게만 하고 UI는 기다리지 않는다.
+    void updateSession(sessionId, { activeQuestionId: questionId }).catch((nextError) => {
+      pushToast(nextError instanceof Error ? nextError.message : '질문 전환에 실패했습니다.', 'error');
+    });
   };
 
   const handleToggleResponseCollection = () => {
@@ -223,7 +245,6 @@ export function AdminPage() {
                       key={question.id}
                       type="button"
                       className={`adminQuestionRow ${isSelected ? 'isSelected' : ''} ${isOpenRow ? 'isOpen' : ''}`}
-                      disabled={busy}
                       onClick={() => handleSelectQuestion(question.id)}
                     >
                       <span className="questionIndexBadge">Q{String(index + 1).padStart(2, '0')}</span>
