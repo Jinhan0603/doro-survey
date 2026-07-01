@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { firebaseConfigStatus } from '../firebase/client';
 import { signInStudentAnonymously } from '../firebase/auth';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
-import { useOwnAnswer } from '../hooks/useAnswers';
+import { useOwnAnswers } from '../hooks/useAnswers';
 import { useAuth } from '../hooks/useAuth';
 import { useSessionId } from '../hooks/useSessionId';
 import { normalizeNickname } from '../utils/sanitize';
@@ -11,6 +11,7 @@ import { WaitingState } from '../components/survey/WaitingState';
 import { LiveQuestionForm } from '../components/student/LiveQuestionForm';
 import { NicknameOnboarding } from '../components/student/NicknameOnboarding';
 import { StudentPreview } from '../components/student/StudentPreview';
+import { StudentQuestionList } from '../components/student/StudentQuestionList';
 import { StudentShell } from '../components/student/StudentShell';
 
 const NICKNAME_STORAGE_KEY = 'doro-live-survey.nickname';
@@ -26,11 +27,13 @@ export function StudentPage() {
   const { user, loading: authLoading } = useAuth();
   // Wait for auth before subscribing to Firestore — Firestore rules require isSignedIn()
   const firestoreEnabled = !authLoading && !!user && Boolean(sessionId);
-  const { session, activeQuestion, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
-  const { answer: existingAnswer, error: ownAnswerError } = useOwnAnswer(sessionId ?? '', activeQuestion?.id, user?.uid);
+  const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
+  const questionIds = useMemo(() => questions.map((question) => question.id), [questions]);
+  const ownAnswers = useOwnAnswers(sessionId ?? '', questionIds, user?.uid);
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -76,31 +79,33 @@ export function StudentPage() {
     );
   }
 
+  const selectedQuestion = selectedQuestionId
+    ? questions.find((question) => question.id === selectedQuestionId) ?? null
+    : null;
+
   const liveContent = (() => {
     if (authLoading || loading) {
       return null;
     }
 
-    if (authError || error || ownAnswerError) {
-      return (
-        <Card className="banner-card banner-card--error">{authError ?? error ?? ownAnswerError}</Card>
-      );
+    if (authError || error) {
+      return <Card className="banner-card banner-card--error">{authError ?? error}</Card>;
     }
 
-    if (!session || !activeQuestion) {
+    if (!session) {
       return (
         <WaitingState
-          description="강사님이 질문을 열면 자동으로 표시됩니다."
+          description="강사님이 세션을 준비하면 자동으로 표시됩니다."
           title="질문을 기다리는 중입니다"
         />
       );
     }
 
-    if (!session.accepting) {
+    if (questions.length === 0) {
       return (
         <WaitingState
-          description="강사님이 다음 질문을 열면 자동으로 바뀝니다."
-          title="답변이 마감되었습니다"
+          description="강사님이 질문을 준비 중입니다. 잠시만 기다려주세요."
+          title="아직 등록된 질문이 없습니다"
         />
       );
     }
@@ -109,14 +114,44 @@ export function StudentPage() {
       return null;
     }
 
+    // 답변 뷰: 목록에서 고른 질문. 실시간으로 닫히면 안내로 전환한다.
+    if (selectedQuestion) {
+      const isOpen = (selectedQuestion.open ?? false) && (session.accepting ?? false);
+      return (
+        <div className="student-answer-view">
+          <button
+            type="button"
+            className="student-back"
+            onClick={() => setSelectedQuestionId(null)}
+          >
+            ← 질문 목록으로
+          </button>
+          {isOpen ? (
+            <LiveQuestionForm
+              key={selectedQuestion.id}
+              existingAnswer={ownAnswers[selectedQuestion.id] ?? null}
+              nickname={nickname}
+              question={selectedQuestion}
+              sessionId={sessionId}
+              uid={user.uid}
+            />
+          ) : (
+            <WaitingState
+              description="강사님이 이 질문을 다시 열면 답변할 수 있습니다."
+              title="지금은 닫힌 질문입니다"
+            />
+          )}
+        </div>
+      );
+    }
+
+    // 목록 뷰: 전체 질문을 펼쳐 보여주고, 열린 질문만 눌러 답변한다.
     return (
-      <LiveQuestionForm
-        key={activeQuestion.id}
-        existingAnswer={existingAnswer}
-        nickname={nickname}
-        question={activeQuestion}
-        sessionId={sessionId}
-        uid={user.uid}
+      <StudentQuestionList
+        accepting={session.accepting ?? false}
+        ownAnswers={ownAnswers}
+        questions={questions}
+        onSelect={(questionId) => setSelectedQuestionId(questionId)}
       />
     );
   })();

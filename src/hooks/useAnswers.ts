@@ -60,6 +60,42 @@ export function useAnswers(sessionId: string, questionId: string | null | undefi
   return state;
 }
 
+/**
+ * 여러 질문에 대한 학생 본인 답변을 한꺼번에 구독한다(질문별 리스너).
+ * 리스트 화면에서 각 질문의 '제출완료' 여부 판단에 쓴다. 반환은 questionId → 답변 맵.
+ */
+export function useOwnAnswers(
+  sessionId: string,
+  questionIds: string[],
+  uid: string | null | undefined,
+): Record<string, AnswerDoc | null> {
+  const [answers, setAnswers] = useState<Record<string, AnswerDoc | null>>({});
+  const key = questionIds.join('|');
+
+  useEffect(() => {
+    if (!firebaseConfigStatus.isConfigured || !uid || questionIds.length === 0) {
+      setAnswers({});
+      return undefined;
+    }
+
+    const unsubscribers = questionIds.map((questionId) =>
+      subscribeOwnAnswer(
+        sessionId,
+        questionId,
+        uid,
+        (answer) => setAnswers((current) => ({ ...current, [questionId]: answer })),
+        () => {},
+      ),
+    );
+
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+    // key(=questionIds 조합)로 질문 집합 변화를 감지한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, uid, key]);
+
+  return answers;
+}
+
 export function useOwnAnswer(
   sessionId: string,
   questionId: string | null | undefined,

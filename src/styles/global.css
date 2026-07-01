@@ -1489,6 +1489,132 @@ button:disabled {
   gap: 20px;
 }
 
+/* ── Student Question List (다중 오픈 개요) ─────────────────── */
+
+.student-question-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-question-list__head h2 {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.student-question-list__head p {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.student-question-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-question-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'order status'
+    'title status';
+  gap: 2px 12px;
+  align-items: center;
+  text-align: left;
+  border: 1px solid rgba(210, 210, 215, 0.84);
+  border-radius: 20px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.92);
+  transition:
+    transform var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.student-question-item__order {
+  grid-area: order;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.student-question-item__title {
+  grid-area: title;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.student-question-item__status {
+  grid-area: status;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-question-item.is-open {
+  cursor: pointer;
+}
+
+.student-question-item.is-open:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.32);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.1);
+}
+
+.student-question-item.is-open .student-question-item__status {
+  color: var(--color-accent);
+}
+
+.student-question-item.is-done .student-question-item__status {
+  color: #15803d;
+}
+
+.student-question-item.is-locked {
+  background: rgba(244, 244, 246, 0.7);
+  cursor: default;
+}
+
+.student-question-item.is-wait .student-question-item__status {
+  color: var(--color-text-soft);
+}
+
+.student-question-item.is-locked .student-question-item__title {
+  color: var(--color-text-soft);
+}
+
+/* ── Student Answer View (목록 → 답변 진입) ─────────────────── */
+
+.student-answer-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.student-back {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  color: var(--color-accent);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.student-back:hover {
+  text-decoration: underline;
+}
+
 /* ── Nickname Onboarding ───────────────────────────────────── */
 
 .student-onboarding {
