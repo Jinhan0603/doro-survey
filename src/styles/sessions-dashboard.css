@@ -132,15 +132,19 @@
   flex: 1 1 auto;
   min-height: 0;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .sessionListEmpty {
-  padding: 40px 18px;
+  flex: 1 1 auto;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   color: #6b7280;
   text-align: center;
