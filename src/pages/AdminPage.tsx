@@ -222,7 +222,7 @@ export function AdminPage() {
                     <button
                       key={question.id}
                       type="button"
-                      className={`adminQuestionRow ${isSelected ? 'isSelected' : ''}`}
+                      className={`adminQuestionRow ${isSelected ? 'isSelected' : ''} ${isOpenRow ? 'isOpen' : ''}`}
                       disabled={busy}
                       onClick={() => handleSelectQuestion(question.id)}
                     >
@@ -231,9 +231,14 @@ export function AdminPage() {
                         <strong>{question.title || typeLabel}</strong>
                         <span>
                           {typeLabel} · 응답 {getRowCount(question.id)}개
-                          {isOpenRow ? ' · 열림' : ''}
                         </span>
                       </span>
+                      {isOpenRow ? (
+                        <span className="questionOpenBadge">
+                          <span className="questionOpenDot" aria-hidden="true" />
+                          열림
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })
@@ -330,7 +335,7 @@ export function AdminPage() {
               <div className="compactActionColumn">
                 <button
                   type="button"
-                  className="primaryOperationButton"
+                  className={`primaryOperationButton ${isResponseOpen ? 'isClose' : ''}`}
                   disabled={busy || !activeQuestion}
                   onClick={handleToggleResponseCollection}
                 >
