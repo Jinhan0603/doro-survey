@@ -1,10 +1,10 @@
 import { type ReactNode } from 'react';
-import { Badge } from '../common/Badge';
+import { BrandLogo } from '../home/ui/BrandLogo';
 
-// Slim mobile header for student screens
+// Slim mobile header for student screens.
+// 브랜드(로고 + 'DORO 실시간 설문 시스템')만 노출한다. 탭·프로필·세션 배지는 없다.
+// sessionId/isPreview는 호출부 호환을 위해 받되 헤더에는 표시하지 않는다.
 export function StudentShell({
-  sessionId,
-  isPreview = false,
   children,
 }: {
   sessionId?: string;
@@ -15,15 +15,10 @@ export function StudentShell({
     <div className="student-shell">
       <header className="student-header">
         <div className="student-header__brand">
-          <span className="brand-mark__tile">D</span>
-          <span className="student-header__name">DORO Live Survey</span>
-        </div>
-        <div>
-          {isPreview ? (
-            <Badge>미리보기</Badge>
-          ) : sessionId ? (
-            <Badge tone="accent">{sessionId}</Badge>
-          ) : null}
+          <span className="student-header__logo">
+            <BrandLogo size={30} />
+          </span>
+          <span className="student-header__name">DORO 실시간 설문 시스템</span>
         </div>
       </header>
       <main className="student-main">{children}</main>
