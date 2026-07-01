@@ -24,8 +24,10 @@ export function StudentPage() {
   const sessionId = useSessionId();
   const liveEnabled = firebaseConfigStatus.isConfigured;
   const { user, loading: authLoading } = useAuth();
-  // Wait for auth before subscribing to Firestore — Firestore rules require isSignedIn()
-  const firestoreEnabled = !authLoading && !!user && Boolean(sessionId);
+  // /student는 항상 '익명 학생' 컨텍스트여야 한다. 같은 브라우저에 발표자(DoroGate) 세션이
+  // 남아 있으면 그 신원이 새어들어와 세션/질문 read가 규칙상 거부된다. 익명일 때만 구독한다.
+  const isAnonymousStudent = Boolean(user?.isAnonymous);
+  const firestoreEnabled = !authLoading && isAnonymousStudent && Boolean(sessionId);
   const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
   const questionIds = useMemo(() => questions.map((question) => question.id), [questions]);
   const ownAnswers = useOwnAnswers(sessionId ?? '', questionIds, user?.uid);
@@ -44,7 +46,13 @@ export function StudentPage() {
   }, [nickname]);
 
   useEffect(() => {
-    if (!liveEnabled || authLoading || user) return;
+    if (!liveEnabled || authLoading) return;
+    // 이미 익명 학생이면 그대로 둔다.
+    if (user?.isAnonymous) return;
+    // 사용자가 없거나(신규) 비익명 세션(발표자 잔존)이면 익명 학생으로 (재)로그인한다.
+    if (user) {
+      console.warn('[auth] /student에 비익명 세션 감지 → 익명 학생으로 전환', { uid: user.uid });
+    }
     signInStudentAnonymously().catch((nextError) => {
       console.error('[auth] 학생 익명 로그인 실패', nextError);
       setAuthError(nextError instanceof Error ? nextError.message : '학생 로그인에 실패했습니다.');
