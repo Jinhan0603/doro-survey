@@ -168,7 +168,7 @@ function TemplateDetail({
 
           <section className="detailSection detailSection--questions">
             <div className="detailSectionHeader">
-              <h3>질문 미리보기</h3>
+              <h3>질문 목록</h3>
               <span>{questionCount}개</span>
             </div>
             {interactions.length > 0 ? (

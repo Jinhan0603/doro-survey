@@ -372,7 +372,7 @@
 }
 
 /* 설명(desc)은 요약 정보(summary)와 같은 행 → 높이가 자동으로 일치하고,
-   그 결과 사용 툴(tools)과 질문 미리보기(questions)의 상단 y가 정렬된다. */
+   그 결과 사용 툴(tools)과 질문 목록(questions)의 상단 y가 정렬된다. */
 .detailSection--desc {
   grid-area: desc;
 }
@@ -424,8 +424,8 @@
 
 .descriptionBox {
   flex: 1 1 auto;
-  min-height: 150px;
-  padding: 18px 20px;
+  min-height: 120px;
+  padding: 16px 18px;
   border: 1px solid #dbe3ef;
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
@@ -456,8 +456,8 @@
 }
 
 .summaryTile {
-  min-height: 92px;
-  padding: 16px;
+  min-height: 72px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -467,7 +467,7 @@
 }
 
 .summaryTile dt {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -515,6 +515,29 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.questionPreviewList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.questionPreviewList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.questionPreviewList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.questionPreviewList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .questionPreviewCard {
