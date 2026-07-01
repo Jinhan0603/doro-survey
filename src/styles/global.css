@@ -714,6 +714,21 @@ button:disabled {
     0 12px 24px rgba(37, 99, 235, 0.18);
 }
 
+/* 선택지 버튼은 호버 효과(lift/색 변화)·클릭 애니메이션(press scale) 없이 정적으로 둔다. */
+.choice-button:hover:not(:disabled),
+.choice-button:active:not(:disabled) {
+  transform: none;
+}
+
+.choice-button.button--primary:hover:not(:disabled) {
+  background: var(--color-accent);
+}
+
+.choice-button.button--secondary:hover:not(:disabled) {
+  border-color: rgba(210, 210, 215, 0.88);
+  background: rgba(255, 255, 255, 0.84);
+}
+
 .multi-choice-grid {
   display: grid;
   gap: 14px;
@@ -1424,6 +1439,8 @@ button:disabled {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* 전역 body의 파란 tint 그라데이션을 학생 화면에서는 평평한 배경으로 덮는다. */
+  background: #f8fafc;
 }
 
 .student-header {
