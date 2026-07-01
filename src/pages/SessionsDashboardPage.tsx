@@ -22,6 +22,7 @@ import { useMySessions } from '../hooks/useMySessions';
 import { useQuestions } from '../hooks/useQuestions';
 import { useToasts } from '../hooks/useToasts';
 import { ToastStack } from '../components/common/Toast';
+import { countAnswersForQuestions } from '../firebase/answers';
 import { deleteSessionCascade, type SessionSummary } from '../firebase/sessions';
 import type { QuestionDoc } from '../firebase/types';
 import { getQuestionResultVisibility, getQuestionTypeLabel } from '../utils/questionRuntime';
@@ -64,14 +65,10 @@ function getQuestionVisibilityLabel(question: QuestionDoc): string {
   return getQuestionResultVisibility(question) === 'public' ? '공개' : '비공개';
 }
 
-// 목록 페이지에서는 질문별 응답 수를 조회하지 않는다(세션마다 N개 구독 비용). 0으로 표기.
-function getQuestionResponseCount(_question: QuestionDoc): number {
-  return 0;
-}
-
 function SessionDetail({
   session,
   questions,
+  answerCounts,
   deleting,
   onEdit,
   onDelete,
@@ -82,6 +79,7 @@ function SessionDetail({
 }: {
   session: SessionSummary;
   questions: QuestionDoc[];
+  answerCounts: Record<string, number>;
   deleting: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -96,7 +94,7 @@ function SessionDetail({
   const createdAtLabel = formatCreatedFull(session.createdAt);
   const createdShort = formatCreatedShort(session.createdAt);
   const questionCount = questions.length;
-  const responseCount = 0;
+  const responseCount = questions.reduce((sum, question) => sum + (answerCounts[question.id] ?? 0), 0);
   const studentJoinUrl = buildAppUrl('/student', session.id);
 
   const sortedQuestions = [...questions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -197,7 +195,7 @@ function SessionDetail({
                           {' · '}
                           {getQuestionVisibilityLabel(question)}
                           {' · '}
-                          응답 {getQuestionResponseCount(question)}개
+                          응답 {answerCounts[question.id] ?? 0}개
                         </p>
                       </div>
                     </article>
@@ -275,10 +273,33 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
   const { sessions, loading, error } = useMySessions(ownerUid);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [answerCounts, setAnswerCounts] = useState<Record<string, number>>({});
   const { toasts, pushToast } = useToasts();
 
   const selected = sessions.find((session) => session.id === selectedId) ?? null;
   const { questions } = useQuestions(selected?.id ?? '', { enabled: Boolean(selected) });
+  const selectedSessionId = selected?.id ?? null;
+  const questionIdsKey = questions.map((question) => question.id).join(',');
+
+  // 선택한 설문의 질문별 응답 수를 count 쿼리로 집계한다(문서 다운로드 없이 개수만).
+  useEffect(() => {
+    const questionIds = questionIdsKey ? questionIdsKey.split(',') : [];
+    if (!selectedSessionId || questionIds.length === 0) {
+      setAnswerCounts({});
+      return;
+    }
+    let cancelled = false;
+    countAnswersForQuestions(selectedSessionId, questionIds)
+      .then((counts) => {
+        if (!cancelled) setAnswerCounts(counts);
+      })
+      .catch(() => {
+        if (!cancelled) setAnswerCounts({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSessionId, questionIdsKey]);
 
   // 목록이 바뀌면 첫 항목을 자동 선택한다(삭제 후 선택 유지 포함).
   // 생성 직후 ?selected= 로 진입하면 해당 설문을 우선 선택한다(최초 1회).
@@ -389,6 +410,7 @@ function SessionsDashboardContent({ ownerUid }: { ownerUid: string }) {
               <SessionDetail
                 session={selected}
                 questions={questions}
+                answerCounts={answerCounts}
                 deleting={deletingId === selected.id}
                 onEdit={() => navigate(`/custom-session/${selected.id}`)}
                 onDelete={() => void handleDelete(selected.id, selected.title)}

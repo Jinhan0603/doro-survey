@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   onSnapshot,
@@ -144,6 +145,23 @@ export async function upsertAnswer({
       throw error;
     });
   });
+}
+
+/** 응답 문서를 내려받지 않고 개수만 집계한다(Firestore count 쿼리). */
+export async function countAnswersForQuestion(sessionId: string, questionId: string): Promise<number> {
+  const snapshot = await getCountFromServer(getAnswersCollection(sessionId, questionId));
+  return snapshot.data().count;
+}
+
+/** 여러 질문의 응답 수를 한 번에 집계해 questionId→count 맵으로 반환한다. */
+export async function countAnswersForQuestions(
+  sessionId: string,
+  questionIds: string[],
+): Promise<Record<string, number>> {
+  const entries = await Promise.all(
+    questionIds.map(async (questionId) => [questionId, await countAnswersForQuestion(sessionId, questionId)] as const),
+  );
+  return Object.fromEntries(entries);
 }
 
 const BATCH_LIMIT = 400;
