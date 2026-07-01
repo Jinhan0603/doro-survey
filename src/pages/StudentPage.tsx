@@ -11,7 +11,6 @@ import { WaitingState } from '../components/survey/WaitingState';
 import { LiveQuestionForm } from '../components/student/LiveQuestionForm';
 import { NicknameOnboarding } from '../components/student/NicknameOnboarding';
 import { StudentPreview } from '../components/student/StudentPreview';
-import { StudentQuestionResults } from '../components/student/StudentQuestionResults';
 import { StudentShell } from '../components/student/StudentShell';
 
 const NICKNAME_STORAGE_KEY = 'doro-live-survey.nickname';
@@ -84,8 +83,15 @@ export function StudentPage() {
       return null;
     }
 
+    // 학생에게 Firebase 원문 에러(예: "Missing or insufficient permissions")를 그대로
+    // 노출하지 않는다. 원인은 콘솔에 로깅되고(useAnswers 등 onError), 화면은 차분한 안내만.
     if (authError || error) {
-      return <Card className="banner-card banner-card--error">{authError ?? error}</Card>;
+      return (
+        <WaitingState
+          description="지금은 설문에 연결할 수 없어요. 잠시 후 다시 시도하거나 강사님께 문의해주세요."
+          title="잠시 후 다시 시도해주세요"
+        />
+      );
     }
 
     if (!session) {
@@ -123,9 +129,15 @@ export function StudentPage() {
       );
     }
 
-    // 결과가 공개되면 폼 대신 그 질문의 결과를 보여준다.
+    // 결과가 공개되면 학생 화면에는 집계를 띄우지 않는다(개별 답변 노출 방지).
+    // 결과는 발표 화면(프로젝터) 전용이므로 앞 화면을 보라고 안내한다.
     if (session.showResults) {
-      return <StudentQuestionResults question={openQuestion} sessionId={sessionId} />;
+      return (
+        <WaitingState
+          description="앞에 있는 발표 화면에서 결과를 확인하세요."
+          title="결과가 공개되었습니다"
+        />
+      );
     }
 
     // 결과 공개 전에는 열린 그 질문의 응답 폼만 표시한다.
