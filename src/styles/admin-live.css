@@ -161,20 +161,8 @@
   box-shadow: inset 4px 0 0 #2563eb;
 }
 
-/* 지금 응답이 열린(활성) 질문 — 목록에서 초록 강조로 확실히 구분한다. */
-.adminQuestionRow.isOpen {
-  border-color: #86efac;
-  background: #f0fdf4;
-  box-shadow: inset 4px 0 0 #10b981;
-}
-
-/* 열림이면서 선택된 질문: 초록(열림) 우선으로 표시하되 배경은 살짝 밝게. */
-.adminQuestionRow.isOpen.isSelected {
-  border-color: #34d399;
-  background: #ecfdf5;
-  box-shadow: inset 4px 0 0 #10b981;
-}
-
+/* 열린 질문은 테두리/배경 강조 없이 '열림' 배지 텍스트로만 표시한다.
+   (좌측 테두리는 '선택됨' 전용 표식이라 열림과 겹치면 안 됨) */
 .adminQuestionRow.isOpen .questionRowContent {
   padding-right: 50px;
 }
@@ -194,11 +182,6 @@
   font-size: 14px;
   font-weight: 900;
   letter-spacing: -0.02em;
-}
-
-.adminQuestionRow.isOpen .questionIndexBadge {
-  background: #dcfce7;
-  color: #059669;
 }
 
 /* 열림 상태 배지(우상단) + 라이브 점 */
