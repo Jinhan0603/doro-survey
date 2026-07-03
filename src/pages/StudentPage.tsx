@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { firebaseConfigStatus } from '../firebase/client';
+import { firebaseConfigStatus, studentDb } from '../firebase/client';
 import { signInStudentAnonymously } from '../firebase/auth';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useOwnAnswers } from '../hooks/useAnswers';
@@ -26,13 +26,18 @@ export function StudentPage() {
   const sessionId = useSessionId();
   const liveEnabled = firebaseConfigStatus.isConfigured;
   const { user, loading: authLoading } = useAuth();
-  // /student는 항상 '익명 학생' 컨텍스트여야 한다. 같은 브라우저에 발표자(DoroGate) 세션이
-  // 남아 있으면 그 신원이 새어들어와 세션/질문 read가 규칙상 거부된다. 익명일 때만 구독한다.
+  // /student의 인증·read·write는 전부 보조(student) Firebase app으로 격리된다. useAuth는
+  // studentAuth를 구독하고, 아래 Firestore 구독/제출도 studentDb를 쓴다. 이렇게 하면 같은
+  // 브라우저의 발표자(DoroGate/default app) 세션과 서로 간섭하지 않는다.
+  const db = studentDb ?? undefined;
   const isAnonymousStudent = Boolean(user?.isAnonymous);
   const firestoreEnabled = !authLoading && isAnonymousStudent && Boolean(sessionId);
-  const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', { enabled: firestoreEnabled });
+  const { session, questions, loading, error } = useActiveQuestion(sessionId ?? '', {
+    enabled: firestoreEnabled,
+    db,
+  });
   const questionIds = useMemo(() => questions.map((question) => question.id), [questions]);
-  const ownAnswers = useOwnAnswers(sessionId ?? '', questionIds, user?.uid);
+  const ownAnswers = useOwnAnswers(sessionId ?? '', questionIds, user?.uid, db);
   const [nickname, setNickname] = useState(getStoredNickname);
   const [nicknameConfirmed, setNicknameConfirmed] = useState(() => getStoredNickname().length > 0);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -52,10 +57,8 @@ export function StudentPage() {
     if (!liveEnabled || authLoading) return;
     // 이미 익명 학생이면 그대로 둔다.
     if (user?.isAnonymous) return;
-    // 사용자가 없거나(신규) 비익명 세션(발표자 잔존)이면 익명 학생으로 (재)로그인한다.
-    if (user) {
-      console.warn('[auth] /student에 비익명 세션 감지 → 익명 학생으로 전환', { uid: user.uid });
-    }
+    // 보조(student) app에는 아직 세션이 없으면(신규) 익명 학생으로 로그인한다. 이 인증은
+    // studentAuth에서만 일어나므로 발표자(default app) 세션을 건드리지 않는다.
     signInStudentAnonymously().catch((nextError) => {
       console.error('[auth] 학생 익명 로그인 실패', nextError);
       setAuthError(nextError instanceof Error ? nextError.message : '학생 로그인에 실패했습니다.');
@@ -170,6 +173,7 @@ export function StudentPage() {
         question={openQuestion}
         sessionId={sessionId}
         uid={user.uid}
+        db={db}
         onSubmitted={() => pushToast('답변이 제출되었습니다.', 'success')}
       />
     );

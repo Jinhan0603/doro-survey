@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import type { Firestore } from 'firebase/firestore';
 import { upsertAnswer } from '../../firebase/answers';
 import { type AnswerDoc, type QuestionDoc } from '../../firebase/types';
 import { normalizeNickname, normalizeTextAnswer } from '../../utils/sanitize';
@@ -56,6 +57,8 @@ type LiveQuestionFormProps = {
   nickname: string;
   existingAnswer: AnswerDoc | null;
   uid: string;
+  // 답변 write에 쓸 Firestore 인스턴스. /student는 보조(student) db를 넘겨 익명 학생 신원으로 저장한다.
+  db?: Firestore;
   onSubmitted?: () => void;
 };
 
@@ -65,6 +68,7 @@ export function LiveQuestionForm({
   nickname,
   existingAnswer,
   uid,
+  db,
   onSubmitted,
 }: LiveQuestionFormProps) {
   const [choiceDraft, setChoiceDraft] = useState<string | null>(null);
@@ -144,6 +148,7 @@ export function LiveQuestionForm({
           value: normalizedValue,
           choiceId: resolveChoiceIdByText(question, normalizedValue),
           displayAnswer: normalizedValue,
+          db,
         });
       } else if (inputType === 'multi') {
         const normalizedValues = selectedChoices.map((item) => item.trim()).filter(Boolean);
@@ -166,6 +171,7 @@ export function LiveQuestionForm({
           values: normalizedValues,
           choiceIds,
           displayAnswer: normalizedValues.join(' | '),
+          db,
         });
       } else {
         const normalizedValue = normalizeTextAnswer(textValue, question.maxLength || 300);
@@ -183,6 +189,7 @@ export function LiveQuestionForm({
           answerKind: 'text',
           value: normalizedValue,
           displayAnswer: normalizedValue,
+          db,
         });
       }
 
