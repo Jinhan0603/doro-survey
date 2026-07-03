@@ -200,7 +200,9 @@ service cloud.firestore {
     }
 
     function studentCreatesAnswer(sessionId, questionId, uid) {
-      return isOwnAnswer(uid)
+      // 답변은 익명 학생만 쓸 수 있다. 발표자(role 토큰) 신원으로는 답변을 생성할 수 없다.
+      return isAnonymousUser()
+        && isOwnAnswer(uid)
         && sessionAcceptsStudentAnswer(sessionId, questionId)
         && request.resource.data.keys().hasOnly([
           'uid',
@@ -226,7 +228,9 @@ service cloud.firestore {
     }
 
     function studentUpdatesAnswer(sessionId, questionId, uid) {
-      return isOwnAnswer(uid)
+      // 답변 수정도 익명 학생 본인만 가능. 발표자(role 토큰) 신원으로는 수정할 수 없다.
+      return isAnonymousUser()
+        && isOwnAnswer(uid)
         && sessionAcceptsStudentAnswer(sessionId, questionId)
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'nickname',
