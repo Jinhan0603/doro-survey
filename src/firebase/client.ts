@@ -52,13 +52,27 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
+// 학생(/student) 전용 보조 인스턴스. 익명 학생 로그인이 발표자(default app)의 currentUser를
+// 덮어쓰지 않도록 별도 이름의 Firebase app으로 분리한다. 같은 origin이지만 app 이름이 다르면
+// Auth persistence 키도 분리돼, 발표자 세션과 학생 익명 세션이 서로 간섭하지 않는다.
+const STUDENT_APP_NAME = 'student';
+let studentApp: FirebaseApp | null = null;
+let studentAuth: Auth | null = null;
+let studentDb: Firestore | null = null;
+
 if (firebaseConfigStatus.isConfigured) {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+
+  studentApp =
+    getApps().find((existing) => existing.name === STUDENT_APP_NAME) ??
+    initializeApp(firebaseConfig, STUDENT_APP_NAME);
+  studentAuth = getAuth(studentApp);
+  studentDb = getFirestore(studentApp);
 }
 
-export { app, auth, db };
+export { app, auth, db, studentApp, studentAuth, studentDb };
 export const defaultSessionId = import.meta.env.VITE_DEFAULT_SESSION_ID?.trim() || 'doro-tech-class-2026';
 export const appName = import.meta.env.VITE_APP_NAME?.trim() || 'DORO Live Survey';
 
@@ -81,4 +95,26 @@ export function requireDb() {
   }
 
   return db;
+}
+
+export function requireStudentDb() {
+  if (!studentDb) {
+    throw new Error(
+      firebaseConfigStatus.message ??
+        'Firebase Firestore(student)가 초기화되지 않았습니다. .env.local 설정을 먼저 확인해주세요.',
+    );
+  }
+
+  return studentDb;
+}
+
+export function requireStudentAuth() {
+  if (!studentAuth) {
+    throw new Error(
+      firebaseConfigStatus.message ??
+        'Firebase Authentication(student)이 초기화되지 않았습니다. .env.local 설정을 먼저 확인해주세요.',
+    );
+  }
+
+  return studentAuth;
 }
