@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { Firestore } from 'firebase/firestore';
 import { firebaseConfigStatus } from '../firebase/client';
 import { subscribeAnswers, subscribeOwnAnswer } from '../firebase/answers';
 import type { AnswerDoc } from '../firebase/types';
@@ -68,6 +69,8 @@ export function useOwnAnswers(
   sessionId: string,
   questionIds: string[],
   uid: string | null | undefined,
+  // 기본은 발표자(default) db. /student는 보조(student) db를 넘겨 익명 학생 신원으로 구독한다.
+  db?: Firestore,
 ): Record<string, AnswerDoc | null> {
   const [answers, setAnswers] = useState<Record<string, AnswerDoc | null>>({});
   const key = questionIds.join('|');
@@ -85,13 +88,14 @@ export function useOwnAnswers(
         uid,
         (answer) => setAnswers((current) => ({ ...current, [questionId]: answer })),
         () => {},
+        db,
       ),
     );
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
     // key(=questionIds 조합)로 질문 집합 변화를 감지한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, uid, key]);
+  }, [sessionId, uid, key, db]);
 
   return answers;
 }

@@ -11,6 +11,7 @@ import {
   setDoc,
   updateDoc,
   writeBatch,
+  type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { requireDb } from './client';
@@ -28,6 +29,8 @@ type UpsertAnswerInput = {
   choiceId?: string | null;
   choiceIds?: string[];
   displayAnswer: string;
+  // 기본은 발표자(default) db. /student는 보조(student) db를 넘겨 익명 학생 신원으로 write한다.
+  db?: Firestore;
 };
 
 type UpdateAnswerModerationInput = {
@@ -38,12 +41,12 @@ type UpdateAnswerModerationInput = {
   hidden?: boolean;
 };
 
-function getAnswersCollection(sessionId: string, questionId: string) {
-  return collection(requireDb(), 'sessions', sessionId, 'questions', questionId, 'answers');
+function getAnswersCollection(sessionId: string, questionId: string, db: Firestore = requireDb()) {
+  return collection(db, 'sessions', sessionId, 'questions', questionId, 'answers');
 }
 
-function getAnswerRef(sessionId: string, questionId: string, uid: string) {
-  return doc(requireDb(), 'sessions', sessionId, 'questions', questionId, 'answers', uid);
+function getAnswerRef(sessionId: string, questionId: string, uid: string, db: Firestore = requireDb()) {
+  return doc(db, 'sessions', sessionId, 'questions', questionId, 'answers', uid);
 }
 
 export function subscribeAnswers(
@@ -75,9 +78,11 @@ export function subscribeOwnAnswer(
   uid: string,
   callback: (answer: AnswerDoc | null) => void,
   onError?: (error: Error) => void,
+  // 기본은 발표자(default) db. /student는 보조(student) db를 넘겨 인증 인스턴스를 분리한다.
+  db: Firestore = requireDb(),
 ): Unsubscribe {
   return onSnapshot(
-    getAnswerRef(sessionId, questionId, uid),
+    getAnswerRef(sessionId, questionId, uid, db),
     (snapshot) => {
       callback(snapshot.exists() ? (snapshot.data() as AnswerDoc) : null);
     },
@@ -102,8 +107,9 @@ export async function upsertAnswer({
   choiceId = null,
   choiceIds = [],
   displayAnswer,
+  db = requireDb(),
 }: UpsertAnswerInput) {
-  const answerRef = getAnswerRef(sessionId, questionId, uid);
+  const answerRef = getAnswerRef(sessionId, questionId, uid, db);
   const existing = await getDoc(answerRef);
   const trimmedNickname = nickname.trim();
   const trimmedValue = value?.trim() ?? null;

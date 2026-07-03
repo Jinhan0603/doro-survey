@@ -4,25 +4,28 @@ import {
   onSnapshot,
   orderBy,
   query,
+  type Firestore,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { requireDb } from './client';
 import type { QuestionDoc } from './types';
 
-function getQuestionsCollection(sessionId: string) {
-  return collection(requireDb(), 'sessions', sessionId, 'questions');
+function getQuestionsCollection(db: Firestore, sessionId: string) {
+  return collection(db, 'sessions', sessionId, 'questions');
 }
 
-function getQuestionRef(sessionId: string, questionId: string) {
-  return doc(requireDb(), 'sessions', sessionId, 'questions', questionId);
+function getQuestionRef(db: Firestore, sessionId: string, questionId: string) {
+  return doc(db, 'sessions', sessionId, 'questions', questionId);
 }
 
 export function subscribeQuestions(
   sessionId: string,
   callback: (questions: QuestionDoc[]) => void,
   onError?: (error: Error) => void,
+  // 기본은 발표자(default) db. /student는 보조(student) db를 넘겨 인증 인스턴스를 분리한다.
+  db: Firestore = requireDb(),
 ): Unsubscribe {
-  const questionsQuery = query(getQuestionsCollection(sessionId), orderBy('order', 'asc'));
+  const questionsQuery = query(getQuestionsCollection(db, sessionId), orderBy('order', 'asc'));
 
   return onSnapshot(
     questionsQuery,
@@ -40,8 +43,9 @@ export function subscribeQuestion(
   sessionId: string,
   questionId: string,
   callback: (question: QuestionDoc | null) => void,
+  db: Firestore = requireDb(),
 ): Unsubscribe {
-  return onSnapshot(getQuestionRef(sessionId, questionId), (snapshot) => {
+  return onSnapshot(getQuestionRef(db, sessionId, questionId), (snapshot) => {
     callback(snapshot.exists() ? ({ ...snapshot.data(), id: snapshot.id } as QuestionDoc) : null);
   });
 }

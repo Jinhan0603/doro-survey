@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
   writeBatch,
+  type Firestore,
   type Timestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -75,8 +76,8 @@ export function subscribeMySessions(
   );
 }
 
-function getSessionRef(sessionId: string) {
-  return doc(requireDb(), 'sessions', sessionId);
+function getSessionRef(sessionId: string, db: Firestore = requireDb()) {
+  return doc(db, 'sessions', sessionId);
 }
 
 function getQuestionRef(sessionId: string, questionId: string) {
@@ -87,9 +88,11 @@ export function subscribeSession(
   sessionId: string,
   callback: (session: SessionDoc | null) => void,
   onError?: (error: Error) => void,
+  // 기본은 발표자(default) db. /student는 보조(student) db를 넘겨 인증 인스턴스를 분리한다.
+  db: Firestore = requireDb(),
 ): Unsubscribe {
   return onSnapshot(
-    getSessionRef(sessionId),
+    getSessionRef(sessionId, db),
     (snapshot) => {
       callback(snapshot.exists() ? (snapshot.data() as SessionDoc) : null);
     },
