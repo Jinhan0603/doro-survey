@@ -285,7 +285,11 @@ service cloud.firestore {
     }
 
     match /sessions/{sessionId} {
-      allow read: if canReadSessionData(resource.data);
+      // 없는 문서(resource == null) 읽기는 발표자에게 허용한다. 세션 생성 전 중복 ID
+      // 검사(getDoc)가 이 경로를 타는데, null일 때 canReadSessionData가 data.ownerUid를
+      // 참조하다 비-admin 발표자에서 거부돼 세션 생성이 통째로 막히던 문제를 푼다.
+      // 없는 문서 읽기는 빈 결과라 정보 노출이 없다. (null 가드를 먼저 둬 단락시킨다.)
+      allow read: if (isPresenter() && resource == null) || canReadSessionData(resource.data);
       allow create: if isAdmin() || canCreateOwnSession();
       allow update: if isAdmin() || canUpdateOwnSession();
       allow delete: if isAdmin() || (isPresenter() && resource.data.ownerUid == request.auth.uid);
