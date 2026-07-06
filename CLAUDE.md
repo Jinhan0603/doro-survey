@@ -23,6 +23,13 @@ npx tsc --noEmit # 타입체크만
 ```
 > 테스트 프레임워크는 아직 없음. 검증은 빌드/타입체크 + codex 위임으로 한다.
 
+## 배포
+
+- **dev** → `survey.doroedu.co.kr` 서버 (`210.109.82.243`)
+  - SSH 키: `C:\Users\pc\Documents\PW\hy_key.pem`
+  - 예) `ssh -i "C:\Users\pc\Documents\PW\hy_key.pem" <user>@210.109.82.243`
+- **main** → GitHub Pages
+
 ## 화면 구성
 
 - `/` 홈(발표자 랜딩) · `/admin` 교사 운영 콘솔 · `/display` 발표 화면 · `/student` 학생 참여(참여 링크 전용)
