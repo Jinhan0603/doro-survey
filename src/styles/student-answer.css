@@ -73,9 +73,15 @@
     transform 120ms ease;
 }
 
-.studentOptionButton:hover:not(:disabled) {
+/* 선택된 항목은 제외 — 연한 배경이 .isSelected의 흰 글자를 덮어 글자가 사라진다. */
+.studentOptionButton:hover:not(:disabled):not(.isSelected) {
   border-color: #93c5fd;
   background: #eff6ff;
+}
+
+.studentOptionButton.isSelected:hover:not(:disabled) {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
 }
 
 .studentOptionButton:active:not(:disabled) {
