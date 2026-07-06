@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, ListChecks, Save, Sparkles } from 'lucide-react';
+import { FileText, ListChecks, Save } from 'lucide-react';
 import { usePresenterAuth } from '../auth/AuthProvider';
 import { BackLink } from '../components/common/BackLink';
 import { Button } from '../components/common/Button';
@@ -34,7 +34,6 @@ import {
   updateLessonTemplate,
 } from '../firebase/lessonTemplates';
 import { inferInteractionType, inferPurpose } from '../firebase/sessions';
-import { STARTUP_BOOTCAMP_TEMPLATE } from '../data/startupBootcampTemplate';
 import type { QuestionInputType, TemplateVisibility } from '../firebase/types';
 import { useLessonTemplateDetail } from '../hooks/useLessonTemplatesData';
 import { useUserProfile } from '../hooks/useUserProfile';
@@ -124,32 +123,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
 
   const handleAddQuestion = (inputType: QuestionInputType) => {
     setQuestions((current) => [...current, createDraft({ inputType, visibility: 'public' })]);
-  };
-
-  // 창업 부트캠프 전체 공유 프리셋을 폼과 질문 목록에 채운다(새 템플릿에서만 노출).
-  // 공유 권한이 없으면 개인용으로 떨어뜨린다(저장 시에도 동일하게 강제됨).
-  const handleLoadStartupPreset = () => {
-    setForm({
-      title: STARTUP_BOOTCAMP_TEMPLATE.title,
-      description: STARTUP_BOOTCAMP_TEMPLATE.description,
-      subject: STARTUP_BOOTCAMP_TEMPLATE.subject,
-      targetGrade: STARTUP_BOOTCAMP_TEMPLATE.targetGrade,
-      toolInput: formatToolTags(STARTUP_BOOTCAMP_TEMPLATE.toolTags),
-      templateVisibility: canShareTemplate ? STARTUP_BOOTCAMP_TEMPLATE.templateVisibility : 'private',
-    });
-    setQuestions(
-      STARTUP_BOOTCAMP_TEMPLATE.interactions.map((seed) =>
-        createDraft({
-          phase: seed.phase,
-          title: seed.title,
-          prompt: seed.prompt,
-          inputType: seed.inputType,
-          visibility: seed.visibility,
-          choices: toChoiceDrafts(seed.choices),
-          maxLength: seed.maxLength,
-        }),
-      ),
-    );
   };
 
   const handleQuestionPatch = (clientId: string, patch: Partial<CustomQuestionDraft>) => {
@@ -271,12 +244,6 @@ function LessonTemplateBuilderContent({ ownerUid }: { ownerUid: string }) {
             <h1>{templateId ? '설문지 템플릿 편집' : '새 설문지 템플릿'}</h1>
           </div>
           <div className="templateBuilderActions">
-            {!templateId ? (
-              <Button size="sm" variant="secondary" onClick={handleLoadStartupPreset}>
-                <Sparkles size={16} />
-                창업 부트캠프 불러오기
-              </Button>
-            ) : null}
             <Button
               disabled={busy || !form.title.trim() || questions.length === 0}
               size="sm"
