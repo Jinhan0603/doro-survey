@@ -338,12 +338,8 @@
   flex: 1 1 auto;
   min-height: 0;
   padding: 22px 24px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  /* 바깥 패널은 스크롤하지 않는다(높이 고정). 스크롤은 질문 목록만 소유. */
+  overflow: hidden;
 }
 
 .templateDetailBody::-webkit-scrollbar {
@@ -366,11 +362,15 @@
 .templateDetailContentGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'desc summary'
     'tools questions';
   gap: 24px 26px;
   align-items: stretch;
+  /* 바디 높이를 꽉 채워 아래 행(질문 목록)이 남은 공간을 갖게 한다. */
+  height: 100%;
+  min-height: 0;
 }
 
 /* 설명(desc)은 요약 정보(summary)와 같은 행 → 높이가 자동으로 일치하고,
@@ -389,6 +389,8 @@
 
 .detailSection--questions {
   grid-area: questions;
+  /* 내부 질문 목록이 남은 높이 안에서 스크롤하도록 자신도 축소 허용. */
+  min-height: 0;
 }
 
 .detailSection {
@@ -517,7 +519,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 320px;
+  /* 고정 높이 대신 남은 공간을 채우고, 넘칠 때만 이 목록이 스크롤한다. */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -722,7 +726,20 @@
 @media (max-width: 1040px) {
   .templateDetailContentGrid {
     grid-template-columns: 1fr;
+    grid-template-rows: none;
     grid-template-areas: none;
+    /* 1단으로 쌓이면 바디가 스크롤을 소유한다(질문 목록은 자연 높이). */
+    height: auto;
+  }
+
+  /* 1단 세로 스택에서는 바깥 바디가 스크롤한다. */
+  .templateDetailBody {
+    overflow-y: auto;
+  }
+
+  .questionPreviewList {
+    flex: 0 1 auto;
+    max-height: 320px;
   }
 
   .templateDetailHeader {
