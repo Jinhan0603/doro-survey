@@ -262,7 +262,10 @@ service cloud.firestore {
     }
 
     match /lessonTemplates/{templateId} {
-      allow read: if canReadTemplateData(resource.data);
+      // 세션 규칙과 동일한 null 가드: 없는 문서(resource == null) 읽기는 발표자에게 허용.
+      // canReadTemplateData가 null.ownerUid를 참조해 비-admin 발표자를 거부하던 패턴 방지
+      // (삭제된 템플릿·잘못된 ?template= id 접근 시 매니저/강사만 에러 나던 지뢰).
+      allow read: if (isPresenter() && resource == null) || canReadTemplateData(resource.data);
       allow create: if isAdmin() || canCreateOwnTemplate();
       allow update: if isAdmin() || canUpdateOwnTemplate();
       allow delete: if isAdmin() || (isPresenter() && resource.data.ownerUid == request.auth.uid);
