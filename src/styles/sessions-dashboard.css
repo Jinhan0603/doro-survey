@@ -442,10 +442,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* 평소엔 넘치지 않아 스크롤이 없고, 질문 미리보기 리스트만 내부 스크롤한다.
-     창이 아주 낮아 요약 내용까지 못 담을 때만 본문이 폴백 스크롤한다(요약 잘림 방지). */
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 상세 패널 본문은 스크롤하지 않는다(높이 고정). 스크롤은 질문 미리보기 리스트만 소유.
+     좁은 화면(≤1040px) 스택 레이아웃에서만 본문 스크롤로 폴백한다. */
+  overflow: hidden;
 }
 
 .questionPreviewList::-webkit-scrollbar,
@@ -481,6 +480,9 @@
    min-height:0이라 남는 높이를 채우며 넘치면 내부 리스트가 스크롤한다. */
 .sessionDetailGrid {
   flex: 1 1 auto;
+  /* min-height: 0이 없으면 내용 높이 아래로 못 줄어들어 본문이 넘치고(바깥 스크롤),
+     내부 리스트는 영영 제약을 못 받아 스크롤하지 않는다. */
+  min-height: 0;
   display: flex;
   gap: 16px;
   align-items: stretch;
@@ -902,8 +904,14 @@
   }
 
   /* 스택되면 본문 전체가 정상 스크롤(내부 스크롤 해제). */
+  .sessionDetailBody {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
   .sessionDetailGrid {
     flex: 0 0 auto;
+    min-height: auto;
     flex-direction: column;
     align-items: stretch;
   }
