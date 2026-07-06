@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Copy, ExternalLink, Lock, Trash2, Unlock } from 'lucide-react';
+import { BarChart3, ChevronLeft, Copy, ExternalLink, Lock, Trash2, Unlock } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { AdminPreview } from '../components/admin/AdminPreview';
 import { Button } from '../components/common/Button';
@@ -472,6 +472,12 @@ export function AdminPage() {
                 </button>
               </div>
             </section>
+
+            {/* 실제 앵커라 Ctrl/Cmd+클릭·휠클릭 새 탭 열기가 브라우저 기본 동작으로 된다. */}
+            <a className="resultScreenLink" href={buildAppUrl('/display', sessionId)}>
+              <BarChart3 size={16} />
+              결과 화면
+            </a>
 
             {canManageAnswerDocs ? (
               <section className="dangerCompactCard">
