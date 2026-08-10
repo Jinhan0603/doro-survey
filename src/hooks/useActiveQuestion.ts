@@ -8,7 +8,12 @@ export function useActiveQuestion(
   { enabled = true, db }: { enabled?: boolean; db?: Firestore } = {},
 ) {
   const { session, loading: sessionLoading, error: sessionError } = useSession(sessionId, { enabled, db });
-  const { questions, loading: questionsLoading, error: questionsError } = useQuestions(sessionId, { enabled, db });
+  // 세션 문서가 없는 경우 하위 questions 경로를 구독하면 Firestore가 권한 오류를 낸다.
+  // 세션을 확인한 뒤에만 질문을 구독해, 삭제됐거나 잘못된 세션 링크를 정상 빈 상태로 처리한다.
+  const { questions, loading: questionsLoading, error: questionsError } = useQuestions(sessionId, {
+    enabled: enabled && Boolean(session),
+    db,
+  });
 
   const activeQuestion = !session?.activeQuestionId
     ? questions[0] ?? null

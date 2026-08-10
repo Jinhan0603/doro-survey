@@ -8,7 +8,7 @@ import { usePresenterAuth } from '../auth/AuthProvider';
 import { useActiveQuestion } from '../hooks/useActiveQuestion';
 import { useAnswers } from '../hooks/useAnswers';
 import { useSessionId } from '../hooks/useSessionId';
-import { buildChoiceResults, getApprovedTextAnswers } from '../utils/stats';
+import { buildChoiceResults, getTextAnswers } from '../utils/stats';
 import {
   getQuestionChoices,
   getQuestionInputType,
@@ -20,7 +20,7 @@ import { previewQuestions } from '../data/previewQuestions';
 import '../styles/display-stage.css';
 
 type ChoiceResult = { name: string; value: number };
-type TextAnswer = ReturnType<typeof getApprovedTextAnswers>[number];
+type TextAnswer = ReturnType<typeof getTextAnswers>[number];
 
 // 발표 화면은 읽기 전용이다. 강사 조작 버튼·QR·링크·코드·원시 enum 값을 절대 노출하지 않는다.
 
@@ -313,7 +313,7 @@ export function DisplayPage() {
         isSubjective={getQuestionInputType(activeQuestion) === 'text'}
         choices={getQuestionChoices(activeQuestion)}
         choiceResults={buildChoiceResults(activeQuestion, answers)}
-        textAnswers={getApprovedTextAnswers(answers)}
+        textAnswers={getTextAnswers(answers)}
       />
     );
   }

@@ -12,7 +12,7 @@ export function AnswerWall({ answers }: AnswerWallProps) {
     return (
       <Card className="answer-wall__empty" tone="muted">
         <strong>아직 공개할 답변이 없습니다.</strong>
-        <p>관리자 화면에서 승인된 답변을 선택하면 이 영역에 카드로 표시됩니다.</p>
+        <p>학생 답변이 들어오면 결과 공개 시 이 영역에 카드로 표시됩니다.</p>
       </Card>
     );
   }

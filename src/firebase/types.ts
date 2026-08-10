@@ -66,6 +66,7 @@ export type AnswerDoc = {
   answerChoiceId?: string | null;
   answerChoiceIds?: string[] | null;
   displayAnswer?: string | null;
+  // 이전 Firestore 규칙·문서와의 호환용 값이다. 결과 표시에는 사용하지 않는다.
   approved: boolean;
   hidden: boolean;
   createdAt?: Timestamp | null;

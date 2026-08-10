@@ -93,9 +93,10 @@ export function buildStatusResults(question: QuestionDoc, answers: AnswerDoc[]) 
   return tallyChoiceResults(question, answers, false);
 }
 
-export function getApprovedTextAnswers(answers: AnswerDoc[]) {
+/** 결과 공개 시 모든 유효 주관식 답변을 표시한다. */
+export function getTextAnswers(answers: AnswerDoc[]) {
   return answers
-    .filter((answer) => answer.approved && !answer.hidden && getDisplayAnswer(answer))
+    .filter((answer) => getDisplayAnswer(answer))
     .map((answer) => ({
       nickname: answer.nickname,
       answer: getDisplayAnswer(answer),

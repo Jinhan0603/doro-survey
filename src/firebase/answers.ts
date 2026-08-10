@@ -33,14 +33,6 @@ type UpsertAnswerInput = {
   db?: Firestore;
 };
 
-type UpdateAnswerModerationInput = {
-  sessionId: string;
-  questionId: string;
-  uid: string;
-  approved?: boolean;
-  hidden?: boolean;
-};
-
 function getAnswersCollection(sessionId: string, questionId: string, db: Firestore = requireDb()) {
   return collection(db, 'sessions', sessionId, 'questions', questionId, 'answers');
 }
@@ -137,6 +129,7 @@ export async function upsertAnswer({
     answerChoiceId: answerKind === 'text' || answerKind === 'multi' ? null : choiceId,
     answerChoiceIds: answerKind === 'multi' ? choiceIds : null,
     displayAnswer: normalizedDisplayAnswer,
+    // 이전 Firestore 규칙과의 배포 호환용 값. 발표 화면은 이 값을 읽지 않는다.
     approved: false,
     hidden: false,
   };
@@ -214,26 +207,4 @@ export async function deleteAnswersForSession(
     total += await deleteAnswersForQuestion(sessionId, questionId);
   }
   return total;
-}
-
-export async function updateAnswerModeration({
-  sessionId,
-  questionId,
-  uid,
-  approved,
-  hidden,
-}: UpdateAnswerModerationInput) {
-  const patch: Record<string, unknown> = {
-    updatedAt: serverTimestamp(),
-  };
-
-  if (typeof approved === 'boolean') {
-    patch.approved = approved;
-  }
-
-  if (typeof hidden === 'boolean') {
-    patch.hidden = hidden;
-  }
-
-  await updateDoc(getAnswerRef(sessionId, questionId, uid), patch);
 }
