@@ -128,7 +128,7 @@ function SubjectiveAnswerList({ answers }: { answers: TextAnswer[] }) {
     );
   }
   return (
-    <div className="subjectiveAnswerGrid">
+    <div className="subjectiveAnswerList">
       {answers.map((answer, index) => (
         <article className="subjectiveAnswerCard" key={`${answer.nickname}-${index}`}>
           {answer.answer}
