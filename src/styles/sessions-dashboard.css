@@ -442,9 +442,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* 상세 패널 본문은 스크롤하지 않는다(높이 고정). 스크롤은 질문 미리보기 리스트만 소유.
-     좁은 화면(≤1040px) 스택 레이아웃에서만 본문 스크롤로 폴백한다. */
-  overflow: hidden;
+  /* 평소 스크롤은 질문 미리보기 리스트가 소유한다. 화면 높이가 낮아 2열 영역이
+     최소 높이를 확보하지 못하면 본문 전체 스크롤로 폴백해 요약 정보가 잘리지 않게 한다. */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .questionPreviewList::-webkit-scrollbar,
@@ -480,9 +481,10 @@
    min-height:0이라 남는 높이를 채우며 넘치면 내부 리스트가 스크롤한다. */
 .sessionDetailGrid {
   flex: 1 1 auto;
-  /* min-height: 0이 없으면 내용 높이 아래로 못 줄어들어 본문이 넘치고(바깥 스크롤),
-     내부 리스트는 영영 제약을 못 받아 스크롤하지 않는다. */
-  min-height: 0;
+  /* min-height: auto(내용 높이)면 본문이 늘 넘쳐 내부 리스트가 스크롤하지 않으므로 고정
+     최솟값을 준다. 요약 정보 카드(제목 + 타일 2행)가 다 보이는 높이이며, 이보다 낮아지면
+     본문이 스크롤한다. */
+  min-height: 240px;
   display: flex;
   gap: 16px;
   align-items: stretch;
@@ -895,6 +897,48 @@
   color: #6b7280;
   font-size: 14px;
   line-height: 1.55;
+}
+
+/* 낮은 화면에서는 여백과 QR 크기를 줄여 질문 미리보기 높이를 확보한다. */
+@media (max-height: 860px) {
+  .sessionsPage {
+    padding: 18px 24px 20px;
+  }
+
+  .sessionsShell {
+    gap: 14px;
+  }
+
+  .sessionDetailHeader {
+    padding: 18px 24px 14px;
+  }
+
+  .sessionDetailBody {
+    padding: 12px 24px;
+  }
+
+  .studentEntryCard {
+    padding: 10px 16px;
+  }
+
+  .studentEntryContent {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .studentQrBox {
+    width: 112px;
+    height: 112px;
+  }
+
+  .studentQrBox canvas,
+  .studentQrBox svg {
+    width: 100px;
+    height: 100px;
+  }
+
+  .sessionDetailFooter {
+    padding: 12px 24px;
+  }
 }
 
 /* 반응형 */
